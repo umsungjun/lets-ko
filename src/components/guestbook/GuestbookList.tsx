@@ -113,10 +113,14 @@ export default function GuestbookList() {
     <div className="space-y-6">
       {loading ? (
         <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
+          {[...Array(2)].map((_, i) => (
             <div
               key={i}
-              className="p-5 rounded-2xl bg-white border border-border shadow-card animate-pulse h-24"
+              className="p-5 rounded-2xl bg-white border border-border shadow-card h-20"
+              style={{
+                animation: `pulse 1.5s ease-in-out infinite`,
+                animationDelay: `${i * 200}ms`,
+              }}
             />
           ))}
         </div>

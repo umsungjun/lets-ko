@@ -66,7 +66,7 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
           onChange={(e) => setNickname(e.target.value)}
           placeholder={t("nicknamePlaceholder")}
           maxLength={50}
-          className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+          className="flex-1 min-w-0 px-4 py-2.5 rounded-xl border border-border bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
         />
         <button
           type="button"
