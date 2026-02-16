@@ -1,0 +1,149 @@
+{
+  "record": { "wins": 13, "losses": 2, "draws": 0 },
+  "knockouts": 6,
+  "strikeAccuracy": 59,
+  "strikesLandedPerMin": 0,
+  "strikeDefense": 0,
+  "takedownAccuracy": 63,
+  "takedownDefense": 0,
+  "height": "5'10\"",
+  "weight": "170 lbs",
+  "reach": "71\"",
+  "fightHistory": [
+    {
+      "date": "2025-11-01",
+      "event": "UFC Fight Night 263",
+      "opponent": "Phil Rowe",
+      "result": "win",
+      "method": "Decision (Unanimous)",
+      "round": 3,
+      "time": "5:00"
+    },
+    {
+      "date": "2025-06-21",
+      "event": "UFC on ABC 8",
+      "opponent": "Oban Elliott",
+      "result": "win",
+      "method": "Decision (Unanimous)",
+      "round": 3,
+      "time": "5:00"
+    },
+    {
+      "date": "2024-09-03",
+      "event": "Dana White's Contender Series S8",
+      "opponent": "Igor Cavalcanti",
+      "result": "win",
+      "method": "Decision (Unanimous)",
+      "round": 3,
+      "time": "5:00"
+    },
+    {
+      "date": "2023-12-08",
+      "event": "AFC 29",
+      "opponent": "Alwin Kincai",
+      "result": "win",
+      "method": "KO (Punches)",
+      "round": 1,
+      "time": "0:58"
+    },
+    {
+      "date": "2023-04-06",
+      "event": "AFC 24 x HEAT 51",
+      "opponent": "Ryuta Sakurai",
+      "result": "win",
+      "method": "TKO (Punches)",
+      "round": 2,
+      "time": "0:56"
+    },
+    {
+      "date": "2022-12-30",
+      "event": "AFC 22",
+      "opponent": "Jae Woong Kim",
+      "result": "win",
+      "method": "TKO (Retirement)",
+      "round": 2,
+      "time": "5:00"
+    },
+    {
+      "date": "2021-12-30",
+      "event": "Double G FC 11",
+      "opponent": "Han Seul Kim",
+      "result": "loss",
+      "method": "KO (Punches)",
+      "round": 1,
+      "time": "1:05"
+    },
+    {
+      "date": "2021-10-15",
+      "event": "AFC 17",
+      "opponent": "Yun Jae Jung",
+      "result": "win",
+      "method": "Decision (Unanimous)",
+      "round": 3,
+      "time": "5:00"
+    },
+    {
+      "date": "2021-05-31",
+      "event": "AFC 16",
+      "opponent": "Jae Young Ahn",
+      "result": "win",
+      "method": "Decision (Unanimous)",
+      "round": 3,
+      "time": "5:00"
+    },
+    {
+      "date": "2020-08-17",
+      "event": "AFC 14",
+      "opponent": "Moon Ho Park",
+      "result": "win",
+      "method": "KO (Punch)",
+      "round": 1,
+      "time": "0:51"
+    },
+    {
+      "date": "2020-02-22",
+      "event": "Gentleman Flower FC 02",
+      "opponent": "Zahriddin Zahriddin",
+      "result": "win",
+      "method": "TKO (Punches)",
+      "round": 1,
+      "time": "1:15"
+    },
+    {
+      "date": "2018-12-17",
+      "event": "AFC 9",
+      "opponent": "Hoi Gil Kim",
+      "result": "win",
+      "method": "TKO (Punches)",
+      "round": 1,
+      "time": "0:42"
+    },
+    {
+      "date": "2018-10-20",
+      "event": "NeoFight 14",
+      "opponent": "Kyohei Wakimoto",
+      "result": "win",
+      "method": "Decision (Majority)",
+      "round": 2,
+      "time": "5:00"
+    },
+    {
+      "date": "2018-03-16",
+      "event": "Just MMA 3",
+      "opponent": "Sasha Palatnikov",
+      "result": "loss",
+      "method": "KO (Punch)",
+      "round": 2,
+      "time": "1:22"
+    },
+    {
+      "date": "2018-01-12",
+      "event": "V Combat Hong Kong",
+      "opponent": "Nosherwan Khanzada",
+      "result": "win",
+      "method": "Decision (Unanimous)",
+      "round": 3,
+      "time": "5:00"
+    }
+  ]
+}

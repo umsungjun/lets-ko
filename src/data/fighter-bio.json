@@ -1,0 +1,13 @@
+{
+  "name": { "ko": "고석현", "en": "Ko Seokhyeon" },
+  "nickname": "The Korean Tyson",
+  "birthDate": "1993-09-24",
+  "hometown": { "ko": "대한민국", "en": "South Korea" },
+  "gym": "HAVAS MMA",
+  "fightingStyle": { "ko": "유도 / 삼보", "en": "Judo / Sambo" },
+  "background": {
+    "ko": "고석현은 UFC 웰터급에서 활약 중인 대한민국의 종합격투기 선수입니다. '코리안 타이슨'이라는 별명으로 불리며, 유도와 삼보를 기반으로 한 강력한 그래플링과 파워풀한 타격으로 상대를 압도합니다. 삼보 세계선수권 금메달리스트 출신으로, 2018년 프로 데뷔 이후 꾸준한 상승세를 보이며 UFC 무대까지 진출했습니다.",
+    "en": "Ko Seokhyeon is a South Korean mixed martial artist competing in the UFC welterweight division. Known as 'The Korean Tyson', he overwhelms opponents with powerful grappling rooted in judo and sambo, combined with devastating striking. A Sambo World Championship gold medalist, he has shown steady improvement since his 2018 professional debut, earning his way to the UFC."
+  },
+  "instagramUrl": "https://www.instagram.com/ko.seokhyeon/"
+}

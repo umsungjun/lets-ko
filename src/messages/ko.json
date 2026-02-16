@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "홈",
+    "cheer": "응원하기"
+  },
+  "hero": {
+    "nickname": "코리안 타이슨",
+    "division": "웰터급",
+    "gym": "소속",
+    "fightingStyle": "주요 기술",
+    "born": "생년월일",
+    "from": "출신"
+  },
+  "stats": {
+    "title": "전적 및 스탯",
+    "record": "전적",
+    "wins": "승",
+    "losses": "패",
+    "draws": "무",
+    "knockouts": "KO/TKO",
+    "strikeAccuracy": "타격 정확도",
+    "takedownAccuracy": "테이크다운 정확도",
+    "strikesPerMin": "분당 타격",
+    "strikeDefense": "타격 방어",
+    "takedownDefense": "테이크다운 방어"
+  },
+  "timeline": {
+    "title": "커리어 하이라이트"
+  },
+  "fightRecord": {
+    "title": "경기 기록",
+    "date": "날짜",
+    "event": "이벤트",
+    "opponent": "상대",
+    "result": "결과",
+    "method": "방법",
+    "round": "라운드",
+    "win": "승",
+    "loss": "패"
+  },
+  "guestbook": {
+    "title": "고석현 선수에게 응원 메시지를 남겨주세요!",
+    "subtitle": "익명으로 자유롭게 응원 메시지를 남기실 수 있습니다",
+    "shuffleNickname": "닉네임 바꾸기",
+    "nicknamePlaceholder": "닉네임",
+    "messagePlaceholder": "응원 메시지를 입력하세요...",
+    "submit": "응원하기",
+    "submitting": "전송 중...",
+    "noMessages": "아직 응원 메시지가 없습니다. 첫 번째 응원을 남겨 주세요!",
+    "loadMore": "더 보기",
+    "edit": "수정",
+    "cancel": "취소",
+    "save": "저장",
+    "cheerCta": "고석현 선수에게 응원 남기기"
+  },
+  "videos": {
+    "title": "관련 YouTube 영상"
+  },
+  "news": {
+    "title": "관련 뉴스"
+  },
+  "footer": {
+    "disclaimer": "이 사이트는 비공식 팬사이트입니다.",
+    "instagram": "인스타그램"
+  },
+  "common": {
+    "locale": "KO"
+  }
+}

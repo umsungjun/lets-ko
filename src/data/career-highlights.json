@@ -1,0 +1,59 @@
+[
+  {
+    "year": 2017,
+    "title": {
+      "ko": "삼보 세계선수권 금메달",
+      "en": "Sambo World Championship Gold"
+    },
+    "description": {
+      "ko": "삼보 세계선수권대회에서 금메달을 획득하며 세계적인 그래플링 실력을 증명",
+      "en": "Won gold at the Sambo World Championship, proving world-class grappling skills"
+    },
+    "category": "achievement"
+  },
+  {
+    "year": 2018,
+    "title": { "ko": "프로 MMA 데뷔", "en": "Professional MMA Debut" },
+    "description": {
+      "ko": "종합격투기 프로 무대에 데뷔하며 새로운 도전을 시작",
+      "en": "Made his professional MMA debut, beginning a new chapter in combat sports"
+    },
+    "category": "debut"
+  },
+  {
+    "year": 2021,
+    "title": { "ko": "AFC 웰터급 챔피언", "en": "AFC Welterweight Champion" },
+    "description": {
+      "ko": "AFC 웰터급 타이틀을 획득하며 아시아 최고의 웰터급 파이터로 자리매김",
+      "en": "Captured the AFC welterweight title, establishing himself as Asia's top welterweight"
+    },
+    "category": "title"
+  },
+  {
+    "year": 2023,
+    "title": { "ko": "DWCS 계약 획득", "en": "DWCS Contract Earned" },
+    "description": {
+      "ko": "Dana White's Contender Series에서 인상적인 승리를 거두며 UFC 계약을 획득",
+      "en": "Earned a UFC contract with an impressive victory on Dana White's Contender Series"
+    },
+    "category": "fight"
+  },
+  {
+    "year": 2024,
+    "title": { "ko": "UFC 데뷔전 승리", "en": "UFC Debut Victory" },
+    "description": {
+      "ko": "UFC 데뷔전에서 승리하며 세계 최고 무대에서의 여정을 시작",
+      "en": "Won his UFC debut, beginning his journey on the world's biggest stage"
+    },
+    "category": "fight"
+  },
+  {
+    "year": 2025,
+    "title": { "ko": "UFC 연승 행진", "en": "UFC Winning Streak" },
+    "description": {
+      "ko": "UFC에서 연승을 이어가며 웰터급 랭킹 상승 중",
+      "en": "Continuing a winning streak in the UFC, climbing the welterweight rankings"
+    },
+    "category": "fight"
+  }
+]

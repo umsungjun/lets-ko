@@ -1,0 +1,38 @@
+[
+  {
+    "id": "VIDEO_ID_1",
+    "title": {
+      "ko": "고석현 vs 오반 엘리엇 | UFC 데뷔전 하이라이트",
+      "en": "Ko Seokhyeon vs Oban Elliott | UFC Debut Highlight"
+    },
+    "description": {
+      "ko": "2025년 6월, 아제르바이잔 바쿠에서 열린 UFC 데뷔전. 만장일치 판정승.",
+      "en": "June 2025, UFC debut in Baku, Azerbaijan. Unanimous decision victory."
+    },
+    "date": "2025-06-22"
+  },
+  {
+    "id": "VIDEO_ID_2",
+    "title": {
+      "ko": "고석현 vs 필 로우 | UFC 2연승",
+      "en": "Ko Seokhyeon vs Phil Rowe | UFC 2nd Win"
+    },
+    "description": {
+      "ko": "2025년 11월, 라스베가스 UFC 파이트 나이트. 만장일치 판정승으로 2연승 달성.",
+      "en": "November 2025, UFC Fight Night Las Vegas. Unanimous decision for 2nd UFC win."
+    },
+    "date": "2025-11-02"
+  },
+  {
+    "id": "VIDEO_ID_3",
+    "title": {
+      "ko": "고석현 DWCS | UFC 계약 획득 경기",
+      "en": "Ko Seokhyeon DWCS | UFC Contract Fight"
+    },
+    "description": {
+      "ko": "2024년 9월, 데이나 화이트 컨텐더 시리즈에서 이고르 카발칸티를 꺾고 UFC 계약 획득.",
+      "en": "September 2024, defeated Igor Cavalcante on DWCS to earn a UFC contract."
+    },
+    "date": "2024-09-03"
+  }
+]
