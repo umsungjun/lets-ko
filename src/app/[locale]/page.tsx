@@ -32,8 +32,8 @@ export async function generateMetadata({
 
   return {
     title: isKo
-      ? "고석현 - UFC 웰터급 파이터 | LET'S KO"
-      : "Ko Seokhyeon - UFC Welterweight Fighter | LET'S KO",
+      ? "고석현 - UFC 웰터급 파이터"
+      : "Ko Seokhyeon - UFC Welterweight Fighter",
     description: isKo
       ? "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 전적, 경기 기록, 하이라이트 영상, 뉴스, 응원 메시지. 13승 2패, 6연승 행진 중!"
       : "UFC welterweight fighter Ko Seokhyeon (The Korean Tyson) - fight record, career highlights, videos, news, and fan messages. 13-2, on a 6-fight win streak!",
