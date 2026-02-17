@@ -54,12 +54,19 @@ export default function Header() {
           </Link>
         </nav>
 
-        {/* Mobile menu button */}
-        <button
-          className="sm:hidden p-2 -mr-2 text-muted hover:text-foreground rounded-lg hover:bg-surface transition-colors"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
+        {/* Mobile: locale switch + menu button */}
+        <div className="sm:hidden flex items-center gap-1">
+          <Link
+            href={switchLocalePath}
+            className="text-xs font-bold px-2.5 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-colors"
+          >
+            {otherLocale.toUpperCase()}
+          </Link>
+          <button
+            className="p-2 -mr-2 text-muted hover:text-foreground rounded-lg hover:bg-surface transition-colors"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+          >
           <svg
             className="w-5 h-5"
             fill="none"
@@ -82,7 +89,8 @@ export default function Header() {
               />
             )}
           </svg>
-        </button>
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
@@ -102,13 +110,6 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
-          <Link
-            href={switchLocalePath}
-            className="text-xs font-bold text-muted px-3 py-2"
-            onClick={() => setMenuOpen(false)}
-          >
-            {otherLocale.toUpperCase()}
-          </Link>
         </nav>
       )}
     </header>
