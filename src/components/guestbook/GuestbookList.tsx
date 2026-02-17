@@ -112,17 +112,10 @@ export default function GuestbookList() {
   return (
     <div className="space-y-6">
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(2)].map((_, i) => (
-            <div
-              key={i}
-              className="p-5 rounded-2xl bg-white border border-border shadow-card h-20"
-              style={{
-                animation: `pulse 1.5s ease-in-out infinite`,
-                animationDelay: `${i * 200}ms`,
-              }}
-            />
-          ))}
+        <div className="flex items-center justify-center py-16">
+          <span className="text-2xl font-bold text-red-500 tracking-widest animate-pulse">
+            ...
+          </span>
         </div>
       ) : messages.length === 0 ? (
         <div className="text-center py-12">
