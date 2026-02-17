@@ -1,6 +1,6 @@
+import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
-import type { Metadata } from "next";
 
 import GuestbookList from "@/components/guestbook/GuestbookList";
 

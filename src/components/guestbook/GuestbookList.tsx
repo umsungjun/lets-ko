@@ -40,25 +40,22 @@ export default function GuestbookList() {
     setMyIds(getMyIds());
   }, []);
 
-  const fetchMessages = useCallback(
-    async (pageNum: number, append = false) => {
-      try {
-        const res = await fetch(
-          `/api/guestbook?page=${pageNum}&limit=${PAGE_SIZE}`
+  const fetchMessages = useCallback(async (pageNum: number, append = false) => {
+    try {
+      const res = await fetch(
+        `/api/guestbook?page=${pageNum}&limit=${PAGE_SIZE}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) =>
+          append ? [...prev, ...data.messages] : data.messages
         );
-        if (res.ok) {
-          const data = await res.json();
-          setMessages((prev) =>
-            append ? [...prev, ...data.messages] : data.messages
-          );
-          setHasMore(data.hasMore);
-        }
-      } finally {
-        setLoading(false);
+        setHasMore(data.hasMore);
       }
-    },
-    []
-  );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchMessages(1);
