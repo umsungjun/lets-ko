@@ -60,7 +60,11 @@ async function getFighterStats(): Promise<FighterStats> {
         .single();
 
       if (data?.data) {
-        return data.data as FighterStats;
+        const stats = data.data as FighterStats;
+        // Reject invalid data (e.g. 0-0-0 from failed crawl)
+        if (stats.record.wins + stats.record.losses + stats.record.draws > 0) {
+          return stats;
+        }
       }
     } catch {
       // Fall through to cached data

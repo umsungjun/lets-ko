@@ -20,18 +20,41 @@ export async function crawlUfcStats(): Promise<FighterStats> {
   const html = await response.text();
   const $ = cheerio.load(html);
 
-  // Parse record
-  const recordText =
-    $(".hero-profile__stat-text").first().text().trim() ||
-    $('[class*="record"]').first().text().trim();
-  const recordMatch = recordText.match(/(\d+)-(\d+)-(\d+)/);
-  const record = recordMatch
-    ? {
-        wins: parseInt(recordMatch[1]),
-        losses: parseInt(recordMatch[2]),
-        draws: parseInt(recordMatch[3]),
-      }
-    : { wins: 0, losses: 0, draws: 0 };
+  // Parse record - search broadly for W-L-D pattern in hero/header area
+  let recordMatch: RegExpMatchArray | null = null;
+
+  // Try specific selectors first, then fall back to broader search
+  const recordSelectors = [
+    ".hero-profile__stat-text",
+    ".c-hero--full__headline",
+    ".l-masthead__headline",
+    '[class*="record"]',
+    '[class*="hero"]',
+  ];
+
+  for (const selector of recordSelectors) {
+    const text = $(selector).text().trim();
+    recordMatch = text.match(/(\d+)-(\d+)-(\d+)/);
+    if (recordMatch) break;
+  }
+
+  // Last resort: search full page text for W-L-D pattern near "(W-L-D)"
+  if (!recordMatch) {
+    const bodyText = $("body").text();
+    recordMatch = bodyText.match(/(\d+)-(\d+)-(\d+)\s*\(W-L-D\)/);
+  }
+
+  if (!recordMatch) {
+    throw new Error(
+      "Could not parse fighter record from UFC page. Site structure may have changed."
+    );
+  }
+
+  const record = {
+    wins: parseInt(recordMatch[1]),
+    losses: parseInt(recordMatch[2]),
+    draws: parseInt(recordMatch[3]),
+  };
 
   // Parse stats from the page
   const stats: Partial<FighterStats> = {
