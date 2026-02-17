@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-이 파일은 Claude Code (claude.ai/code)가 이 저장소에서 작업할 때 참고하는 가이드입니다.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 명령어
 
@@ -29,17 +29,17 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 - URL 기반 로케일: `/ko` (기본값), `/en`
 - `src/middleware.ts`에서 로케일 리다이렉트 처리 (`/` → `/ko`)
-- `i18n/routing.ts`에서 로케일 정의, `i18n/request.ts`에서 메시지 로드
+- 루트 `i18n/` 디렉토리: `routing.ts` (로케일 정의), `request.ts` (메시지 로드) — `next.config.ts`에서 `createNextIntlPlugin("./i18n/request.ts")` 연결
 - 번역 파일: `src/messages/{ko,en}.json` (네임스페이스: `hero`, `nav`, `guestbook` 등)
 - Next.js 15+에서 `params`는 Promise — 반드시 `await params` 사용
 
 ### 데이터 흐름
 
-- **선수 통계**: Supabase `fighter_stats` 테이블 → `src/data/cached-stats.json` 폴백
+- **선수 통계**: Supabase `fighter_stats` 테이블 → `src/data/cached-stats.json` 폴백. Supabase 데이터가 비정상(전적 0-0-0 등)이면 캐시로 폴백
 - **YouTube 영상**: YouTube Data API v3 (`src/lib/youtube.ts`), ISR 24시간
 - **뉴스**: Google News RSS 파싱 (`src/lib/news.ts`), ISR 24시간
 - **방명록**: Supabase `guestbook_messages` 테이블, `/api/guestbook` API (GET/POST/PATCH)
-- **UFC 크롤러**: Cheerio 스크래퍼 (`src/lib/crawl/ufc-crawler.ts`), Vercel Cron으로 매일 오전 6시 UTC 실행 (`/api/cron/crawl`)
+- **UFC 크롤러**: Cheerio 스크래퍼 (`src/lib/crawl/ufc-crawler.ts`), Vercel Cron으로 매일 오전 6시 UTC 실행 (`/api/cron/crawl`). 파싱 실패 시 `throw`하여 잘못된 데이터 저장 방지. Cron 스케줄은 `vercel.json`에서 관리
 
 ### Supabase
 
@@ -49,7 +49,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 ### 정적 데이터 (`src/data/`)
 
-- `cached-stats.json` — 선수 통계 폴백 (Supabase 접근 불가 시 사용)
+- `cached-stats.json` — 선수 통계 폴백 (Supabase 접근 불가 또는 크롤링 데이터 비정상 시 사용)
 - `career-highlights.json` — 커리어 타임라인 이정표 (다국어)
 - `fighter-bio.json` — 선수 바이오 데이터 (다국어 필드)
 
