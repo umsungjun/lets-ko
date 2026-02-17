@@ -60,7 +60,8 @@
     "moreOnYoutube": "More on YouTube"
   },
   "news": {
-    "title": "Related News"
+    "title": "Related News",
+    "moreNews": "More News"
   },
   "footer": {
     "disclaimer": "This is an unofficial fan site.",

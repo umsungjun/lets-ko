@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
 import type { NewsArticle } from "@/lib/news";
+import { SEARCH_QUERY } from "@/lib/news";
 
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -22,16 +23,37 @@ export default function NewsSection({ articles, locale }: NewsSectionProps) {
   return (
     <section className="py-20 px-4" ref={ref}>
       <div className="max-w-5xl mx-auto">
-        <h2
-          className="section-heading section-heading-center text-center mb-12"
+        <div
+          className="flex items-center justify-between mb-10"
           style={{
             opacity: isInView ? 1 : 0,
             transform: isInView ? "translateY(0)" : "translateY(16px)",
             transition: "opacity 0.5s ease, transform 0.5s ease",
           }}
         >
-          {t("title")}
-        </h2>
+          <h2 className="section-heading">{t("title")}</h2>
+          <a
+            href={`https://news.google.com/search?q=${encodeURIComponent(SEARCH_QUERY)}&hl=ko&gl=KR`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-white text-muted hover:text-primary hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 text-sm font-medium cursor-pointer shrink-0"
+          >
+            {t("moreNews")}
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+          </a>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {articles.map((article, index) => {

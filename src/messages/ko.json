@@ -60,7 +60,8 @@
     "moreOnYoutube": "더보러가기"
   },
   "news": {
-    "title": "관련 뉴스"
+    "title": "관련 뉴스",
+    "moreNews": "더보러가기"
   },
   "footer": {
     "disclaimer": "이 사이트는 비공식 팬사이트입니다.",
