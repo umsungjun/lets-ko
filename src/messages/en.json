@@ -54,7 +54,10 @@
     "cheerCta": "Cheer for Ko Seokhyeon"
   },
   "videos": {
-    "title": "Related YouTube Videos"
+    "title": "Related YouTube Videos",
+    "latest": "Latest",
+    "popular": "Most Viewed",
+    "moreOnYoutube": "More on YouTube"
   },
   "news": {
     "title": "Related News"

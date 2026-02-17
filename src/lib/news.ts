@@ -5,7 +5,7 @@ export interface NewsArticle {
   pubDate: string;
 }
 
-const SEARCH_QUERY = "고석현 UFC";
+const SEARCH_QUERY = "고석현";
 const MAX_RESULTS = 6;
 
 export async function fetchNews(): Promise<NewsArticle[]> {

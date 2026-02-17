@@ -20,7 +20,7 @@ export default function NewsSection({ articles, locale }: NewsSectionProps) {
   if (articles.length === 0) return null;
 
   return (
-    <section className="py-16 px-4" ref={ref}>
+    <section className="py-20 px-4" ref={ref}>
       <div className="max-w-5xl mx-auto">
         <h2
           className="section-heading section-heading-center text-center mb-12"
@@ -33,7 +33,7 @@ export default function NewsSection({ articles, locale }: NewsSectionProps) {
           {t("title")}
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {articles.map((article, index) => {
             let timeAgo = "";
             try {
@@ -51,7 +51,7 @@ export default function NewsSection({ articles, locale }: NewsSectionProps) {
                 href={article.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/20 transition-all"
+                className="group p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
                 style={{
                   opacity: isInView ? 1 : 0,
                   transform: isInView ? "translateY(0)" : "translateY(16px)",
@@ -59,7 +59,7 @@ export default function NewsSection({ articles, locale }: NewsSectionProps) {
                 }}
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-9 h-9 rounded-xl bg-linear-to-br from-primary/15 to-primary/5 flex items-center justify-center shrink-0 mt-0.5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all duration-300">
                     <svg
                       className="w-4 h-4 text-primary"
                       fill="none"
@@ -75,18 +75,31 @@ export default function NewsSection({ articles, locale }: NewsSectionProps) {
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+                    <h3 className="font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200 leading-snug">
                       {article.title}
                     </h3>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2.5">
                       {article.source && (
-                        <span className="text-xs font-medium text-primary/70 bg-primary/5 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-medium text-primary/80 bg-primary/5 px-2.5 py-0.5 rounded-full ring-1 ring-primary/10">
                           {article.source}
                         </span>
                       )}
                       {timeAgo && (
                         <span className="text-xs text-muted">{timeAgo}</span>
                       )}
+                      <svg
+                        className="w-3.5 h-3.5 text-muted/0 group-hover:text-primary/50 transition-all duration-200 ml-auto shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
                     </div>
                   </div>
                 </div>

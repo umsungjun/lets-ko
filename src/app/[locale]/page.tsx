@@ -1,6 +1,6 @@
+import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
-import type { Metadata } from "next";
 import Link from "next/link";
 
 import CareerTimeline from "@/components/fighter/CareerTimeline";
@@ -83,9 +83,10 @@ export default async function HomePage({
   setRequestLocale(locale);
 
   const t = await getTranslations("guestbook");
-  const [stats, videos, news] = await Promise.all([
+  const [stats, videosByDate, videosByViews, news] = await Promise.all([
     getFighterStats(),
-    searchYouTubeVideos(),
+    searchYouTubeVideos("date"),
+    searchYouTubeVideos("viewCount"),
     fetchNews(),
   ]);
 
@@ -125,7 +126,7 @@ export default async function HomePage({
         locale={locale}
       />
       <FightRecord fights={stats.fightHistory} />
-      <VideoSection videos={videos} />
+      <VideoSection videosByDate={videosByDate} videosByViews={videosByViews} />
       <NewsSection articles={news} locale={locale} />
 
       {/* CTA to Guestbook */}

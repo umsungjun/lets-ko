@@ -22,10 +22,12 @@ interface YouTubeSearchResponse {
   items?: YouTubeSearchItem[];
 }
 
-const SEARCH_QUERY = "고석현 UFC";
+export const SEARCH_QUERY = "고석현";
 const MAX_RESULTS = 6;
 
-export async function searchYouTubeVideos(): Promise<YouTubeVideo[]> {
+export async function searchYouTubeVideos(
+  order: "date" | "viewCount" = "date"
+): Promise<YouTubeVideo[]> {
   const apiKey = process.env.YOUTUBE_API_KEY;
 
   if (!apiKey) {
@@ -38,7 +40,7 @@ export async function searchYouTubeVideos(): Promise<YouTubeVideo[]> {
       q: SEARCH_QUERY,
       type: "video",
       maxResults: String(MAX_RESULTS),
-      order: "date",
+      order,
       key: apiKey,
     });
 

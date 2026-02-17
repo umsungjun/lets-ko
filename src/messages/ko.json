@@ -54,7 +54,10 @@
     "cheerCta": "고석현 선수에게 응원 남기기"
   },
   "videos": {
-    "title": "관련 YouTube 영상"
+    "title": "관련 YouTube 영상",
+    "latest": "최신순",
+    "popular": "조회순",
+    "moreOnYoutube": "더보러가기"
   },
   "news": {
     "title": "관련 뉴스"
