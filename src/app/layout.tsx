@@ -37,12 +37,21 @@ export const metadata: Metadata = {
       "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 전적, 경기 기록, 하이라이트 영상, 응원 메시지",
     locale: "ko_KR",
     alternateLocale: "en_US",
+    images: [
+      {
+        url: `${SITE_URL}/api/og`,
+        width: 1200,
+        height: 630,
+        alt: "LET'S KO - 고석현 응원 사이트",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "LET'S KO - 고석현 응원 사이트",
     description:
       "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 비공식 팬 응원 사이트",
+    images: [`${SITE_URL}/api/og`],
   },
   robots: {
     index: true,

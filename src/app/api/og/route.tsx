@@ -3,11 +3,7 @@ import path from "path";
 
 import { ImageResponse } from "next/og";
 
-export const alt = "LET'S KO - 고석현 응원 사이트";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
-
-export default async function Image() {
+export async function GET() {
   // Google Fonts에서 한국어 폰트 로드 (node UA → TTF 반환)
   let fontData: ArrayBuffer | null = null;
   try {
@@ -124,7 +120,9 @@ export default async function Image() {
           </div>
 
           {/* 중앙: 이름 + 정보 */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
             {/* 한국어 이름 */}
             <div
               style={{
@@ -164,8 +162,16 @@ export default async function Image() {
             />
 
             {/* 스탯 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "32px" }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                }}
+              >
                 <div
                   style={{
                     display: "flex",
@@ -191,7 +197,13 @@ export default async function Image() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                }}
+              >
                 <div
                   style={{
                     display: "flex",
@@ -225,7 +237,13 @@ export default async function Image() {
                 }}
               />
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
                 <div
                   style={{
                     color: "white",
@@ -318,7 +336,8 @@ export default async function Image() {
       </div>
     ),
     {
-      ...size,
+      width: 1200,
+      height: 630,
       fonts: fontData
         ? [
             {
