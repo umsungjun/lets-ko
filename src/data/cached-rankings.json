@@ -1,0 +1,1312 @@
+{
+  "updatedAt": "2026-02-18T05:03:03.867Z",
+  "poundForPoundMen": {
+    "topFighter": {
+      "name": "Islam Makhachev",
+      "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-01/7/MAKHACHEV_ISLAM_BELT_01-18.png?itok=1c_0sLUs"
+    },
+    "fighters": [
+      {
+        "rank": 1,
+        "name": "Islam Makhachev",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 2,
+        "name": "Ilia Topuria",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 3,
+        "name": "Khamzat Chimaev",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 4,
+        "name": "Alexander Volkanovski",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 5,
+        "name": "Alex Pereira",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 6,
+        "name": "Petr Yan",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 7,
+        "name": "Merab Dvalishvili",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 8,
+        "name": "Tom Aspinall",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 9,
+        "name": "Alexandre Pantoja",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 10,
+        "name": "Max Holloway",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 11,
+        "name": "Joshua Van",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 12,
+        "name": "Dricus Du Plessis",
+        "rankChange": 1,
+        "isNR": false
+      },
+      {
+        "rank": 13,
+        "name": "Magomed Ankalaev",
+        "rankChange": -1,
+        "isNR": false
+      },
+      {
+        "rank": 14,
+        "name": "Jack Della Maddalena",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 15,
+        "name": "Arman Tsarukyan",
+        "rankChange": 0,
+        "isNR": false
+      }
+    ]
+  },
+  "poundForPoundWomen": {
+    "topFighter": {
+      "name": "Valentina Shevchenko",
+      "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-11/SHEVCHENKO_VALENTINA_BELT_11-15.png?itok=qTNJTw1A"
+    },
+    "fighters": [
+      {
+        "rank": 1,
+        "name": "Valentina Shevchenko",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 2,
+        "name": "Kayla Harrison",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 3,
+        "name": "Zhang Weili",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 4,
+        "name": "Natalia Silva",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 5,
+        "name": "Mackenzie Dern",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 6,
+        "name": "Manon Fiorot",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 7,
+        "name": "Erin Blanchfield",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 8,
+        "name": "Julianna Peña",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 9,
+        "name": "Alexa Grasso",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 10,
+        "name": "Virna Jandiroba",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 11,
+        "name": "Raquel Pennington",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 12,
+        "name": "Tatiana Suarez",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 13,
+        "name": "Rose Namajunas",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 14,
+        "name": "Yan Xiaonan",
+        "rankChange": 0,
+        "isNR": false
+      },
+      {
+        "rank": 15,
+        "name": "Maycee Barber",
+        "rankChange": 0,
+        "isNR": false
+      }
+    ]
+  },
+  "divisions": [
+    {
+      "divisionName": "플라이급",
+      "divisionNameEn": "Flyweight",
+      "divisionSlug": "flyweight",
+      "champion": {
+        "name": "Joshua Van",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-12/VAN_JOSHUA_BELT.png?itok=GQa_jYaa"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Alexandre Pantoja",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Manel Kape",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Tatsuro Taira",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Brandon Royval",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Kyoji Horiguchi",
+          "rankChange": 3,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Brandon Moreno",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Amir Albazi",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Asu Almabayev",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Tim Elliott",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Alex Perez",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Steve Erceg",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Tagir Ulanbekov",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Charles Johnson",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Bruno Silva",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "Lone’er Kavanagh",
+          "rankChange": 0,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "밴텀급",
+      "divisionNameEn": "Bantamweight",
+      "divisionSlug": "bantamweight",
+      "champion": {
+        "name": "Petr Yan",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-12/YAN_PETR_BELT.png?itok=WSUntwLO"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Merab Dvalishvili",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Umar Nurmagomedov",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Sean O'Malley",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Cory Sandhagen",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Song Yadong",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Aiemann Zahabi",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Deiveson Figueiredo",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Mario Bautista",
+          "rankChange": 1,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Marlon Vera",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "David Martinez",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Payton Talbott",
+          "rankChange": 1,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Vinicius Oliveira",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Rob Font",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Kyler Phillips",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "Montel Jackson",
+          "rankChange": 0,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "페더급",
+      "divisionNameEn": "Featherweight",
+      "divisionSlug": "featherweight",
+      "champion": {
+        "name": "Alexander Volkanovski",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2026-01/VOLKANOVSKI_ALEXANDER_BELT_01-31.png?itok=Gy0HQ3re"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Movsar Evloev",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Diego Lopes",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Lerone Murphy",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Yair Rodriguez",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Aljamain Sterling",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Jean Silva",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Arnold Allen",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Youssef Zalal",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Steve Garcia",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Brian Ortega",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Josh Emmett",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Patricio Pitbull",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Kevin Vallejos",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Dan Ige",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "David Onama",
+          "rankChange": 0,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "라이트급",
+      "divisionNameEn": "Lightweight",
+      "divisionSlug": "lightweight",
+      "champion": {
+        "name": "Ilia Topuria",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-06/TOPURIA_ILIA_BELT_10-26.png?itok=2FEk51Ro"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Justin Gaethje",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Arman Tsarukyan",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Charles Oliveira",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Max Holloway",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Benoît Saint Denis",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Paddy Pimblett",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Mateusz Gamrot",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Dan Hooker",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Mauricio Ruffy",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Renato Moicano",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Rafael Fiziev",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Beneil Dariush",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Michael Chandler",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Manuel Torres",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "Farès Ziam",
+          "rankChange": 0,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "웰터급",
+      "divisionNameEn": "Welterweight",
+      "divisionSlug": "welterweight",
+      "champion": {
+        "name": "Islam Makhachev",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-01/7/MAKHACHEV_ISLAM_BELT_01-18.png?itok=1c_0sLUs"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Jack Della Maddalena",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Ian Machado Garry",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Michael Morales",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Belal Muhammad",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Carlos Prates",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Sean Brady",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Kamaru Usman",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Leon Edwards",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Joaquin Buckley",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Gabriel Bonfim",
+          "rankChange": 1,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Gilbert Burns",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Geoff Neal",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Daniel Rodriguez",
+          "rankChange": 1,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Michael Page",
+          "rankChange": 1,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Colby Covington",
+          "rankChange": -1,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "미들급",
+      "divisionNameEn": "Middleweight",
+      "divisionSlug": "middleweight",
+      "champion": {
+        "name": "Khamzat Chimaev",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-08/CHIMAEV_KHAMZAT_BELTMOCK.png?itok=EbxhqAOH"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Dricus Du Plessis",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Nassourdine Imavov",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Sean Strickland",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Anthony Hernandez",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Brendan Allen",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Israel Adesanya",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Caio Borralho",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Reinier de Ridder",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Robert Whittaker",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Jared Cannonier",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Roman Dolidze",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Paulo Costa",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Gregory Rodrigues",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Joe Pyfer",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "Brunno Ferreira",
+          "rankChange": 0,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "라이트 헤비급",
+      "divisionNameEn": "Light Heavyweight",
+      "divisionSlug": "light-heavyweight",
+      "champion": {
+        "name": "Alex Pereira",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-03/PEREIRA_ALEX_BELT_03-08.png?itok=-Ys_m_dN"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Magomed Ankalaev",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Jiří Procházka",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Carlos Ulberg",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Khalil Rountree Jr.",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Jan Błachowicz",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Azamat Murzakanov",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Jamahal Hill",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Volkan Oezdemir",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Bogdan Guskov",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Dominick Reyes",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Aleksandar Rakić",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Johnny Walker",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Nikita Krylov",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Dustin Jacoby",
+          "rankChange": 0,
+          "isNR": true
+        },
+        {
+          "rank": 15,
+          "name": "Zhang Mingyang",
+          "rankChange": -1,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "헤비급",
+      "divisionNameEn": "Heavyweight",
+      "divisionSlug": "heavyweight",
+      "champion": {
+        "name": "Tom Aspinall",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-10/ASPINALL_TOM_BELT_10-25.png?itok=aJJdjr2E"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Ciryl Gane",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Alexander Volkov",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Sergei Pavlovich",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Curtis Blaydes",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Waldo Cortes Acosta",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Rizvan Kuniev",
+          "rankChange": 0,
+          "isNR": true
+        },
+        {
+          "rank": 7,
+          "name": "Serghei Spivac",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Jailton Almeida",
+          "rankChange": -2,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Ante Delija",
+          "rankChange": 1,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Marcin Tybura",
+          "rankChange": -2,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Derrick Lewis",
+          "rankChange": -2,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Tallison Teixeira",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Shamil Gaziev",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Valter Walker",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "Mick Parkin",
+          "rankChange": -2,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "여성 스트로급",
+      "divisionNameEn": "Women's Strawweight",
+      "divisionSlug": "womens-strawweight",
+      "champion": {
+        "name": "Mackenzie Dern",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-10/DERN_MACKENZIE_BELT.png?itok=Pmm2lP8p"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Zhang Weili",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Tatiana Suarez",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Virna Jandiroba",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Yan Xiaonan",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Amanda Lemos",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Loopy Godinez",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Tabatha Ricci",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Gillian Robertson",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Jéssica Andrade",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Amanda Ribas",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Fatima Kline",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Denise Gomes",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Alexia Thainara",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Angela Hill",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "Mizuki",
+          "rankChange": 0,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "여성 플라이급",
+      "divisionNameEn": "Women's Flyweight",
+      "divisionSlug": "womens-flyweight",
+      "champion": {
+        "name": "Valentina Shevchenko",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-11/SHEVCHENKO_VALENTINA_BELT_11-15.png?itok=qTNJTw1A"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Natalia Silva",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 1,
+          "name": "Manon Fiorot",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Alexa Grasso",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Erin Blanchfield",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Maycee Barber",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Jasmine Jasudavicius",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Rose Namajunas",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Tracy Cortez",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Karine Silva",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Miranda Maverick",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Wang Cong",
+          "rankChange": 1,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Casey O'Neill",
+          "rankChange": -1,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Eduarda Moura",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "JJ Aldrich",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "Gabriella Fernandes",
+          "rankChange": 0,
+          "isNR": false
+        }
+      ]
+    },
+    {
+      "divisionName": "여성 밴텀급",
+      "divisionNameEn": "Women's Bantamweight",
+      "divisionSlug": "womens-bantamweight",
+      "champion": {
+        "name": "Kayla Harrison",
+        "imageUrl": "https://ufc.com/images/styles/athlete_profile_listing_medium_1x/s3/2025-06/HARRISON_KAYLA_BELTMOCK.png?itok=-1guMOHA"
+      },
+      "rankedFighters": [
+        {
+          "rank": 1,
+          "name": "Julianna Peña",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 2,
+          "name": "Raquel Pennington",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 3,
+          "name": "Norma Dumont",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 4,
+          "name": "Ketlen Vieira",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 5,
+          "name": "Yana Santos",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 6,
+          "name": "Irene Aldana",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 7,
+          "name": "Ailin Perez",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 8,
+          "name": "Macy Chiasson",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 9,
+          "name": "Karol Rosa",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 10,
+          "name": "Jacqueline Cavalcanti",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 11,
+          "name": "Mayra Bueno Silva",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 12,
+          "name": "Nora Cornolle",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 13,
+          "name": "Miesha Tate",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 14,
+          "name": "Joselyne Edwards",
+          "rankChange": 0,
+          "isNR": false
+        },
+        {
+          "rank": 15,
+          "name": "Luana Santos",
+          "rankChange": 0,
+          "isNR": false
+        }
+      ]
+    }
+  ]
+}

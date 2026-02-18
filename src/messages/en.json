@@ -1,6 +1,7 @@
 {
   "nav": {
     "home": "Home",
+    "rankings": "UFC Rankings",
     "cheer": "Cheer"
   },
   "hero": {
@@ -66,6 +67,22 @@
   "footer": {
     "disclaimer": "This is an unofficial fan site.",
     "instagram": "Instagram"
+  },
+  "rankings": {
+    "title": "Official UFC Rankings",
+    "p4p": "Pound for Pound",
+    "p4pMen": "Men's P4P",
+    "p4pWomen": "Women's P4P",
+    "mensDivisions": "Men's Divisions",
+    "womensDivisions": "Women's Divisions",
+    "champion": "Champion",
+    "vacant": "Vacant",
+    "rankUp": "up",
+    "rankDown": "down",
+    "notRanked": "NR",
+    "source": "Source: Official UFC Website",
+    "championsTitle": "UFC Champions by Division",
+    "viewAll": "View All Rankings"
   },
   "common": {
     "locale": "EN"

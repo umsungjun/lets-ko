@@ -9,6 +9,8 @@ import FighterProfile from "@/components/fighter/FighterProfile";
 import NewsSection from "@/components/fighter/NewsSection";
 import StatsCard from "@/components/fighter/StatsCard";
 import VideoSection from "@/components/fighter/VideoSection";
+import ChampionsPreview from "@/components/rankings/ChampionsPreview";
+import cachedRankings from "@/data/cached-rankings.json";
 import cachedStats from "@/data/cached-stats.json";
 import careerHighlights from "@/data/career-highlights.json";
 import fighterBio from "@/data/fighter-bio.json";
@@ -19,6 +21,7 @@ import type {
   FighterBio,
   FighterStats,
 } from "@/types/fighter";
+import type { UfcRankings } from "@/types/rankings";
 
 export const revalidate = 86400;
 
@@ -74,6 +77,35 @@ async function getFighterStats(): Promise<FighterStats> {
   return cachedStats as FighterStats;
 }
 
+async function getRankings(): Promise<UfcRankings> {
+  if (
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    try {
+      const { createServerClient } = await import("@/lib/supabase/server");
+      const supabase = createServerClient();
+      const { data } = await supabase
+        .from("ufc_rankings")
+        .select("data")
+        .order("crawled_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data?.data) {
+        const rankings = data.data as UfcRankings;
+        if (rankings.divisions && rankings.divisions.length >= 6) {
+          return rankings;
+        }
+      }
+    } catch {
+      // Fall through to cached data
+    }
+  }
+
+  return cachedRankings as UfcRankings;
+}
+
 export default async function HomePage({
   params,
 }: {
@@ -83,12 +115,14 @@ export default async function HomePage({
   setRequestLocale(locale);
 
   const t = await getTranslations("guestbook");
-  const [stats, videosByDate, videosByViews, news] = await Promise.all([
-    getFighterStats(),
-    searchYouTubeVideos("date"),
-    searchYouTubeVideos("viewCount"),
-    fetchNews(),
-  ]);
+  const [stats, videosByDate, videosByViews, news, rankings] =
+    await Promise.all([
+      getFighterStats(),
+      searchYouTubeVideos("date"),
+      searchYouTubeVideos("viewCount"),
+      fetchNews(),
+      getRankings(),
+    ]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -128,6 +162,10 @@ export default async function HomePage({
       <FightRecord fights={stats.fightHistory} />
       <VideoSection videosByDate={videosByDate} videosByViews={videosByViews} />
       <NewsSection articles={news} locale={locale} />
+      <ChampionsPreview
+        divisions={rankings.divisions}
+        locale={locale}
+      />
 
       {/* CTA to Guestbook */}
       <section className="py-16 px-4 bg-surface">

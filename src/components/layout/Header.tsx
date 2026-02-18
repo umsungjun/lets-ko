@@ -17,6 +17,7 @@ export default function Header() {
 
   const navItems = [
     { href: `/${locale}`, label: t("home") },
+    { href: `/${locale}/rankings`, label: t("rankings") },
     { href: `/${locale}/cheer`, label: t("cheer") },
   ];
 

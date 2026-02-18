@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
+import { crawlUfcRankings } from "@/lib/crawl/rankings-crawler";
 import { crawlUfcStats } from "@/lib/crawl/ufc-crawler";
 import { createServerClient } from "@/lib/supabase/server";
 
@@ -11,38 +12,56 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const supabase = createServerClient();
+  const results: Record<string, unknown> = {};
+
+  // Crawl fighter stats
   try {
     const stats = await crawlUfcStats();
-
-    // Store in Supabase
-    const supabase = createServerClient();
     const { error } = await supabase.from("fighter_stats").insert({
       data: stats,
       source: "ufc_korea",
     });
-
-    if (error) {
-      console.error("Failed to store crawled data:", error);
-      return NextResponse.json(
-        { error: "Failed to store data", details: error.message },
-        { status: 500 }
-      );
-    }
-
-    // Trigger revalidation
-    revalidatePath("/ko");
-    revalidatePath("/en");
-
-    return NextResponse.json({
-      success: true,
-      crawledAt: new Date().toISOString(),
-      record: stats.record,
-    });
+    if (error) throw error;
+    results.stats = { success: true, record: stats.record };
   } catch (error) {
-    console.error("Crawl failed:", error);
-    return NextResponse.json(
-      { error: "Crawl failed", details: String(error) },
-      { status: 500 }
-    );
+    console.error("Stats crawl failed:", error);
+    results.stats = { success: false, error: String(error) };
   }
+
+  // Crawl UFC rankings
+  try {
+    const rankings = await crawlUfcRankings();
+    const { error } = await supabase.from("ufc_rankings").insert({
+      data: rankings,
+      source: "ufc_korea",
+    });
+    if (error) throw error;
+    results.rankings = {
+      success: true,
+      divisions: rankings.divisions.length,
+    };
+  } catch (error) {
+    console.error("Rankings crawl failed:", error);
+    results.rankings = { success: false, error: String(error) };
+  }
+
+  // Trigger revalidation
+  revalidatePath("/ko");
+  revalidatePath("/en");
+  revalidatePath("/ko/rankings");
+  revalidatePath("/en/rankings");
+
+  const allSucceeded = Object.values(results).every(
+    (r) => (r as { success: boolean }).success
+  );
+
+  return NextResponse.json(
+    {
+      success: allSucceeded,
+      crawledAt: new Date().toISOString(),
+      results,
+    },
+    { status: allSucceeded ? 200 : 207 }
+  );
 }

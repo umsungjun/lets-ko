@@ -69,6 +69,22 @@ async function setup() {
     ON fighter_stats(crawled_at DESC)
   `;
 
+  // UFC 랭킹 데이터 테이블
+  await sql`
+    CREATE TABLE IF NOT EXISTS ufc_rankings (
+      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      data JSONB NOT NULL,
+      crawled_at TIMESTAMPTZ DEFAULT NOW(),
+      source TEXT DEFAULT 'ufc_korea'
+    )
+  `;
+  console.log("  ufc_rankings 테이블 생성 완료");
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_ufc_rankings_crawled_at
+    ON ufc_rankings(crawled_at DESC)
+  `;
+
   console.log("\n모든 테이블 생성이 완료되었습니다.");
   await sql.end();
 }

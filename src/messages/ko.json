@@ -1,6 +1,7 @@
 {
   "nav": {
     "home": "홈",
+    "rankings": "UFC 랭킹",
     "cheer": "응원하기"
   },
   "hero": {
@@ -66,6 +67,22 @@
   "footer": {
     "disclaimer": "이 사이트는 비공식 팬사이트입니다.",
     "instagram": "인스타그램"
+  },
+  "rankings": {
+    "title": "UFC 공식 랭킹",
+    "p4p": "파운드 포 파운드",
+    "p4pMen": "남성 P4P",
+    "p4pWomen": "여성 P4P",
+    "mensDivisions": "남성 체급",
+    "womensDivisions": "여성 체급",
+    "champion": "챔피언",
+    "vacant": "공석",
+    "rankUp": "상승",
+    "rankDown": "하락",
+    "notRanked": "NR",
+    "source": "출처: UFC 공식 사이트",
+    "championsTitle": "UFC 체급별 챔피언",
+    "viewAll": "전체 랭킹 보기"
   },
   "common": {
     "locale": "KO"
