@@ -20,10 +20,11 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 ### 페이지 & 라우팅
 
-- `/[locale]` — 메인 페이지: 선수 프로필, 전적, 영상, 뉴스 (ISR 24시간, `revalidate: 86400`)
+- `/[locale]` — 메인 페이지: 선수 프로필, 전적, 영상, 뉴스, 챔피언 프리뷰 (ISR 24시간, `revalidate: 86400`)
+- `/[locale]/rankings` — UFC 체급별 랭킹 페이지 (ISR 24시간, `revalidate: 86400`)
 - `/[locale]/cheer` — 응원 방명록 페이지 (`force-dynamic`, 항상 최신 데이터)
 - `/api/guestbook` — REST API (GET/POST/PATCH)
-- `/api/cron/crawl` — Vercel Cron 엔드포인트 (매일 오전 6시 UTC, `CRON_SECRET` 필요)
+- `/api/cron/crawl` — Vercel Cron 엔드포인트 (매일 UTC 03:00 = KST 12:00, `CRON_SECRET` 필요)
 
 ### 다국어 (i18n)
 
