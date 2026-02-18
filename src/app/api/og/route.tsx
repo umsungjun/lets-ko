@@ -161,125 +161,24 @@ export async function GET() {
               }}
             />
 
-            {/* 스탯 */}
+            {/* 체급 */}
             <div
-              style={{ display: "flex", alignItems: "center", gap: "32px" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginTop: "8px",
+              }}
             >
               <div
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
+                  color: "white",
+                  fontFamily: font,
+                  fontWeight: 700,
+                  fontSize: "28px",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    color: "white",
-                    fontFamily: font,
-                    fontWeight: 900,
-                    fontSize: "52px",
-                    lineHeight: 1,
-                  }}
-                >
-                  <span>13</span>
-                  <span style={{ color: "#dc2626", fontSize: "32px" }}>W</span>
-                </div>
-                <div
-                  style={{
-                    color: "#555",
-                    fontSize: "14px",
-                    fontFamily: font,
-                  }}
-                >
-                  승리
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    color: "#888",
-                    fontFamily: font,
-                    fontWeight: 900,
-                    fontSize: "52px",
-                    lineHeight: 1,
-                  }}
-                >
-                  <span>2</span>
-                  <span style={{ color: "#555", fontSize: "32px" }}>L</span>
-                </div>
-                <div
-                  style={{
-                    color: "#555",
-                    fontSize: "14px",
-                    fontFamily: font,
-                  }}
-                >
-                  패배
-                </div>
-              </div>
-
-              <div
-                style={{
-                  width: "1px",
-                  height: "50px",
-                  backgroundColor: "#2a2a2a",
-                }}
-              />
-
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <div
-                  style={{
-                    color: "white",
-                    fontFamily: font,
-                    fontWeight: 700,
-                    fontSize: "20px",
-                  }}
-                >
-                  UFC 웰터급
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "50%",
-                      backgroundColor: "#22c55e",
-                    }}
-                  />
-                  <div
-                    style={{
-                      color: "#22c55e",
-                      fontFamily: font,
-                      fontSize: "15px",
-                      fontWeight: 700,
-                    }}
-                  >
-                    6연승 진행중
-                  </div>
-                </div>
+                UFC 웰터급
               </div>
             </div>
           </div>
