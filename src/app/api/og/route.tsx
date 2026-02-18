@@ -62,7 +62,7 @@ export async function GET() {
         <div
           style={{
             position: "absolute",
-            right: "340px",
+            right: "480px",
             top: 0,
             bottom: 0,
             width: "2px",
@@ -73,7 +73,7 @@ export async function GET() {
         <div
           style={{
             position: "absolute",
-            right: "360px",
+            right: "500px",
             top: 0,
             bottom: 0,
             width: "1px",
@@ -88,7 +88,7 @@ export async function GET() {
             flex: 1,
             display: "flex",
             flexDirection: "column",
-            padding: "56px 60px 56px 68px",
+            padding: "56px 48px 56px 68px",
             justifyContent: "space-between",
           }}
         >
@@ -205,6 +205,7 @@ export async function GET() {
               display: "flex",
               overflow: "hidden",
               position: "relative",
+              marginRight: "140px",
             }}
           >
             <img
