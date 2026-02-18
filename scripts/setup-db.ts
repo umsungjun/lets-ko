@@ -85,6 +85,35 @@ async function setup() {
     ON ufc_rankings(crawled_at DESC)
   `;
 
+  // 방명록 리액션 테이블
+  await sql`
+    CREATE TABLE IF NOT EXISTS guestbook_reactions (
+      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      message_id UUID NOT NULL REFERENCES guestbook_messages(id) ON DELETE CASCADE,
+      emoji TEXT NOT NULL CHECK (char_length(emoji) <= 10),
+      ip_hash TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(message_id, emoji, ip_hash)
+    )
+  `;
+  console.log("  guestbook_reactions 테이블 생성 완료");
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_reactions_message_id
+    ON guestbook_reactions(message_id)
+  `;
+
+  await sql`ALTER TABLE guestbook_reactions ENABLE ROW LEVEL SECURITY`;
+  await sql`
+    DO $$ BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'guestbook_reactions' AND policyname = 'read'
+      ) THEN
+        CREATE POLICY "read" ON guestbook_reactions FOR SELECT USING (true);
+      END IF;
+    END $$
+  `;
+
   console.log("\n모든 테이블 생성이 완료되었습니다.");
   await sql.end();
 }

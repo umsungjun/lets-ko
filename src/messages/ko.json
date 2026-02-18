@@ -50,6 +50,10 @@
     "noMessages": "아직 응원 메시지가 없습니다. 첫 번째 응원을 남겨 주세요!",
     "loadMore": "더 보기",
     "edit": "수정",
+    "delete": "삭제",
+    "deleteModalTitle": "메시지를 삭제하시겠어요?",
+    "deleteModalDesc": "삭제된 메시지는 복구할 수 없습니다.",
+    "deleteConfirm": "삭제하기",
     "cancel": "취소",
     "save": "저장",
     "cheerCta": "고석현 선수에게 응원 남기기"

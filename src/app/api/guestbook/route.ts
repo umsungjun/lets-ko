@@ -40,8 +40,30 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // 리액션 집계
+  const messageIds = (messages || []).map((m) => m.id);
+  const reactionsMap: Record<string, Record<string, number>> = {};
+
+  if (messageIds.length > 0) {
+    const { data: reactionRows } = await supabase
+      .from("guestbook_reactions")
+      .select("message_id, emoji")
+      .in("message_id", messageIds);
+
+    for (const row of reactionRows || []) {
+      if (!reactionsMap[row.message_id]) reactionsMap[row.message_id] = {};
+      reactionsMap[row.message_id][row.emoji] =
+        (reactionsMap[row.message_id][row.emoji] || 0) + 1;
+    }
+  }
+
+  const messagesWithReactions = (messages || []).map((m) => ({
+    ...m,
+    reactions: reactionsMap[m.id] || {},
+  }));
+
   return NextResponse.json({
-    messages: messages || [],
+    messages: messagesWithReactions,
     hasMore: (count || 0) > offset + limit,
     total: count || 0,
   });
@@ -189,4 +211,54 @@ export async function PATCH(request: NextRequest) {
   }
 
   return NextResponse.json({ message: data });
+}
+
+export async function DELETE(request: NextRequest) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const { id } = body;
+
+  if (!id || typeof id !== "string") {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+
+  const supabase = createServerClient();
+
+  // IP 검증: 작성자 본인만 삭제 가능
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+  const ipHash = hashIp(ip);
+
+  const { data: existing } = await supabase
+    .from("guestbook_messages")
+    .select("ip_hash")
+    .eq("id", id)
+    .single();
+
+  if (!existing) {
+    return NextResponse.json({ error: "Message not found" }, { status: 404 });
+  }
+
+  if (existing.ip_hash !== ipHash) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const { error } = await supabase
+    .from("guestbook_messages")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Failed to delete message" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ success: true });
 }

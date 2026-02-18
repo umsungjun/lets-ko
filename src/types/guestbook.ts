@@ -3,6 +3,7 @@ export interface GuestbookMessage {
   nickname: string;
   message: string;
   created_at: string;
+  reactions?: Record<string, number>;
 }
 
 export interface GuestbookResponse {

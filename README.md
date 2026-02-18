@@ -13,18 +13,20 @@ UFC 웰터급 파이터 **고석현**(The Korean Tyson) 선수의 비공식 팬 
 ## 주요 기능
 
 - **선수 프로필** — 고석현 선수의 기본 정보, 전적, 스탯
-- **경기 기록** — 전체 15경기(13승 2패) 상세 기록
+- **경기 기록** — 전체 경기 상세 기록 (결과·방식·라운드·날짜)
 - **커리어 하이라이트** — 주요 커리어 타임라인
-- **관련 YouTube 영상** — YouTube API를 통한 최신 영상 자동 수집 (하루 1회 갱신)
+- **UFC 랭킹** — 전 체급 공식 랭킹 및 챔피언 프리뷰 (하루 1회 갱신)
+- **관련 YouTube 영상** — YouTube API를 통한 최신·인기 영상 자동 수집 (하루 1회 갱신)
 - **관련 뉴스** — Google News RSS를 통한 최신 뉴스 자동 수집 (하루 1회 갱신)
-- **응원하기** — 익명 방명록 (닉네임 자동 생성, 수정 가능)
+- **응원 방명록** — 익명 방명록 (닉네임 자동 생성, 수정·삭제 가능)
+- **이모지 리액션** — 응원 메시지에 👊🔥💪❤️👏 리액션 토글
 - **다국어 지원** — 한국어(기본) / 영어
 
 ## 기술 스택
 
 | 구분 | 기술 |
 |---|---|
-| 프레임워크 | Next.js 15 (App Router) |
+| 프레임워크 | Next.js 16 (App Router) |
 | 언어 | TypeScript |
 | 스타일링 | Tailwind CSS v4 |
 | 데이터베이스 | Supabase (PostgreSQL) |
@@ -37,27 +39,39 @@ UFC 웰터급 파이터 **고석현**(The Korean Tyson) 선수의 비공식 팬 
 src/
 ├── app/
 │   ├── [locale]/
-│   │   ├── page.tsx          # 메인 페이지
-│   │   └── cheer/page.tsx    # 응원하기 페이지
+│   │   ├── page.tsx             # 메인 페이지
+│   │   ├── cheer/page.tsx       # 응원하기 페이지
+│   │   └── rankings/page.tsx    # UFC 랭킹 페이지
 │   ├── api/
-│   │   ├── guestbook/        # 응원 메시지 API (GET/POST/PATCH)
-│   │   └── cron/crawl/       # UFC 전적 크롤링 (일 1회)
-│   ├── robots.ts             # SEO
-│   └── sitemap.ts            # SEO
+│   │   ├── guestbook/           # 응원 메시지 API (GET/POST/PATCH/DELETE)
+│   │   │   └── reactions/       # 이모지 리액션 API (POST 토글)
+│   │   └── cron/crawl/          # UFC 전적·랭킹 크롤링 (일 1회, KST 12:00)
+│   ├── robots.ts                # SEO
+│   └── sitemap.ts               # SEO
 ├── components/
-│   ├── fighter/              # 선수 관련 컴포넌트
-│   ├── guestbook/            # 응원 메시지 컴포넌트
-│   └── layout/               # Header, Footer
+│   ├── fighter/                 # 선수 관련 컴포넌트
+│   ├── guestbook/               # 응원 메시지 컴포넌트
+│   ├── rankings/                # UFC 랭킹 컴포넌트
+│   └── layout/                  # Header, Footer
 ├── lib/
-│   ├── youtube.ts            # YouTube API 연동
-│   ├── news.ts               # Google News RSS 파싱
-│   ├── supabase/             # Supabase 클라이언트
-│   └── crawl/                # UFC 사이트 크롤러
+│   ├── youtube.ts               # YouTube API 연동
+│   ├── news.ts                  # Google News RSS 파싱
+│   ├── supabase/                # Supabase 클라이언트
+│   └── crawl/                   # UFC 사이트 크롤러
 ├── messages/
-│   ├── ko.json               # 한국어 번역
-│   └── en.json               # 영어 번역
-└── data/                     # 정적 데이터 (전적, 바이오 등)
+│   ├── ko.json                  # 한국어 번역
+│   └── en.json                  # 영어 번역
+└── data/                        # 정적 데이터 (전적, 바이오 등)
 ```
+
+## Supabase 테이블
+
+| 테이블 | 설명 |
+|---|---|
+| `guestbook_messages` | 방명록 메시지 (닉네임, 내용, IP 해시) |
+| `guestbook_reactions` | 이모지 리액션 (message_id, emoji, IP 해시, UNIQUE 제약) |
+| `fighter_stats` | UFC 선수 스탯 크롤링 데이터 |
+| `ufc_rankings` | UFC 체급별 랭킹 크롤링 데이터 |
 
 ## 로컬 개발
 

@@ -21,7 +21,7 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
     setNickname(generateNickname(locale));
   }, [locale]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!message.trim() || submitting) return;
 
@@ -71,7 +71,7 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
         <button
           type="button"
           onClick={shuffleNickname}
-          className="px-3 py-2.5 rounded-xl border border-border bg-surface text-muted hover:text-primary hover:border-primary transition-colors text-sm shrink-0"
+          className="px-3 py-2.5 rounded-xl border border-border bg-surface text-muted hover:text-primary hover:border-primary transition-colors text-sm shrink-0 cursor-pointer"
           title={t("shuffleNickname")}
         >
           <svg
@@ -104,7 +104,7 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
         <button
           type="submit"
           disabled={!message.trim() || submitting}
-          className="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm shadow-card"
+          className="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-sm shadow-card"
         >
           {submitting ? t("submitting") : t("submit")}
         </button>

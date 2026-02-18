@@ -50,6 +50,10 @@
     "noMessages": "No cheer messages yet. Be the first to cheer!",
     "loadMore": "Load more",
     "edit": "Edit",
+    "delete": "Delete",
+    "deleteModalTitle": "Delete this message?",
+    "deleteModalDesc": "This action cannot be undone.",
+    "deleteConfirm": "Yes, delete",
     "cancel": "Cancel",
     "save": "Save",
     "cheerCta": "Cheer for Ko Seokhyeon"
