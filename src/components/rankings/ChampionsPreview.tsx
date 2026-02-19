@@ -53,7 +53,7 @@ export default function ChampionsPreview({
           <h2 className="section-heading">{t("championsTitle")}</h2>
           <Link
             href={`/${locale}/rankings`}
-            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium text-muted transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary"
+            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium text-muted transition-all duration-300 hover:border-primary/40 hover:text-primary"
           >
             {t("viewAll")}
             <svg
@@ -131,7 +131,7 @@ function ChampionCard({
   return (
     <Link
       href={`/${locale}/rankings`}
-      className="group relative overflow-hidden rounded-2xl border border-border/60 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover"
+      className="group relative overflow-hidden rounded-2xl border border-border/60 shadow-card transition-all duration-500 hover:-translate-y-0.5 hover:shadow-card-hover"
       style={{
         opacity: isInView ? 1 : 0,
         transform: isInView ? "translateY(0)" : "translateY(20px)",
@@ -148,7 +148,7 @@ function ChampionCard({
             <img
               src={division.champion.imageUrl}
               alt={division.champion.name}
-              className="h-20 w-auto object-cover drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] transition-transform duration-300 group-hover:scale-110"
+              className="h-20 w-auto object-cover drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
           ) : (
@@ -169,7 +169,7 @@ function ChampionCard({
             )}
           </p>
           {division.champion && (
-            <p className="mt-0.5 truncate text-sm font-bold text-white transition-colors group-hover:text-primary">
+            <p className="mt-0.5 truncate text-sm font-bold text-white transition-colors duration-300 group-hover:text-primary">
               {division.champion.name}
             </p>
           )}

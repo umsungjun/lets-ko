@@ -33,7 +33,7 @@ export default function DivisionCard({ division, locale }: DivisionCardProps) {
   const weight = WEIGHT_LIMITS[division.divisionSlug];
 
   return (
-    <div className="group overflow-hidden rounded-2xl border border-border/80 bg-white shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover">
+    <div className="group overflow-hidden rounded-2xl border border-border/80 bg-white shadow-card transition-all duration-500 hover:shadow-card-hover">
       {/* Champion Header */}
       <div className="relative overflow-hidden bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-5">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(220,38,38,0.15),transparent_70%)]" />
@@ -78,7 +78,7 @@ export default function DivisionCard({ division, locale }: DivisionCardProps) {
         {division.rankedFighters.map((fighter) => (
           <div
             key={`${fighter.rank}-${fighter.name}`}
-            className="flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-surface/60"
+            className="flex items-center gap-3 px-5 py-2.5 transition-colors duration-300 hover:bg-surface/60"
           >
             <span
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
