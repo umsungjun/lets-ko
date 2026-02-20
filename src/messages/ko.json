@@ -47,6 +47,8 @@
     "messagePlaceholder": "응원 메시지를 입력하세요...",
     "submit": "응원하기",
     "submitting": "전송 중...",
+    "errorRateLimit": "잠시 후 다시 시도해주세요. (30초 제한)",
+    "errorServer": "오류가 발생했습니다. 다시 시도해주세요.",
     "noMessages": "아직 응원 메시지가 없습니다. 첫 번째 응원을 남겨 주세요!",
     "loadMore": "더 보기",
     "edit": "수정",
