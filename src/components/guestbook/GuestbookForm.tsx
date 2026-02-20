@@ -16,6 +16,7 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
   const [nickname, setNickname] = useState(() => generateNickname(locale));
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const shuffleNickname = useCallback(() => {
     setNickname(generateNickname(locale));
@@ -26,6 +27,7 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
     if (!message.trim() || submitting) return;
 
     setSubmitting(true);
+    setError(null);
     try {
       const res = await fetch("/api/guestbook", {
         method: "POST",
@@ -48,7 +50,13 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
         setMessage("");
         shuffleNickname();
         onSubmit();
+      } else if (res.status === 429) {
+        setError(t("errorRateLimit"));
+      } else {
+        setError(t("errorServer"));
       }
+    } catch {
+      setError(t("errorServer"));
     } finally {
       setSubmitting(false);
     }
@@ -92,19 +100,24 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
 
       <textarea
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={(e) => { setMessage(e.target.value); setError(null); }}
         placeholder={t("messagePlaceholder")}
         maxLength={500}
         rows={3}
         className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
       />
 
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-muted">{message.length}/500</span>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-muted shrink-0">{message.length}/500</span>
+        {error && (
+          <span className="text-xs text-red-500 flex-1 text-right">
+            {error}
+          </span>
+        )}
         <button
           type="submit"
           disabled={!message.trim() || submitting}
-          className="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-sm shadow-card"
+          className="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-sm shadow-card shrink-0"
         >
           {submitting ? t("submitting") : t("submit")}
         </button>
