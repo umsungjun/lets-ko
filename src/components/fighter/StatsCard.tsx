@@ -125,14 +125,52 @@ export default function StatsCard({ stats }: StatsCardProps) {
                   href={ranking.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all"
+                  className="relative flex flex-col items-center p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all group"
                   style={{
                     opacity: isInView ? 1 : 0,
                     transform: isInView ? "translateY(0)" : "translateY(16px)",
                     transition: `opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms`,
                   }}
                 >
-                  <p className="text-xs font-medium text-muted mb-1">{ranking.site}</p>
+                  <svg
+                    className="absolute top-3 right-3 w-4 h-4 text-muted group-hover:text-primary transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {ranking.icon ? (
+                      <img
+                        src={ranking.icon}
+                        alt={`${ranking.site} icon`}
+                        className="w-4 h-4"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : ranking.site === "Tapology" ? (
+                      <svg className="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="2" y="2" width="4" height="12" rx="1"/>
+                        <rect x="7.5" y="2" width="4" height="12" rx="1"/>
+                        <rect x="13" y="2" width="4" height="12" rx="1"/>
+                        <rect x="18.5" y="2" width="4" height="12" rx="1"/>
+                        <rect x="2" y="16" width="9" height="6" rx="1"/>
+                        <rect x="13" y="16" width="9" height="6" rx="1"/>
+                      </svg>
+                    ) : (
+                      <span className="w-4 h-4 flex items-center justify-center text-[10px] font-bold text-muted bg-gray-100 rounded">
+                        {ranking.site.charAt(0)}
+                      </span>
+                    )}
+                    <p className="text-xs font-medium text-muted">{ranking.site}</p>
+                  </div>
                   <p className="text-4xl font-black text-primary">#{ranking.rank}</p>
                 </a>
               ))}
