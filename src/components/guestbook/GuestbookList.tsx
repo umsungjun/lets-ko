@@ -46,6 +46,7 @@ export default function GuestbookList() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [myIds, setMyIds] = useState<string[]>([]);
   const [myReactions, setMyReactions] = useState<Record<string, string[]>>({});
+  const [openReactionId, setOpenReactionId] = useState<string | null>(null);
 
   const dateLocale = locale === "ko" ? ko : enUS;
 
@@ -185,6 +186,8 @@ export default function GuestbookList() {
 
   return (
     <div className="space-y-6">
+      <GuestbookForm onSubmit={handleNewMessage} />
+
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <span className="text-2xl font-bold text-red-500 tracking-widest animate-pulse">
@@ -293,25 +296,87 @@ export default function GuestbookList() {
                     <p className="text-sm text-foreground leading-relaxed">
                       {msg.message}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-                      {REACTION_EMOJIS.map((emoji) => {
-                        const count = msg.reactions?.[emoji] || 0;
-                        const reacted = (myReactions[msg.id] || []).includes(emoji);
-                        return (
-                          <button
-                            key={emoji}
-                            onClick={() => handleReaction(msg.id, emoji)}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition-all cursor-pointer ${
-                              reacted
-                                ? "bg-primary/10 border-primary/30 text-primary font-medium"
-                                : "bg-surface border-border text-muted hover:border-primary/40 hover:text-foreground"
-                            }`}
+                    <div className="mt-3 space-y-2">
+                      {/* 1줄: 😊 토글 버튼 + 슬라이딩 이모지 피커 */}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() =>
+                            setOpenReactionId(
+                              openReactionId === msg.id ? null : msg.id
+                            )
+                          }
+                          className={`flex items-center px-2.5 py-1 rounded-full text-xs border transition-all cursor-pointer ${
+                            openReactionId === msg.id
+                              ? "bg-primary/10 border-primary/30 text-primary"
+                              : "bg-surface border-border text-muted hover:border-primary/40 hover:text-foreground"
+                          }`}
+                        >
+                          <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           >
-                            <span>{emoji}</span>
-                            {count > 0 && <span>{count}</span>}
-                          </button>
-                        );
-                      })}
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M8 13s1.5 2 4 2 4-2 4-2" />
+                            <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth="3" />
+                            <line x1="15" y1="9" x2="15.01" y2="9" strokeWidth="3" />
+                          </svg>
+                        </button>
+                        <div
+                          className={`flex items-center gap-1 overflow-hidden transition-all duration-300 ease-in-out ${
+                            openReactionId === msg.id
+                              ? "max-w-72 opacity-100"
+                              : "max-w-0 opacity-0"
+                          }`}
+                        >
+                          {REACTION_EMOJIS.map((emoji) => {
+                            const reacted = (myReactions[msg.id] || []).includes(emoji);
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleReaction(msg.id, emoji)}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition-colors cursor-pointer whitespace-nowrap ${
+                                  reacted
+                                    ? "bg-primary/10 border-primary/30 text-primary font-medium"
+                                    : "bg-surface border-border text-muted hover:border-primary/40 hover:text-foreground"
+                                }`}
+                              >
+                                <span>{emoji}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* 2줄: 리액션 카운트 배지 */}
+                      {REACTION_EMOJIS.some((e) => (msg.reactions?.[e] || 0) > 0 || (myReactions[msg.id] || []).includes(e)) && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {REACTION_EMOJIS.map((emoji) => {
+                            const count = msg.reactions?.[emoji] || 0;
+                            const reacted = (myReactions[msg.id] || []).includes(emoji);
+                            if (count === 0 && !reacted) return null;
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleReaction(msg.id, emoji)}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition-all cursor-pointer ${
+                                  reacted
+                                    ? "bg-primary/10 border-primary/30 text-primary font-medium"
+                                    : "bg-surface border-border text-muted hover:border-primary/40 hover:text-foreground"
+                                }`}
+                              >
+                                <span>{emoji}</span>
+                                {count > 0 && <span>{count}</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -329,8 +394,6 @@ export default function GuestbookList() {
           )}
         </div>
       )}
-
-      <GuestbookForm onSubmit={handleNewMessage} />
 
       {/* 삭제 확인 모달 */}
       {deletingId && (
