@@ -42,14 +42,18 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - **YouTube 영상**: YouTube Data API v3 (`src/lib/youtube.ts`), ISR 24시간. 재생은 사이트 내 모달로 `youtube-nocookie.com` 임베드
 - **뉴스**: Google News RSS 파싱 (`src/lib/news.ts`), ISR 24시간
 - **방명록**: Supabase `guestbook_messages` 테이블, `/api/guestbook` API (GET/POST/PATCH/DELETE)
-- **UFC 크롤러**: Cheerio 스크래퍼 (`src/lib/crawl/ufc-crawler.ts`), Vercel Cron으로 매일 오전 3시 UTC 실행 (`/api/cron/crawl`). 파싱 실패 시 `throw`하여 잘못된 데이터 저장 방지. Cron 스케줄은 `vercel.json`에서 관리
+- **UFC 크롤러**: Vercel Cron으로 매일 오전 3시 UTC 실행 (`/api/cron/crawl`). Cron 스케줄은 `vercel.json`에서 관리. 두 크롤러가 순차 실행되며, 부분 실패 시 HTTP 207 반환:
+  - `crawlUfcStats()` (`src/lib/crawl/ufc-crawler.ts`) — 선수 전적/스탯 크롤. 파싱 실패 시 `throw`하여 잘못된 데이터 저장 방지
+  - `crawlUfcRankings()` (`src/lib/crawl/rankings-crawler.ts`) — UFC 전 체급 랭킹 크롤
+  - 크롤 후 `revalidatePath()`로 `/ko`, `/en`, `/ko/rankings`, `/en/rankings` ISR 캐시 무효화
 - **외부 랭킹**: UFC 크롤 후 FightMatrix + Tapology 두 사이트에서 `Promise.allSettled()`로 병렬 크롤, 결과를 `FighterStats.externalRankings`에 저장. 실패해도 메인 크롤 중단 없음. Supabase 데이터에 `externalRankings`가 없으면 `cached-stats.json`에서 병합 (page.tsx `getFighterStats()`)
+- **닉네임 생성**: `src/lib/nickname-generator.ts` — 방명록 작성 시 로케일 기반 랜덤 닉네임 생성 (예: "행복한 석현", "Happy Seokhyeon")
 
 ### Supabase
 
 - **서버 클라이언트** (`src/lib/supabase/server.ts`): `SUPABASE_SERVICE_ROLE_KEY` 사용, 라우트 핸들러 및 서버 컴포넌트용
 - **클라이언트** (`src/lib/supabase/client.ts`): `NEXT_PUBLIC_SUPABASE_ANON_KEY` 사용
-- **테이블**: `guestbook_messages` (RLS: read/insert/update/delete), `guestbook_reactions` (이모지 토글, IP당 1개), `fighter_stats` (RLS 없음, 서버 전용)
+- **테이블**: `guestbook_messages` (RLS: read/insert/update/delete), `guestbook_reactions` (이모지 토글, IP당 1개), `fighter_stats` (RLS 없음, 서버 전용), `ufc_rankings` (체급별 랭킹, 서버 전용)
 
 ### OG 이미지
 
@@ -60,8 +64,10 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 ### 정적 데이터 (`src/data/`)
 
 - `cached-stats.json` — 선수 통계 폴백 (Supabase 접근 불가 또는 크롤링 데이터 비정상 시 사용). `externalRankings` 배열 포함 (FightMatrix, Tapology 최신 수동 확인값)
+- `cached-rankings.json` — UFC 전 체급 랭킹 폴백 (Supabase 접근 불가 시 사용)
 - `career-highlights.json` — 커리어 타임라인 이정표 (다국어)
 - `fighter-bio.json` — 선수 바이오 데이터 (다국어 필드)
+- `videos.json` — 정적 비디오 메타데이터 (YouTube API 할당량 초과 시 폴백)
 
 ### 주요 컨벤션
 
@@ -75,6 +81,10 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - **애널리틱스**: Microsoft Clarity 스크립트 (`[locale]/layout.tsx` `<head>`에 인라인 삽입, ID: `vkw0n969lk`)
 - **SEO**: 메인 페이지 Schema.org JSON-LD, `robots.ts`, `sitemap.ts`, `hreflang` 대체 링크
 - **DOM 사이드 이펙트**: `document.body.style` 등 컴포넌트 외부 DOM 변경은 반드시 `useEffect` 안에서 처리 (ESLint `react-hooks/immutability` 규칙)
+
+### 테스트
+
+테스트 프레임워크 미설정. `pnpm build`로 타입 체크 및 빌드 검증.
 
 ### 환경 변수
 
