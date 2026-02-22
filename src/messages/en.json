@@ -23,7 +23,8 @@
     "takedownAccuracy": "Takedown Accuracy",
     "strikesPerMin": "Strikes/Min",
     "strikeDefense": "Strike Defense",
-    "takedownDefense": "Takedown Defense"
+    "takedownDefense": "Takedown Defense",
+    "currentRanking": "Current Rankings"
   },
   "timeline": {
     "title": "Career Highlights"

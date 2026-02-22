@@ -23,7 +23,8 @@
     "takedownAccuracy": "테이크다운 정확도",
     "strikesPerMin": "분당 타격",
     "strikeDefense": "타격 방어",
-    "takedownDefense": "테이크다운 방어"
+    "takedownDefense": "테이크다운 방어",
+    "currentRanking": "현재 랭킹"
   },
   "timeline": {
     "title": "커리어 하이라이트"

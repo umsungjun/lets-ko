@@ -116,7 +116,7 @@ export default function StatsCard({ stats }: StatsCardProps) {
                 transition: "opacity 0.5s ease, transform 0.5s ease",
               }}
             >
-              현재 랭킹
+              {t("currentRanking")}
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {stats.externalRankings.map((ranking, i) => (
