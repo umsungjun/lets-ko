@@ -1,8 +1,72 @@
-import type { FightHistoryEntry, FighterStats } from "@/types/fighter";
+import type {
+  ExternalRanking,
+  FightHistoryEntry,
+  FighterStats,
+} from "@/types/fighter";
 
 import * as cheerio from "cheerio";
 
 const UFC_ATHLETE_URL = "https://kr.ufc.com/athlete/seokhyeon-ko";
+const FIGHTMATRIX_URL =
+  "https://www.fightmatrix.com/fighter-profile/Seok%20Hyeon%20Ko/185137/";
+const TAPOLOGY_URL =
+  "https://www.tapology.com/fightcenter/fighters/175557-seok-hyun-ko";
+
+const CRAWLER_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+};
+
+async function crawlFightMatrixRank(): Promise<ExternalRanking | undefined> {
+  try {
+    const res = await fetch(FIGHTMATRIX_URL, { headers: CRAWLER_HEADERS });
+    if (!res.ok) return undefined;
+    const $ = cheerio.load(await res.text());
+    let result: ExternalRanking | undefined;
+    $('a[href*="/mma-ranks/"]').each((_, el) => {
+      if (result) return;
+      const match = $(el).text().trim().match(/^#(\d+)\s+(.+)$/);
+      if (match) {
+        result = {
+          site: "FightMatrix",
+          rank: parseInt(match[1]),
+          division: match[2].trim(),
+          url: FIGHTMATRIX_URL,
+        };
+      }
+    });
+    return result;
+  } catch {
+    return undefined;
+  }
+}
+
+async function crawlTapologyRank(): Promise<ExternalRanking | undefined> {
+  try {
+    const res = await fetch(TAPOLOGY_URL, { headers: CRAWLER_HEADERS });
+    if (!res.ok) return undefined;
+    const $ = cheerio.load(await res.text());
+    const bodyText = $("body").text();
+    const match = bodyText.match(/(\d+)\s+of\s+(\d+)/);
+    if (match) {
+      const rank = parseInt(match[1]);
+      const total = parseInt(match[2]);
+      if (rank > 0 && rank < 500 && total > rank) {
+        return {
+          site: "Tapology",
+          rank,
+          total,
+          division: "Welterweight",
+          url: TAPOLOGY_URL,
+        };
+      }
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export async function crawlUfcStats(): Promise<FighterStats> {
   const response = await fetch(UFC_ATHLETE_URL, {
@@ -161,6 +225,23 @@ export async function crawlUfcStats(): Promise<FighterStats> {
   });
 
   stats.fightHistory = fightHistory;
+
+  // Fetch external rankings in parallel (failures are non-blocking)
+  const [fightmatrixResult, tapologyResult] = await Promise.allSettled([
+    crawlFightMatrixRank(),
+    crawlTapologyRank(),
+  ]);
+
+  const externalRankings: ExternalRanking[] = [];
+  if (fightmatrixResult.status === "fulfilled" && fightmatrixResult.value) {
+    externalRankings.push(fightmatrixResult.value);
+  }
+  if (tapologyResult.status === "fulfilled" && tapologyResult.value) {
+    externalRankings.push(tapologyResult.value);
+  }
+  if (externalRankings.length > 0) {
+    stats.externalRankings = externalRankings;
+  }
 
   return stats as FighterStats;
 }

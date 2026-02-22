@@ -66,6 +66,10 @@ async function getFighterStats(): Promise<FighterStats> {
         const stats = data.data as FighterStats;
         // Reject invalid data (e.g. 0-0-0 from failed crawl)
         if (stats.record.wins + stats.record.losses + stats.record.draws > 0) {
+          // externalRankings가 없으면 캐시에서 보완 (크론 실행 전)
+          if (!stats.externalRankings?.length) {
+            stats.externalRankings = (cachedStats as FighterStats).externalRankings;
+          }
           return stats;
         }
       }

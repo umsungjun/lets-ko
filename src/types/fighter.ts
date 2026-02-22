@@ -1,3 +1,11 @@
+export interface ExternalRanking {
+  site: string;
+  rank: number;
+  total?: number;
+  division: string;
+  url: string;
+}
+
 export interface FighterStats {
   record: {
     wins: number;
@@ -14,6 +22,7 @@ export interface FighterStats {
   weight: string;
   reach: string;
   fightHistory: FightHistoryEntry[];
+  externalRankings?: ExternalRanking[];
 }
 
 export interface FightHistoryEntry {

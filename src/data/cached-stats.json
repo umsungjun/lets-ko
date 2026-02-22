@@ -145,5 +145,20 @@
       "round": 3,
       "time": "5:00"
     }
+  ],
+  "externalRankings": [
+    {
+      "site": "FightMatrix",
+      "rank": 48,
+      "division": "Welterweight",
+      "url": "https://www.fightmatrix.com/fighter-profile/Seok%20Hyeon%20Ko/185137/"
+    },
+    {
+      "site": "Tapology",
+      "rank": 45,
+      "total": 76,
+      "division": "Welterweight",
+      "url": "https://www.tapology.com/fightcenter/fighters/175557-seok-hyun-ko"
+    }
   ]
 }

@@ -105,82 +105,118 @@ export default function StatsCard({ stats }: StatsCardProps) {
 
   return (
     <section className="py-16 px-4" ref={ref}>
-      <div className="max-w-5xl mx-auto">
-        <h2
-          className="section-heading section-heading-center text-center mb-12"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
-          {t("title")}
-        </h2>
+      <div className="max-w-5xl mx-auto space-y-12">
+        {stats.externalRankings && stats.externalRankings.length > 0 && (
+          <div>
+            <h2
+              className="section-heading section-heading-center text-center mb-8"
+              style={{
+                opacity: isInView ? 1 : 0,
+                transform: isInView ? "translateY(0)" : "translateY(16px)",
+                transition: "opacity 0.5s ease, transform 0.5s ease",
+              }}
+            >
+              현재 랭킹
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {stats.externalRankings.map((ranking, i) => (
+                <a
+                  key={ranking.site}
+                  href={ranking.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all"
+                  style={{
+                    opacity: isInView ? 1 : 0,
+                    transform: isInView ? "translateY(0)" : "translateY(16px)",
+                    transition: `opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms`,
+                  }}
+                >
+                  <p className="text-xs font-medium text-muted mb-1">{ranking.site}</p>
+                  <p className="text-4xl font-black text-primary">#{ranking.rank}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <RecordBox
-            value={wins}
-            label={t("wins")}
-            color="text-win"
-            delay={0}
-            animate={isInView}
-          />
-          <RecordBox
-            value={losses}
-            label={t("losses")}
-            color="text-loss"
-            delay={100}
-            animate={isInView}
-          />
-          <RecordBox
-            value={draws}
-            label={t("draws")}
-            color="text-muted"
-            delay={200}
-            animate={isInView}
-          />
-          <RecordBox
-            value={stats.knockouts}
-            label={t("knockouts")}
-            color="text-primary"
-            delay={300}
-            animate={isInView}
-          />
-        </div>
+        <div>
+          <h2
+            className="section-heading section-heading-center text-center mb-12"
+            style={{
+              opacity: isInView ? 1 : 0,
+              transform: isInView ? "translateY(0)" : "translateY(16px)",
+              transition: "opacity 0.5s ease, transform 0.5s ease",
+            }}
+          >
+            {t("title")}
+          </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {stats.strikeAccuracy > 0 && (
-            <StatCircle
-              value={stats.strikeAccuracy}
-              label={t("strikeAccuracy")}
-              delay={400}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <RecordBox
+              value={wins}
+              label={t("wins")}
+              color="text-win"
+              delay={0}
               animate={isInView}
             />
-          )}
-          {stats.takedownAccuracy > 0 && (
-            <StatCircle
-              value={stats.takedownAccuracy}
-              label={t("takedownAccuracy")}
-              delay={500}
+            <RecordBox
+              value={losses}
+              label={t("losses")}
+              color="text-loss"
+              delay={100}
               animate={isInView}
             />
-          )}
-          {stats.strikeDefense > 0 && (
-            <StatCircle
-              value={stats.strikeDefense}
-              label={t("strikeDefense")}
-              delay={600}
+            <RecordBox
+              value={draws}
+              label={t("draws")}
+              color="text-muted"
+              delay={200}
               animate={isInView}
             />
-          )}
-          {stats.takedownDefense > 0 && (
-            <StatCircle
-              value={stats.takedownDefense}
-              label={t("takedownDefense")}
-              delay={700}
+            <RecordBox
+              value={stats.knockouts}
+              label={t("knockouts")}
+              color="text-primary"
+              delay={300}
               animate={isInView}
             />
-          )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {stats.strikeAccuracy > 0 && (
+              <StatCircle
+                value={stats.strikeAccuracy}
+                label={t("strikeAccuracy")}
+                delay={400}
+                animate={isInView}
+              />
+            )}
+            {stats.takedownAccuracy > 0 && (
+              <StatCircle
+                value={stats.takedownAccuracy}
+                label={t("takedownAccuracy")}
+                delay={500}
+                animate={isInView}
+              />
+            )}
+            {stats.strikeDefense > 0 && (
+              <StatCircle
+                value={stats.strikeDefense}
+                label={t("strikeDefense")}
+                delay={600}
+                animate={isInView}
+              />
+            )}
+            {stats.takedownDefense > 0 && (
+              <StatCircle
+                value={stats.takedownDefense}
+                label={t("takedownDefense")}
+                delay={700}
+                animate={isInView}
+              />
+            )}
+          </div>
         </div>
       </div>
     </section>
