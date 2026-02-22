@@ -43,6 +43,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - **뉴스**: Google News RSS 파싱 (`src/lib/news.ts`), ISR 24시간
 - **방명록**: Supabase `guestbook_messages` 테이블, `/api/guestbook` API (GET/POST/PATCH/DELETE)
 - **UFC 크롤러**: Cheerio 스크래퍼 (`src/lib/crawl/ufc-crawler.ts`), Vercel Cron으로 매일 오전 3시 UTC 실행 (`/api/cron/crawl`). 파싱 실패 시 `throw`하여 잘못된 데이터 저장 방지. Cron 스케줄은 `vercel.json`에서 관리
+- **외부 랭킹**: UFC 크롤 후 FightMatrix + Tapology 두 사이트에서 `Promise.allSettled()`로 병렬 크롤, 결과를 `FighterStats.externalRankings`에 저장. 실패해도 메인 크롤 중단 없음. Supabase 데이터에 `externalRankings`가 없으면 `cached-stats.json`에서 병합 (page.tsx `getFighterStats()`)
 
 ### Supabase
 
@@ -58,7 +59,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 ### 정적 데이터 (`src/data/`)
 
-- `cached-stats.json` — 선수 통계 폴백 (Supabase 접근 불가 또는 크롤링 데이터 비정상 시 사용)
+- `cached-stats.json` — 선수 통계 폴백 (Supabase 접근 불가 또는 크롤링 데이터 비정상 시 사용). `externalRankings` 배열 포함 (FightMatrix, Tapology 최신 수동 확인값)
 - `career-highlights.json` — 커리어 타임라인 이정표 (다국어)
 - `fighter-bio.json` — 선수 바이오 데이터 (다국어 필드)
 
@@ -70,6 +71,8 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - **스크롤 애니메이션**: `useInView` 커스텀 훅 (`src/hooks/useInView.ts`) + `globals.css` CSS 키프레임 (`fade-up`, `fade-in`, `scale-in`, `slide-left`). 모바일 IntersectionObserver 미감지 대비 800ms fallback timer 포함
 - **컴포넌트**: 서버 컴포넌트 기본, `"use client"`는 필요한 경우만 (애니메이션, 인터랙티브)
 - **방명록 레이트 리미팅**: IP당 30초 쿨다운 (SHA256 해시). 수정/삭제 권한은 localStorage 메시지 ID + 서버 IP 검증
+- **방명록 UI**: 댓글 작성 폼이 목록 최상단 위치. 이모지 리액션은 버튼 클릭 시 `max-w-0 → max-w-72` 슬라이딩 애니메이션으로 펼침. 이모지 피커(1행)와 리액션 카운트 배지(2행) 분리
+- **애널리틱스**: Microsoft Clarity 스크립트 (`[locale]/layout.tsx` `<head>`에 인라인 삽입, ID: `vkw0n969lk`)
 - **SEO**: 메인 페이지 Schema.org JSON-LD, `robots.ts`, `sitemap.ts`, `hreflang` 대체 링크
 - **DOM 사이드 이펙트**: `document.body.style` 등 컴포넌트 외부 DOM 변경은 반드시 `useEffect` 안에서 처리 (ESLint `react-hooks/immutability` 규칙)
 
