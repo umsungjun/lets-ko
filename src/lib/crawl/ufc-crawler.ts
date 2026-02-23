@@ -33,6 +33,7 @@ async function crawlFightMatrixRank(): Promise<ExternalRanking | undefined> {
           rank: parseInt(match[1]),
           division: match[2].trim(),
           url: FIGHTMATRIX_URL,
+          icon: "https://www.fightmatrix.com/favicon.ico",
         };
       }
     });

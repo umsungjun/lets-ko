@@ -4,6 +4,7 @@ export interface ExternalRanking {
   total?: number;
   division: string;
   url: string;
+  icon?: string;
 }
 
 export interface FighterStats {
