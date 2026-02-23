@@ -293,7 +293,7 @@ export default function GuestbookList() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm text-foreground leading-relaxed">
+                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                       {msg.message}
                     </p>
                     <div className="mt-3 space-y-2">
