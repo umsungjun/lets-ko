@@ -70,6 +70,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
+    other: {
+      "naver-site-verification": "ad18a7dc71d1d32805179c7a463795189da8cfd4",
+    },
   },
 };
 
