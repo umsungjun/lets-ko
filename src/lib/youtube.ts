@@ -22,7 +22,7 @@ interface YouTubeSearchResponse {
   items?: YouTubeSearchItem[];
 }
 
-export const SEARCH_QUERY = "고석현";
+export const SEARCH_QUERY = "고석현 Ko Seokhyeon UFC";
 const MAX_RESULTS = 9;
 
 export async function searchYouTubeVideos(
