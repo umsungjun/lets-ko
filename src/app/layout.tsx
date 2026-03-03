@@ -13,6 +13,8 @@ const SITE_URL = (() => {
 })();
 
 export const metadata: Metadata = {
+  // 상대 경로 alternates가 절대 URL로 변환되도록 metadataBase 설정
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "고석현 응원 | LET'S KO",
     template: "%s | LET'S KO",
@@ -62,10 +64,12 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: SITE_URL,
+    // 루트(/)는 /ko로 리다이렉트되므로 canonical을 기본 로케일로 지정
+    canonical: `${SITE_URL}/ko`,
     languages: {
       ko: `${SITE_URL}/ko`,
       en: `${SITE_URL}/en`,
+      "x-default": `${SITE_URL}/ko`,
     },
   },
   verification: {

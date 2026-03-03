@@ -22,7 +22,11 @@ export async function generateMetadata({
       : "Official UFC rankings across all divisions. View champions, pound-for-pound, and ranked fighters 1-15.",
     alternates: {
       canonical: `/${locale}/rankings`,
-      languages: { ko: "/ko/rankings", en: "/en/rankings" },
+      languages: {
+        ko: "/ko/rankings",
+        en: "/en/rankings",
+        "x-default": "/ko/rankings",
+      },
     },
   };
 }

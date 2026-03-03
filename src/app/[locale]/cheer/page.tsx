@@ -21,7 +21,7 @@ export async function generateMetadata({
       : "Leave a cheer message for UFC welterweight fighter Ko Seokhyeon. Anonymous messages welcome!",
     alternates: {
       canonical: `/${locale}/cheer`,
-      languages: { ko: "/ko/cheer", en: "/en/cheer" },
+      languages: { ko: "/ko/cheer", en: "/en/cheer", "x-default": "/ko/cheer" },
     },
   };
 }

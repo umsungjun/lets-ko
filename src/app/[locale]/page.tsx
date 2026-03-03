@@ -40,7 +40,7 @@ export async function generateMetadata({
       : "UFC welterweight fighter Ko Seokhyeon (The Korean Tyson) - fight record, career highlights, videos, news, and fan messages. 13-2, on a 6-fight win streak!",
     alternates: {
       canonical: `/${locale}`,
-      languages: { ko: "/ko", en: "/en" },
+      languages: { ko: "/ko", en: "/en", "x-default": "/ko" },
     },
   };
 }
@@ -126,6 +126,16 @@ export default async function HomePage({
       getRankings(),
     ]);
 
+  const siteOrigin = (() => {
+    const raw =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
+    try {
+      return new URL(raw).origin;
+    } catch {
+      return "https://lets-ko.vercel.app";
+    }
+  })();
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -140,9 +150,8 @@ export default async function HomePage({
     jobTitle: "UFC Fighter",
     affiliation: { "@type": "SportsTeam", name: "HAVAS MMA" },
     sport: "Mixed Martial Arts",
-    url:
-      (process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app") +
-      `/${locale}`,
+    image: `${siteOrigin}/og.png`,
+    url: `${siteOrigin}/${locale}`,
   };
 
   return (
