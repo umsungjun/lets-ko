@@ -46,7 +46,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
   - `crawlUfcStats()` (`src/lib/crawl/ufc-crawler.ts`) — 선수 전적/스탯 크롤. 파싱 실패 시 `throw`하여 잘못된 데이터 저장 방지
   - `crawlUfcRankings()` (`src/lib/crawl/rankings-crawler.ts`) — UFC 전 체급 랭킹 크롤
   - 크롤 후 `revalidatePath()`로 `/ko`, `/en`, `/ko/rankings`, `/en/rankings` ISR 캐시 무효화
-- **외부 랭킹**: UFC 크롤 후 FightMatrix + Tapology 두 사이트에서 `Promise.allSettled()`로 병렬 크롤, 결과를 `FighterStats.externalRankings`에 저장. 실패해도 메인 크롤 중단 없음. Supabase 데이터에 `externalRankings`가 없으면 `cached-stats.json`에서 병합 (page.tsx `getFighterStats()`)
+- **외부 랭킹**: UFC 크롤 후 FightMatrix에서 랭킹 크롤, 결과를 `FighterStats.externalRankings`에 저장. 실패해도 메인 크롤 중단 없음. Supabase 데이터에 `externalRankings`가 없으면 `cached-stats.json`에서 병합 (page.tsx `getFighterStats()`). Tapology는 Cloudflare 차단으로 제거됨
 - **닉네임 생성**: `src/lib/nickname-generator.ts` — 방명록 작성 시 로케일 기반 랜덤 닉네임 생성 (예: "행복한 석현", "Happy Seokhyeon")
 
 ### Supabase
@@ -63,7 +63,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 ### 정적 데이터 (`src/data/`)
 
-- `cached-stats.json` — 선수 통계 폴백 (Supabase 접근 불가 또는 크롤링 데이터 비정상 시 사용). `externalRankings` 배열 포함 (FightMatrix, Tapology 최신 수동 확인값)
+- `cached-stats.json` — 선수 통계 폴백 (Supabase 접근 불가 또는 크롤링 데이터 비정상 시 사용). `externalRankings` 배열 포함 (FightMatrix 최신 수동 확인값)
 - `cached-rankings.json` — UFC 전 체급 랭킹 폴백 (Supabase 접근 불가 시 사용)
 - `career-highlights.json` — 커리어 타임라인 이정표 (다국어)
 - `fighter-bio.json` — 선수 바이오 데이터 (다국어 필드)
