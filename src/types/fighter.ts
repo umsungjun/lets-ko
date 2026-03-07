@@ -1,7 +1,6 @@
 export interface ExternalRanking {
   site: string;
   rank: number;
-  total?: number;
   division: string;
   url: string;
   icon?: string;

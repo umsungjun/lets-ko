@@ -9,9 +9,6 @@ import * as cheerio from "cheerio";
 const UFC_ATHLETE_URL = "https://kr.ufc.com/athlete/seokhyeon-ko";
 const FIGHTMATRIX_URL =
   "https://www.fightmatrix.com/fighter-profile/Seok%20Hyeon%20Ko/185137/";
-const TAPOLOGY_URL =
-  "https://www.tapology.com/fightcenter/fighters/175557-seok-hyun-ko";
-
 const CRAWLER_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -38,32 +35,6 @@ async function crawlFightMatrixRank(): Promise<ExternalRanking | undefined> {
       }
     });
     return result;
-  } catch {
-    return undefined;
-  }
-}
-
-async function crawlTapologyRank(): Promise<ExternalRanking | undefined> {
-  try {
-    const res = await fetch(TAPOLOGY_URL, { headers: CRAWLER_HEADERS });
-    if (!res.ok) return undefined;
-    const $ = cheerio.load(await res.text());
-    const bodyText = $("body").text();
-    const match = bodyText.match(/(\d+)\s+of\s+(\d+)/);
-    if (match) {
-      const rank = parseInt(match[1]);
-      const total = parseInt(match[2]);
-      if (rank > 0 && rank < 500 && total > rank) {
-        return {
-          site: "Tapology",
-          rank,
-          total,
-          division: "Welterweight",
-          url: TAPOLOGY_URL,
-        };
-      }
-    }
-    return undefined;
   } catch {
     return undefined;
   }
@@ -185,63 +156,143 @@ export async function crawlUfcStats(): Promise<FighterStats> {
     }
   });
 
-  // Extract fight history
+  // Extract fight history via Drupal AJAX API
+  // 초기 HTML에는 최근 1경기만 새 구조로 표시되므로, AJAX로 전체 전적 로드
   const fightHistory: FightHistoryEntry[] = [];
-  $(".c-card-event--athlete-results, .l-listing__item").each((_, el) => {
-    const opponent =
-      $(el).find(".c-card-event--athlete-results__opponent").text().trim() ||
-      $(el).find('[class*="opponent"]').text().trim();
-    const result =
-      $(el).find(".c-card-event--athlete-results__result").text().trim() ||
-      $(el).find('[class*="result"]').text().trim();
-    const method =
-      $(el).find(".c-card-event--athlete-results__method").text().trim() ||
-      $(el).find('[class*="method"]').text().trim();
-    const date =
-      $(el).find(".c-card-event--athlete-results__date").text().trim() ||
-      $(el).find('[class*="date"]').text().trim();
-    const event =
-      $(el).find(".c-card-event--athlete-results__event").text().trim() ||
-      $(el).find('[class*="event-name"]').text().trim();
-    const roundText =
-      $(el).find(".c-card-event--athlete-results__round").text().trim() || "";
-    const timeText =
-      $(el).find(".c-card-event--athlete-results__time").text().trim() || "";
+  try {
+    const viewDomId =
+      html.match(/view_dom_id":"([a-f0-9]+)"/)?.[1] || "";
+    const viewArgs =
+      html.match(/view_args":"([^"]+)"/)?.[1]?.replace(/\\\//g, "/") || "";
 
-    if (opponent) {
-      fightHistory.push({
-        date: date || "",
-        event: event || "",
-        opponent,
-        result: result.toLowerCase().includes("win")
-          ? "win"
-          : result.toLowerCase().includes("loss")
-            ? "loss"
-            : "draw",
-        method: method || "",
-        round: parseInt(roundText) || 0,
-        time: timeText || "",
+    if (viewDomId && viewArgs) {
+      const ajaxParams = new URLSearchParams({
+        view_name: "athlete_results",
+        view_display_id: "entity_view_1",
+        view_args: viewArgs,
+        view_path: `/node/${viewArgs.split("/")[0]}`,
+        view_dom_id: viewDomId,
+        pager_element: "0",
+        page: "0",
+        _drupal_ajax: "1",
+        _wrapper_format: "drupal_ajax",
       });
+
+      const ajaxRes = await fetch(
+        `https://kr.ufc.com/views/ajax?${ajaxParams.toString()}`,
+        {
+          headers: {
+            ...CRAWLER_HEADERS,
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        },
+      );
+
+      if (ajaxRes.ok) {
+        const ajaxJson = (await ajaxRes.json()) as Array<{
+          command: string;
+          data?: string;
+        }>;
+        const insertCmd = ajaxJson.find(
+          (c) => c.command === "insert" && c.data && c.data.length > 0,
+        );
+
+        if (insertCmd?.data) {
+          const $ajax = cheerio.load(insertCmd.data);
+
+          $ajax(".c-card-event--athlete-results").each((_, el) => {
+            // 상대 이름: headline 내 <a> 중 본인(seokhyeon-ko)이 아닌 링크
+            const headlineLinks = $ajax(el).find(
+              ".c-card-event--athlete-results__headline a",
+            );
+            let opponent = "";
+            headlineLinks.each((_, link) => {
+              const href = $ajax(link).attr("href") || "";
+              if (!href.includes("seokhyeon-ko")) {
+                opponent = $ajax(link).text().trim();
+              }
+            });
+
+            if (!opponent) return;
+
+            // 승패: plaque 클래스의 win/loss
+            const plaqueClass =
+              $ajax(el)
+                .find(".c-card-event--athlete-results__plaque")
+                .attr("class") || "";
+            const resultStr: "win" | "loss" | "draw" =
+              plaqueClass.includes("win")
+                ? "win"
+                : plaqueClass.includes("loss")
+                  ? "loss"
+                  : "draw";
+
+            // 날짜
+            const date = $ajax(el)
+              .find(".c-card-event--athlete-results__date")
+              .text()
+              .trim();
+
+            // 결과 상세 (라운드, 시간, 메소드) — label/text 쌍으로 파싱
+            let round = 0;
+            let time = "";
+            let method = "";
+            $ajax(el)
+              .find(".c-card-event--athlete-results__result")
+              .each((_, resultEl) => {
+                const label = $ajax(resultEl)
+                  .find(".c-card-event--athlete-results__result-label")
+                  .text()
+                  .trim()
+                  .toLowerCase();
+                const value = $ajax(resultEl)
+                  .find(".c-card-event--athlete-results__result-text")
+                  .text()
+                  .trim();
+                if (
+                  label.includes("round") ||
+                  label.includes("일주") ||
+                  label.includes("라운드")
+                ) {
+                  round = parseInt(value) || 0;
+                } else if (
+                  label.includes("time") ||
+                  label.includes("시간")
+                ) {
+                  time = value;
+                } else if (
+                  label.includes("method") ||
+                  label.includes("메소드") ||
+                  label.includes("방법")
+                ) {
+                  method = value;
+                }
+              });
+
+            fightHistory.push({
+              date: date || "",
+              event: "",
+              opponent,
+              result: resultStr,
+              method,
+              round,
+              time,
+            });
+          });
+        }
+      }
     }
-  });
+  } catch {
+    // Fight history fetch failed — non-blocking, use empty array
+  }
 
   stats.fightHistory = fightHistory;
 
-  // Fetch external rankings in parallel (failures are non-blocking)
-  const [fightmatrixResult, tapologyResult] = await Promise.allSettled([
-    crawlFightMatrixRank(),
-    crawlTapologyRank(),
-  ]);
-
-  const externalRankings: ExternalRanking[] = [];
-  if (fightmatrixResult.status === "fulfilled" && fightmatrixResult.value) {
-    externalRankings.push(fightmatrixResult.value);
-  }
-  if (tapologyResult.status === "fulfilled" && tapologyResult.value) {
-    externalRankings.push(tapologyResult.value);
-  }
-  if (externalRankings.length > 0) {
-    stats.externalRankings = externalRankings;
+  // Fetch external rankings (failures are non-blocking)
+  const fightmatrixRank = await crawlFightMatrixRank();
+  if (fightmatrixRank) {
+    stats.externalRankings = [fightmatrixRank];
   }
 
   return stats as FighterStats;
