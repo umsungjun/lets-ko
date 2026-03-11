@@ -219,7 +219,6 @@ export default function VideoSection({
                 allowFullScreen
               />
             </div>
-
           </div>
         </div>
       )}

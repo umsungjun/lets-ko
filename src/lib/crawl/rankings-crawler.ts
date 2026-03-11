@@ -46,9 +46,8 @@ function parseRankedFighters(
       .find(".views-field-weight-class-rank-change")
       .text()
       .trim();
-    const changeHtml = $(row)
-      .find(".views-field-weight-class-rank-change")
-      .html() || "";
+    const changeHtml =
+      $(row).find(".views-field-weight-class-rank-change").html() || "";
 
     const rank = parseInt(rankText);
     if (!name || isNaN(rank)) return;
@@ -125,8 +124,7 @@ export async function crawlUfcRankings(): Promise<UfcRankings> {
 
     if (champion$.length > 0) {
       const champName = champion$.find("h5 a").text().trim();
-      const champImg =
-        champion$.find("img").attr("src") || "";
+      const champImg = champion$.find("img").attr("src") || "";
 
       if (champName) {
         champion = { name: champName, imageUrl: champImg };

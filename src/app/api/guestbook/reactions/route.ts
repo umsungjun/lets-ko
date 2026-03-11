@@ -46,10 +46,7 @@ export async function POST(request: NextRequest) {
   let active: boolean;
 
   if (existing) {
-    await supabase
-      .from("guestbook_reactions")
-      .delete()
-      .eq("id", existing.id);
+    await supabase.from("guestbook_reactions").delete().eq("id", existing.id);
     active = false;
   } else {
     const { error } = await supabase.from("guestbook_reactions").insert({

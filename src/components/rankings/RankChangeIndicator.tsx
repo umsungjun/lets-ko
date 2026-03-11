@@ -3,10 +3,7 @@ interface RankChangeProps {
   isNR: boolean;
 }
 
-export default function RankChangeIndicator({
-  change,
-  isNR,
-}: RankChangeProps) {
+export default function RankChangeIndicator({ change, isNR }: RankChangeProps) {
   if (isNR) {
     return (
       <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-semibold text-blue-600">

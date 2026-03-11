@@ -70,7 +70,10 @@ export default async function LocaleLayout({
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col antialiased" suppressHydrationWarning>
+      <body
+        className="min-h-screen flex flex-col antialiased"
+        suppressHydrationWarning
+      >
         <NextIntlClientProvider messages={messages}>
           <Header />
           <main className="flex-1">{children}</main>

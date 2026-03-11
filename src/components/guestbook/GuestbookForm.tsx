@@ -100,7 +100,10 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
 
       <textarea
         value={message}
-        onChange={(e) => { setMessage(e.target.value); setError(null); }}
+        onChange={(e) => {
+          setMessage(e.target.value);
+          setError(null);
+        }}
         placeholder={t("messagePlaceholder")}
         maxLength={500}
         rows={3}
@@ -108,7 +111,9 @@ export default function GuestbookForm({ onSubmit }: GuestbookFormProps) {
       />
 
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-muted shrink-0">{message.length}/500</span>
+        <span className="text-xs text-muted shrink-0">
+          {message.length}/500
+        </span>
         {error && (
           <span className="text-xs text-red-500 flex-1 text-right">
             {error}

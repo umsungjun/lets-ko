@@ -23,7 +23,10 @@ async function crawlFightMatrixRank(): Promise<ExternalRanking | undefined> {
     let result: ExternalRanking | undefined;
     $('a[href*="/mma-ranks/"]').each((_, el) => {
       if (result) return;
-      const match = $(el).text().trim().match(/^#(\d+)\s+(.+)$/);
+      const match = $(el)
+        .text()
+        .trim()
+        .match(/^#(\d+)\s+(.+)$/);
       if (match) {
         result = {
           site: "FightMatrix",
@@ -160,8 +163,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
   // 초기 HTML에는 최근 1경기만 새 구조로 표시되므로, AJAX로 전체 전적 로드
   const fightHistory: FightHistoryEntry[] = [];
   try {
-    const viewDomId =
-      html.match(/view_dom_id":"([a-f0-9]+)"/)?.[1] || "";
+    const viewDomId = html.match(/view_dom_id":"([a-f0-9]+)"/)?.[1] || "";
     const viewArgs =
       html.match(/view_args":"([^"]+)"/)?.[1]?.replace(/\\\//g, "/") || "";
 
@@ -186,7 +188,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
             Accept: "application/json",
             "X-Requested-With": "XMLHttpRequest",
           },
-        },
+        }
       );
 
       if (ajaxRes.ok) {
@@ -195,7 +197,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
           data?: string;
         }>;
         const insertCmd = ajaxJson.find(
-          (c) => c.command === "insert" && c.data && c.data.length > 0,
+          (c) => c.command === "insert" && c.data && c.data.length > 0
         );
 
         if (insertCmd?.data) {
@@ -204,7 +206,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
           $ajax(".c-card-event--athlete-results").each((_, el) => {
             // 상대 이름: headline 내 <a> 중 본인(seokhyeon-ko)이 아닌 링크
             const headlineLinks = $ajax(el).find(
-              ".c-card-event--athlete-results__headline a",
+              ".c-card-event--athlete-results__headline a"
             );
             let opponent = "";
             headlineLinks.each((_, link) => {
@@ -221,12 +223,13 @@ export async function crawlUfcStats(): Promise<FighterStats> {
               $ajax(el)
                 .find(".c-card-event--athlete-results__plaque")
                 .attr("class") || "";
-            const resultStr: "win" | "loss" | "draw" =
-              plaqueClass.includes("win")
-                ? "win"
-                : plaqueClass.includes("loss")
-                  ? "loss"
-                  : "draw";
+            const resultStr: "win" | "loss" | "draw" = plaqueClass.includes(
+              "win"
+            )
+              ? "win"
+              : plaqueClass.includes("loss")
+                ? "loss"
+                : "draw";
 
             // 날짜
             const date = $ajax(el)
@@ -256,10 +259,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
                   label.includes("라운드")
                 ) {
                   round = parseInt(value) || 0;
-                } else if (
-                  label.includes("time") ||
-                  label.includes("시간")
-                ) {
+                } else if (label.includes("time") || label.includes("시간")) {
                   time = value;
                 } else if (
                   label.includes("method") ||
