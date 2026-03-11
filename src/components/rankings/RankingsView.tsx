@@ -115,9 +115,7 @@ export default function RankingsView({ rankings, locale }: RankingsViewProps) {
       </div>
 
       {/* Source */}
-      <p className="mt-10 text-center text-xs text-muted/50">
-        {t("source")}
-      </p>
+      <p className="mt-10 text-center text-xs text-muted/50">{t("source")}</p>
     </div>
   );
 }

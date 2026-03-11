@@ -24,14 +24,14 @@ UFC 웰터급 파이터 **고석현**(The Korean Tyson) 선수의 비공식 팬 
 
 ## 기술 스택
 
-| 구분 | 기술 |
-|---|---|
-| 프레임워크 | Next.js 16 (App Router) |
-| 언어 | TypeScript |
-| 스타일링 | Tailwind CSS v4 |
-| 데이터베이스 | Supabase (PostgreSQL) |
-| 다국어 | next-intl |
-| 배포 | Vercel |
+| 구분         | 기술                    |
+| ------------ | ----------------------- |
+| 프레임워크   | Next.js 16 (App Router) |
+| 언어         | TypeScript              |
+| 스타일링     | Tailwind CSS v4         |
+| 데이터베이스 | Supabase (PostgreSQL)   |
+| 다국어       | next-intl               |
+| 배포         | Vercel                  |
 
 ## 프로젝트 구조
 
@@ -66,12 +66,12 @@ src/
 
 ## Supabase 테이블
 
-| 테이블 | 설명 |
-|---|---|
-| `guestbook_messages` | 방명록 메시지 (닉네임, 내용, IP 해시) |
+| 테이블                | 설명                                                    |
+| --------------------- | ------------------------------------------------------- |
+| `guestbook_messages`  | 방명록 메시지 (닉네임, 내용, IP 해시)                   |
 | `guestbook_reactions` | 이모지 리액션 (message_id, emoji, IP 해시, UNIQUE 제약) |
-| `fighter_stats` | UFC 선수 스탯 크롤링 데이터 |
-| `ufc_rankings` | UFC 체급별 랭킹 크롤링 데이터 |
+| `fighter_stats`       | UFC 선수 스탯 크롤링 데이터                             |
+| `ufc_rankings`        | UFC 체급별 랭킹 크롤링 데이터                           |
 
 ## 로컬 개발
 

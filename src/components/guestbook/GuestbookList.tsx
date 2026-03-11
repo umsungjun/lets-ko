@@ -17,9 +17,7 @@ const REACTION_EMOJIS = ["👊", "🔥", "💪", "❤️", "👏"];
 
 function getMyReactions(): Record<string, string[]> {
   try {
-    return JSON.parse(
-      localStorage.getItem("guestbook_my_reactions") || "{}"
-    );
+    return JSON.parse(localStorage.getItem("guestbook_my_reactions") || "{}");
   } catch {
     return {};
   }
@@ -323,8 +321,20 @@ export default function GuestbookList() {
                           >
                             <circle cx="12" cy="12" r="10" />
                             <path d="M8 13s1.5 2 4 2 4-2 4-2" />
-                            <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth="3" />
-                            <line x1="15" y1="9" x2="15.01" y2="9" strokeWidth="3" />
+                            <line
+                              x1="9"
+                              y1="9"
+                              x2="9.01"
+                              y2="9"
+                              strokeWidth="3"
+                            />
+                            <line
+                              x1="15"
+                              y1="9"
+                              x2="15.01"
+                              y2="9"
+                              strokeWidth="3"
+                            />
                           </svg>
                         </button>
                         <div
@@ -335,7 +345,9 @@ export default function GuestbookList() {
                           }`}
                         >
                           {REACTION_EMOJIS.map((emoji) => {
-                            const reacted = (myReactions[msg.id] || []).includes(emoji);
+                            const reacted = (
+                              myReactions[msg.id] || []
+                            ).includes(emoji);
                             return (
                               <button
                                 key={emoji}
@@ -354,11 +366,17 @@ export default function GuestbookList() {
                       </div>
 
                       {/* 2줄: 리액션 카운트 배지 */}
-                      {REACTION_EMOJIS.some((e) => (msg.reactions?.[e] || 0) > 0 || (myReactions[msg.id] || []).includes(e)) && (
+                      {REACTION_EMOJIS.some(
+                        (e) =>
+                          (msg.reactions?.[e] || 0) > 0 ||
+                          (myReactions[msg.id] || []).includes(e)
+                      ) && (
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {REACTION_EMOJIS.map((emoji) => {
                             const count = msg.reactions?.[emoji] || 0;
-                            const reacted = (myReactions[msg.id] || []).includes(emoji);
+                            const reacted = (
+                              myReactions[msg.id] || []
+                            ).includes(emoji);
                             if (count === 0 && !reacted) return null;
                             return (
                               <button

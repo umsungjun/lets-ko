@@ -152,26 +152,34 @@ export default function StatsCard({ stats }: StatsCardProps) {
                         alt={`${ranking.site} icon`}
                         className="w-4 h-4"
                         onError={(e) => {
-                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.style.display = "none";
                         }}
                       />
                     ) : ranking.site === "Tapology" ? (
-                      <svg className="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="2" y="2" width="4" height="12" rx="1"/>
-                        <rect x="7.5" y="2" width="4" height="12" rx="1"/>
-                        <rect x="13" y="2" width="4" height="12" rx="1"/>
-                        <rect x="18.5" y="2" width="4" height="12" rx="1"/>
-                        <rect x="2" y="16" width="9" height="6" rx="1"/>
-                        <rect x="13" y="16" width="9" height="6" rx="1"/>
+                      <svg
+                        className="w-4 h-4 text-muted"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <rect x="2" y="2" width="4" height="12" rx="1" />
+                        <rect x="7.5" y="2" width="4" height="12" rx="1" />
+                        <rect x="13" y="2" width="4" height="12" rx="1" />
+                        <rect x="18.5" y="2" width="4" height="12" rx="1" />
+                        <rect x="2" y="16" width="9" height="6" rx="1" />
+                        <rect x="13" y="16" width="9" height="6" rx="1" />
                       </svg>
                     ) : (
                       <span className="w-4 h-4 flex items-center justify-center text-[10px] font-bold text-muted bg-gray-100 rounded">
                         {ranking.site.charAt(0)}
                       </span>
                     )}
-                    <p className="text-xs font-medium text-muted">{ranking.site}</p>
+                    <p className="text-xs font-medium text-muted">
+                      {ranking.site}
+                    </p>
                   </div>
-                  <p className="text-4xl font-black text-primary">#{ranking.rank}</p>
+                  <p className="text-4xl font-black text-primary">
+                    #{ranking.rank}
+                  </p>
                 </a>
               ))}
             </div>

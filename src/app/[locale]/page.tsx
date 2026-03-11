@@ -66,7 +66,9 @@ async function getFighterStats(): Promise<FighterStats> {
         if (stats.record.wins + stats.record.losses + stats.record.draws > 0) {
           // 크론 미실행 또는 크롤 실패 시 캐시에서 보완
           if (!stats.externalRankings?.length) {
-            stats.externalRankings = (cachedStats as FighterStats).externalRankings;
+            stats.externalRankings = (
+              cachedStats as FighterStats
+            ).externalRankings;
           }
           if (!stats.fightHistory?.length) {
             stats.fightHistory = (cachedStats as FighterStats).fightHistory;
@@ -176,10 +178,7 @@ export default async function HomePage({
       <FightRecord fights={stats.fightHistory} />
       <VideoSection videosByDate={videosByDate} videosByViews={videosByViews} />
       <NewsSection articles={news} locale={locale} />
-      <ChampionsPreview
-        divisions={rankings.divisions}
-        locale={locale}
-      />
+      <ChampionsPreview divisions={rankings.divisions} locale={locale} />
 
       {/* CTA to Guestbook */}
       <section className="py-16 px-4 bg-surface">
