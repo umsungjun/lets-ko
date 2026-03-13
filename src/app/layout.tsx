@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   // 상대 경로 alternates가 절대 URL로 변환되도록 metadataBase 설정
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "고석현 응원 | LET'S KO",
+    default: "고석현 | LET'S KO",
     template: "%s | LET'S KO",
   },
   description:
@@ -40,17 +40,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "LET'S KO",
-    title: "고석현 응원 | LET'S KO",
+    title: "고석현 | LET'S KO",
     description:
-      "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 전적, 경기 기록, 하이라이트 영상, 응원 메시지",
+      "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 비공식 팬 응원 사이트. 전적, 경기 기록, 하이라이트 영상, 응원 메시지를 확인하세요.",
     locale: "ko_KR",
     alternateLocale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "고석현 응원 | LET'S KO",
+    title: "고석현 | LET'S KO",
     description:
-      "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 비공식 팬 응원 사이트",
+      "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 비공식 팬 응원 사이트. 전적, 경기 기록, 하이라이트 영상, 응원 메시지를 확인하세요.",
   },
   robots: {
     index: true,
