@@ -35,11 +35,11 @@ export default async function LocaleLayout({
 
   const siteOrigin = (() => {
     const raw =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://letsko.kro.kr";
     try {
       return new URL(raw).origin;
     } catch {
-      return "https://lets-ko.vercel.app";
+      return "https://letsko.kro.kr";
     }
   })();
   const ogImageUrl = `${siteOrigin}/og.png`;

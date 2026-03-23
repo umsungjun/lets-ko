@@ -1,12 +1,12 @@
 import type { MetadataRoute } from "next";
 
 // path 없이 origin만 사용 (다른 파일과 동일한 정규화)
-const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
+const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://letsko.kro.kr";
 const SITE_URL = (() => {
   try {
     return new URL(raw).origin;
   } catch {
-    return "https://lets-ko.vercel.app";
+    return "https://letsko.kro.kr";
   }
 })();
 
