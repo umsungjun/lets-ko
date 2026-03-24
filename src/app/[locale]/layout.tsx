@@ -47,10 +47,6 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <head>
-        <meta
-          name="google-site-verification"
-          content="FkVxpqkKnBQlSm1tgTF-GyQP0GLfhX_z03E6h21lipo"
-        />
         {/* og:image을 직접 주입 — Next.js 메타데이터 API의 locale prefix 자동 추가 우회 */}
         <meta property="og:image" content={ogImageUrl} />
         <meta property="og:image:width" content="1200" />
