@@ -2,7 +2,8 @@
   "nav": {
     "home": "Home",
     "rankings": "UFC Rankings",
-    "cheer": "Cheer"
+    "cheer": "Cheer",
+    "predictions": "AI Prediction"
   },
   "hero": {
     "nickname": "The Korean Tyson",
@@ -90,6 +91,33 @@
     "source": "Source: Official UFC Website",
     "championsTitle": "UFC Champions by Division",
     "viewAll": "View All Rankings"
+  },
+  "predictions": {
+    "title": "AI Next Opponent Prediction",
+    "poweredBy": "Powered by Gemini AI",
+    "viewDetail": "View Detailed Analysis",
+    "rank": "FightMatrix Rank",
+    "rankSource": "Rankings based on FightMatrix",
+    "record": "Record",
+    "age": "Age",
+    "heightWeight": "Height / Weight",
+    "reach": "Reach",
+    "style": "Style",
+    "winProbability": "AI Win Probability",
+    "matchReason": "Match Likelihood",
+    "fightAnalysis": "Fight Analysis",
+    "updatedAt": "Updated {date}",
+    "disclaimer": "AI-generated prediction. Actual matchups may differ.",
+    "koName": "Ko Seokhyeon",
+    "vs": "VS",
+    "candidate": "Candidate {number}",
+    "confirmed": "Next Fight Confirmed",
+    "confirmedDate": "Date",
+    "confirmedLocation": "Location",
+    "confirmedEvent": "Event",
+    "preparing": "Preparing for Next Fight",
+    "preparingDesc": "Currently preparing after the recent fight. Updates will follow once the next opponent is confirmed.",
+    "lastFight": "Last fight: {date}"
   },
   "common": {
     "locale": "EN"

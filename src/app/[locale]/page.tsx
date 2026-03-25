@@ -7,9 +7,11 @@ import CareerTimeline from "@/components/fighter/CareerTimeline";
 import FightRecord from "@/components/fighter/FightRecord";
 import FighterProfile from "@/components/fighter/FighterProfile";
 import NewsSection from "@/components/fighter/NewsSection";
+import PredictionPreview from "@/components/fighter/PredictionPreview";
 import StatsCard from "@/components/fighter/StatsCard";
 import VideoSection from "@/components/fighter/VideoSection";
 import ChampionsPreview from "@/components/rankings/ChampionsPreview";
+import cachedPredictions from "@/data/cached-predictions.json";
 import cachedRankings from "@/data/cached-rankings.json";
 import cachedStats from "@/data/cached-stats.json";
 import careerHighlights from "@/data/career-highlights.json";
@@ -21,6 +23,7 @@ import type {
   FighterBio,
   FighterStats,
 } from "@/types/fighter";
+import type { PredictionData } from "@/types/prediction";
 import type { UfcRankings } from "@/types/rankings";
 
 export const revalidate = 86400;
@@ -113,6 +116,33 @@ async function getRankings(): Promise<UfcRankings> {
   return cachedRankings as UfcRankings;
 }
 
+async function getPredictions(): Promise<PredictionData> {
+  if (
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    try {
+      const { createServerClient } = await import("@/lib/supabase/server");
+      const supabase = createServerClient();
+      const { data } = await supabase
+        .from("opponent_predictions")
+        .select("data")
+        .order("crawled_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data?.data) {
+        const predictions = data.data as PredictionData;
+        if (predictions.opponents?.length > 0) return predictions;
+      }
+    } catch {
+      // Fall through to cached data
+    }
+  }
+
+  return cachedPredictions as PredictionData;
+}
+
 export default async function HomePage({
   params,
 }: {
@@ -122,13 +152,14 @@ export default async function HomePage({
   setRequestLocale(locale);
 
   const t = await getTranslations("guestbook");
-  const [stats, videosByDate, videosByViews, news, rankings] =
+  const [stats, videosByDate, videosByViews, news, rankings, predictions] =
     await Promise.all([
       getFighterStats(),
       searchYouTubeVideos("date"),
       searchYouTubeVideos("viewCount"),
       fetchNews(),
       getRankings(),
+      getPredictions(),
     ]);
 
   const siteOrigin = (() => {
@@ -170,6 +201,7 @@ export default async function HomePage({
         stats={stats}
         locale={locale}
       />
+      <PredictionPreview predictions={predictions} locale={locale} />
       <StatsCard stats={stats} />
       <CareerTimeline
         highlights={careerHighlights as CareerHighlight[]}

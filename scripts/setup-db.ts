@@ -85,6 +85,21 @@ async function setup() {
     ON ufc_rankings(crawled_at DESC)
   `;
 
+  // AI 상대 예측 테이블
+  await sql`
+    CREATE TABLE IF NOT EXISTS opponent_predictions (
+      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      data JSONB NOT NULL,
+      crawled_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  console.log("  opponent_predictions 테이블 생성 완료");
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_opponent_predictions_crawled_at
+    ON opponent_predictions(crawled_at DESC)
+  `;
+
   // 방명록 리액션 테이블
   await sql`
     CREATE TABLE IF NOT EXISTS guestbook_reactions (
