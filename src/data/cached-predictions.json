@@ -1,0 +1,100 @@
+{
+  "generatedAt": "2026-03-25T12:12:03.563Z",
+  "koFightMatrixRank": 46,
+  "lastFightDate": "02.11.25",
+  "opponents": [
+    {
+      "name": {
+        "ko": "브라이언 배틀",
+        "en": "Bryan Battle"
+      },
+      "imageUrl": "https://ufc.com/images/styles/athlete_bio_full_body/s3/2025-08/BATTLE_BRYAN_L_08-16.png?itok=f3cOGVBM",
+      "country": "USA",
+      "fightMatrixRank": 41,
+      "fightingStyle": {
+        "ko": "레슬링 / 타격",
+        "en": "Wrestling / Striking"
+      },
+      "record": {
+        "wins": 11,
+        "losses": 2,
+        "draws": 0
+      },
+      "age": 29,
+      "height": "185.4cm",
+      "weight": "77.1kg",
+      "reach": "190.5cm",
+      "winProbability": 45,
+      "matchReasoning": {
+        "ko": "고석현에게 레슬링 테스트가 필요합니다. 배틀은 강한 레슬링과 좋은 타격을 갖추고 있으며, 긴 경기 운영 능력도 입증했습니다. 또한 고석현보다 약간 높은 랭킹으로 논리적인 다음 단계의 상대입니다.",
+        "en": "Ko Seokhyeon needs a wrestling test. Battle is a strong wrestler with good striking and has proven he can go the distance. He is also ranked just above Ko, making it a logical step up in competition."
+      },
+      "fightAnalysis": {
+        "ko": "고석현은 강력한 유도/삼보 그래플링과 압박형 스타일을 앞세워 63%의 높은 테이크다운 성공률을 바탕으로 거리를 좁히고 그라운드에서 우위를 점하려 할 것입니다. 브라이언 배틀은 레슬링과 타격 기반의 올라운더로, 190.5cm의 리치 이점을 활용해 스탠딩 타격전으로 경기를 풀어나가며 우세를 점할 것으로 예상됩니다. 경기의 핵심은 고석현의 테이크다운 시도와 배틀의 방어 및 카운터 능력에 달려있습니다. 고석현이 꾸준히 배틀을 그라운드로 끌고 간다면 판정승이나 서브미션을 노릴 수 있지만, 배틀의 방어 레슬링과 카운터 스트라이킹은 상당한 위협이 될 것입니다.",
+        "en": "Ko Seokhyeon, with his powerful Judo/Sambo grappling and pressure-heavy approach, will aim to close the distance, secure takedowns, and dominate on the ground, supported by his 63% takedown accuracy. Bryan Battle, a well-rounded fighter with a wrestling and striking background, will likely utilize his significant reach advantage (190.5cm) to keep the fight standing, where his striking should hold an edge. The critical moments will revolve around Ko's successful takedown entries versus Battle's defensive wrestling and counter-striking. If Ko can consistently ground Battle, he could control the rounds for a decision or submission, but Battle's balanced skillset and defensive capabilities pose a formidable challenge."
+      }
+    },
+    {
+      "name": {
+        "ko": "제이크 매튜스",
+        "en": "Jake Matthews"
+      },
+      "imageUrl": "https://ufc.com/images/styles/athlete_bio_full_body/s3/2025-09/MATTHEWS_JAKE_L_09-27.png?itok=fAqBQZtf",
+      "country": "Australia",
+      "fightMatrixRank": 39,
+      "fightingStyle": {
+        "ko": "웰라운더 / 레슬링",
+        "en": "Well-rounded / Wrestling"
+      },
+      "record": {
+        "wins": 19,
+        "losses": 6,
+        "draws": 0
+      },
+      "age": 29,
+      "height": "180.3cm",
+      "weight": "77.1kg",
+      "reach": "185.4cm",
+      "winProbability": 45,
+      "matchReasoning": {
+        "ko": "매튜스는 탄탄한 레슬링과 그래플링을 포함한 견고한 올라운드 게임을 가진 베테랑입니다. 이 경기는 고석현이 순수 타격가나 BJJ 스페셜리스트와는 다른, 노련하고 올라운드 능력을 갖춘 레슬링 상대에게 대처하는 능력을 시험할 것입니다.",
+        "en": "Matthews is a veteran with a solid all-around game, including strong wrestling and grappling. This fight would test Ko's ability to handle a seasoned, well-rounded opponent who can also wrestle, providing a different challenge than pure strikers or BJJ specialists."
+      },
+      "fightAnalysis": {
+        "ko": "강력한 유도/삼보 그래플링과 압박 스타일의 고석현은 제이크 매튜스에게 근접전을 강요하며 테이크다운을 노릴 것입니다. 63%의 높은 테이크다운 성공률은 큰 무기가 될 수 있습니다. 반면, 레슬링 기반의 웰라운더 매튜스는 거리를 유지하며 고석현의 진입을 카운터 스트라이크로 저지하려 할 것입니다. 고석현이 꾸준히 테이크다운을 성공시키고 그라운드 컨트롤을 유지한다면, 판정승이나 서브미션 기회를 만들 수 있습니다.",
+        "en": "Ko Seokhyeon, with his powerful Judo/Sambo grappling and pressure, will aim to close the distance and take Jake Matthews to the mat, where his 63% takedown accuracy could be a major factor. Matthews, a well-rounded fighter with a wrestling base, will try to keep the fight standing, utilizing his reach and striking to counter Ko's aggressive entries. The key will be Matthews' takedown defense against Ko's relentless pursuit; if Ko can secure sustained ground control, he could grind out a decision or find a submission opportunity. However, if Matthews can consistently sprawl and brawl, his superior striking and Octagon experience might lead him to a late TKO or a decisive points victory."
+      }
+    },
+    {
+      "name": {
+        "ko": "템바 고림보",
+        "en": "Themba Gorimbo"
+      },
+      "imageUrl": "https://ufc.com/images/styles/athlete_bio_full_body/s3/2024-10/GORIMBO_THEMBA_L_10-12.png?itok=aoHqqbBI",
+      "country": "Zimbabwe",
+      "fightMatrixRank": 45,
+      "fightingStyle": {
+        "ko": "레슬링 / 그래플링",
+        "en": "Wrestling / Grappling"
+      },
+      "record": {
+        "wins": 12,
+        "losses": 4,
+        "draws": 0
+      },
+      "age": 33,
+      "height": "180.3cm",
+      "weight": "77.1kg",
+      "reach": "182.9cm",
+      "winProbability": 60,
+      "matchReasoning": {
+        "ko": "고림보는 강력한 레슬러이자 그래플러로, 고석현의 그래플링 위주 스타일에 상당한 도전을 제시할 것입니다. 이 경기는 고석현이 테이크다운을 방어하고 또 다른 강한 그래플러를 상대로 자신의 의지를 관철하는 능력을 시험하는 진정한 시험대가 될 것입니다. 그의 랭킹 또한 고석현의 다음 단계에 완벽하게 부합합니다.",
+        "en": "Gorimbo is a powerful wrestler and grappler who would present a significant challenge to Ko's own grappling-heavy style. This would be a true test of Ko's ability to defend takedowns and impose his will against another strong grappler. His rank is also a perfect fit for Ko's next step up."
+      },
+      "fightAnalysis": {
+        "ko": "이 경기는 고석현의 유도/삼보 기반과 63%의 높은 테이크다운 성공률, 그리고 템바 고림보의 숙련된 레슬링이 맞붙는 고강도 그래플링 싸움이 될 것입니다. 고석현의 \"압박형 파이터\" 스타일은 짧은 타격 교환에서 \"묵직한 펀치\"와 강력한 그래플링을 결합하여 고림보의 방어를 뚫고 테이크다운을 성공시키는 데 중요할 것입니다. 고석현은 꾸준히 테이크다운을 시도하고, 우세한 포지션을 유지하며, 고림보의 체력을 소진시키는 전략으로 승리를 노릴 것입니다. 고석현은 매트 위에서의 우월한 컨트롤과 공격성을 바탕으로 판정승을 거둘 것으로 예상됩니다.",
+        "en": "This fight will primarily be a high-stakes grappling affair, as both Ko Seokhyeon, with his Judo/Sambo base and 63% takedown accuracy, and Themba Gorimbo, a proficient wrestler, will seek to impose their will on the ground. Ko's \"pressure fighter\" approach, coupled with his powerful grappling and \"heavy hands\" in short striking exchanges, could be key to breaking Gorimbo's defense and securing takedowns. Success for Ko lies in consistently driving for takedowns, maintaining dominant positions, and potentially wearing down Gorimbo's cardio. Expect Ko to grind out a decision victory through superior control and aggression on the mat."
+      }
+    }
+  ]
+}
