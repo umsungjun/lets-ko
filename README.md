@@ -15,6 +15,7 @@ UFC 웰터급 파이터 **고석현**(The Korean Tyson) 선수의 비공식 팬 
 - **선수 프로필** — 고석현 선수의 기본 정보, 전적, 스탯
 - **경기 기록** — 전체 경기 상세 기록 (결과·방식·라운드·날짜)
 - **커리어 하이라이트** — 주요 커리어 타임라인
+- **AI 다음 상대 예측** — Gemini AI 기반 다음 경기 상대 분석 및 승률 예측 (하루 1회 갱신)
 - **UFC 랭킹** — 전 체급 공식 랭킹 및 챔피언 프리뷰 (하루 1회 갱신)
 - **관련 YouTube 영상** — YouTube API를 통한 최신·인기 영상 자동 수집 (하루 1회 갱신)
 - **관련 뉴스** — Google News RSS를 통한 최신 뉴스 자동 수집 (하루 1회 갱신)
@@ -30,6 +31,7 @@ UFC 웰터급 파이터 **고석현**(The Korean Tyson) 선수의 비공식 팬 
 | 언어         | TypeScript              |
 | 스타일링     | Tailwind CSS v4         |
 | 데이터베이스 | Supabase (PostgreSQL)   |
+| AI           | Google Gemini API       |
 | 다국어       | next-intl               |
 | 배포         | Vercel                  |
 
@@ -41,23 +43,26 @@ src/
 │   ├── [locale]/
 │   │   ├── page.tsx             # 메인 페이지
 │   │   ├── cheer/page.tsx       # 응원하기 페이지
+│   │   ├── predictions/page.tsx # AI 예측 페이지
 │   │   └── rankings/page.tsx    # UFC 랭킹 페이지
 │   ├── api/
 │   │   ├── guestbook/           # 응원 메시지 API (GET/POST/PATCH/DELETE)
 │   │   │   └── reactions/       # 이모지 리액션 API (POST 토글)
-│   │   └── cron/crawl/          # UFC 전적·랭킹 크롤링 (일 1회, KST 12:00)
+│   │   └── cron/crawl/          # UFC 전적·랭킹·AI예측 크롤링 (일 1회, KST 12:00)
 │   ├── robots.ts                # SEO
 │   └── sitemap.ts               # SEO
 ├── components/
 │   ├── fighter/                 # 선수 관련 컴포넌트
 │   ├── guestbook/               # 응원 메시지 컴포넌트
+│   ├── predictions/             # AI 예측 컴포넌트
 │   ├── rankings/                # UFC 랭킹 컴포넌트
 │   └── layout/                  # Header, Footer
 ├── lib/
+│   ├── gemini.ts                # Google Gemini API 연동
 │   ├── youtube.ts               # YouTube API 연동
 │   ├── news.ts                  # Google News RSS 파싱
 │   ├── supabase/                # Supabase 클라이언트
-│   └── crawl/                   # UFC 사이트 크롤러
+│   └── crawl/                   # UFC 사이트 크롤러, AI 예측 생성기
 ├── messages/
 │   ├── ko.json                  # 한국어 번역
 │   └── en.json                  # 영어 번역
@@ -66,12 +71,13 @@ src/
 
 ## Supabase 테이블
 
-| 테이블                | 설명                                                    |
-| --------------------- | ------------------------------------------------------- |
-| `guestbook_messages`  | 방명록 메시지 (닉네임, 내용, IP 해시)                   |
-| `guestbook_reactions` | 이모지 리액션 (message_id, emoji, IP 해시, UNIQUE 제약) |
-| `fighter_stats`       | UFC 선수 스탯 크롤링 데이터                             |
-| `ufc_rankings`        | UFC 체급별 랭킹 크롤링 데이터                           |
+| 테이블                  | 설명                                                    |
+| ----------------------- | ------------------------------------------------------- |
+| `guestbook_messages`    | 방명록 메시지 (닉네임, 내용, IP 해시)                   |
+| `guestbook_reactions`   | 이모지 리액션 (message_id, emoji, IP 해시, UNIQUE 제약) |
+| `fighter_stats`         | UFC 선수 스탯 크롤링 데이터                             |
+| `ufc_rankings`          | UFC 체급별 랭킹 크롤링 데이터                           |
+| `opponent_predictions`  | AI 다음 상대 예측 데이터 (Gemini 분석 결과)             |
 
 ## 로컬 개발
 
@@ -81,7 +87,7 @@ pnpm install
 
 # 환경변수 설정
 cp .env.local.example .env.local
-# .env.local에 Supabase, YouTube API 키 입력
+# .env.local에 Supabase, YouTube API, Gemini API 키 입력
 
 # DB 테이블 생성
 npx tsx --env-file=.env.local scripts/setup-db.ts
