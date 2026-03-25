@@ -10,6 +10,7 @@
     "prettier": "prettier --write ."
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.95.3",
     "cheerio": "^1.2.0",
     "date-fns": "^4.1.0",
