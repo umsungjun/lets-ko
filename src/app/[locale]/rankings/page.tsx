@@ -21,11 +21,11 @@ export async function generateMetadata({
       ? "UFC 전 체급 공식 랭킹. 챔피언, 파운드 포 파운드, 체급별 1~15위 파이터 순위를 확인하세요."
       : "Official UFC rankings across all divisions. View champions, pound-for-pound, and ranked fighters 1-15.",
     alternates: {
-      canonical: `/${locale}/rankings`,
+      canonical: locale === "ko" ? "/rankings" : `/${locale}/rankings`,
       languages: {
-        ko: "/ko/rankings",
+        ko: "/rankings",
         en: "/en/rankings",
-        "x-default": "/ko/rankings",
+        "x-default": "/rankings",
       },
     },
   };

@@ -56,17 +56,17 @@ export async function generateMetadata({
           "MMA",
         ],
     alternates: {
-      canonical: `/${locale}/predictions`,
+      canonical: locale === "ko" ? "/predictions" : `/${locale}/predictions`,
       languages: {
-        ko: "/ko/predictions",
+        ko: "/predictions",
         en: "/en/predictions",
-        "x-default": "/ko/predictions",
+        "x-default": "/predictions",
       },
     },
     openGraph: {
       title,
       description,
-      url: `${origin}/${locale}/predictions`,
+      url: locale === "ko" ? `${origin}/predictions` : `${origin}/${locale}/predictions`,
       siteName: "LET'S KO",
       locale: isKo ? "ko_KR" : "en_US",
       type: "website",

@@ -66,12 +66,12 @@ export async function GET(request: NextRequest) {
     results.predictions = { success: false, error: String(error) };
   }
 
-  // Trigger revalidation
-  revalidatePath("/ko");
+  // Trigger revalidation (ko는 prefix 없음, localePrefix: "as-needed")
+  revalidatePath("/");
   revalidatePath("/en");
-  revalidatePath("/ko/rankings");
+  revalidatePath("/rankings");
   revalidatePath("/en/rankings");
-  revalidatePath("/ko/predictions");
+  revalidatePath("/predictions");
   revalidatePath("/en/predictions");
 
   const allSucceeded = Object.values(results).every(
