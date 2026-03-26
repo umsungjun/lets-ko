@@ -4,11 +4,11 @@ import type { Metadata } from "next";
 
 // path 없이 origin만 사용 (NEXT_PUBLIC_SITE_URL에 /ko 등 path가 포함되어 있어도 안전)
 const SITE_URL = (() => {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://letsko.kro.kr";
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
   try {
     return new URL(raw).origin;
   } catch {
-    return "https://letsko.kro.kr";
+    return "https://lets-ko.vercel.app";
   }
 })();
 

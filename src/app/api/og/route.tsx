@@ -189,7 +189,7 @@ export async function GET() {
             letterSpacing: "2px",
           }}
         >
-          letsko.kro.kr
+          lets-ko.vercel.app
         </div>
       </div>
 

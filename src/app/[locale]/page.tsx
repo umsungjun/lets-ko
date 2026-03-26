@@ -164,11 +164,11 @@ export default async function HomePage({
 
   const siteOrigin = (() => {
     const raw =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://letsko.kro.kr";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
     try {
       return new URL(raw).origin;
     } catch {
-      return "https://letsko.kro.kr";
+      return "https://lets-ko.vercel.app";
     }
   })();
 
