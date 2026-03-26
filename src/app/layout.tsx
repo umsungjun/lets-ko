@@ -64,12 +64,11 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    // 루트(/)는 /ko로 리다이렉트되므로 canonical을 기본 로케일로 지정
-    canonical: `${SITE_URL}/ko`,
+    canonical: SITE_URL,
     languages: {
-      ko: `${SITE_URL}/ko`,
+      ko: SITE_URL,
       en: `${SITE_URL}/en`,
-      "x-default": `${SITE_URL}/ko`,
+      "x-default": SITE_URL,
     },
   },
   verification: {

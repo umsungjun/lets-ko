@@ -20,15 +20,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/cheer", changeFrequency: "hourly" as const, priority: 0.8 },
   ];
 
+  // ko는 prefix 없이, en은 /en prefix 사용 (localePrefix: "as-needed")
+  const localeUrl = (locale: string, path: string) =>
+    locale === "ko" ? `${SITE_URL}${path}` : `${SITE_URL}/${locale}${path}`;
+
   return pages.flatMap((page) =>
     locales.map((locale) => ({
-      url: `${SITE_URL}/${locale}${page.path}`,
+      url: localeUrl(locale, page.path || "/"),
       lastModified: now,
       changeFrequency: page.changeFrequency,
       priority: page.priority,
       alternates: {
         languages: Object.fromEntries(
-          locales.map((l) => [l, `${SITE_URL}/${l}${page.path}`])
+          locales.map((l) => [l, localeUrl(l, page.path || "/")])
         ),
       },
     }))

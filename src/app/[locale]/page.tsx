@@ -42,8 +42,8 @@ export async function generateMetadata({
       ? "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 비공식 팬 응원 사이트. 전적, 경기 기록, 하이라이트 영상, 응원 메시지를 확인하세요."
       : "UFC welterweight fighter Ko Seokhyeon (The Korean Tyson) - unofficial fan support site. Check out fight records, career highlights, videos, and fan messages.",
     alternates: {
-      canonical: `/${locale}`,
-      languages: { ko: "/ko", en: "/en", "x-default": "/ko" },
+      canonical: locale === "ko" ? "/" : `/${locale}`,
+      languages: { ko: "/", en: "/en", "x-default": "/" },
     },
   };
 }
