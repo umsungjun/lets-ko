@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 import { useLocale, useTranslations } from "next-intl";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+
+import { Link, usePathname } from "../../../i18n/navigation";
 
 export default function Header() {
   const t = useTranslations("nav");
@@ -13,7 +13,6 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const otherLocale = locale === "ko" ? "en" : "ko";
-  const switchLocalePath = pathname.replace(`/${locale}`, `/${otherLocale}`);
 
   const navItems = [
     { href: `/${locale}`, label: t("home") },
@@ -49,7 +48,8 @@ export default function Header() {
           ))}
           <div className="w-px h-5 bg-border mx-2" />
           <Link
-            href={switchLocalePath}
+            href={pathname}
+            locale={otherLocale}
             className="text-xs font-bold px-3 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-colors"
           >
             {otherLocale.toUpperCase()}
@@ -59,7 +59,8 @@ export default function Header() {
         {/* Mobile: locale switch + menu button */}
         <div className="sm:hidden flex items-center gap-1">
           <Link
-            href={switchLocalePath}
+            href={pathname}
+            locale={otherLocale}
             className="text-xs font-bold px-2.5 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-colors"
           >
             {otherLocale.toUpperCase()}
