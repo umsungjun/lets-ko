@@ -23,8 +23,8 @@ export async function generateMetadata({
   const origin = new URL(siteUrl).origin;
 
   const title = isKo
-    ? "AI 다음 상대 예측 | 고석현"
-    : "AI Next Opponent Prediction | Ko Seokhyeon";
+    ? "고석현 다음 상대 예측"
+    : "Ko Seokhyeon Next Opponent Prediction";
   const description = isKo
     ? "AI 고석현 다음 상대 예측. Gemini AI가 분석한 고석현 선수의 다음 UFC 경기 상대 후보 3명의 상세 비교 분석과 승률 예측을 확인하세요."
     : "AI Ko Seokhyeon next opponent prediction. Gemini AI-powered analysis of Ko Seokhyeon's next UFC fight with detailed matchup comparison and win probability for 3 candidates.";
