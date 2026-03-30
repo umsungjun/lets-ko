@@ -74,6 +74,18 @@ export async function GET(request: NextRequest) {
   revalidatePath("/predictions");
   revalidatePath("/en/predictions");
 
+  // revalidatePath는 stale 표시만 하고 즉시 재생성하지 않음
+  // 직접 fetch로 워밍업해서 두 페이지가 동시에 최신 데이터를 갖도록 함
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl) {
+    const pagesToWarm = ["/", "/en", "/predictions", "/en/predictions"];
+    await Promise.allSettled(
+      pagesToWarm.map((path) =>
+        fetch(`${siteUrl}${path}`, { cache: "no-store" })
+      )
+    );
+  }
+
   const allSucceeded = Object.values(results).every(
     (r) => (r as { success: boolean }).success
   );
