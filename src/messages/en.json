@@ -117,7 +117,8 @@
     "confirmedEvent": "Event",
     "preparing": "Preparing for Next Fight",
     "preparingDesc": "Currently preparing after the recent fight. Updates will follow once the next opponent is confirmed.",
-    "lastFight": "Last fight: {date}"
+    "lastFight": "Last fight: {date}",
+    "lastFightDate": "Last Fight"
   },
   "common": {
     "locale": "EN"
