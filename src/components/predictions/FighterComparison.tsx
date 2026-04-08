@@ -15,7 +15,45 @@ interface FighterComparisonProps {
     reach: string;
     style: { ko: string; en: string };
     fightMatrixRank: number;
+    lastFightDate?: string;
   };
+}
+
+/** 다양한 날짜 형식을 "약 N개월 전" / "~N months ago" 형식으로 표시 */
+function formatFightDate(date: string | undefined, locale: string): string {
+  if (!date) return "-";
+
+  let parsed: Date | null = null;
+
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    parsed = new Date(date);
+  }
+  // MM.DD.YY (예: 02.11.25 → 2025년 2월 11일)
+  else if (/^\d{2}\.\d{2}\.\d{2}$/.test(date)) {
+    const [mm, dd, yy] = date.split(".");
+    parsed = new Date(`20${yy}-${mm}-${dd}`);
+  }
+
+  if (!parsed || isNaN(parsed.getTime())) return date;
+
+  const months = Math.floor(
+    (Date.now() - parsed.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
+  );
+
+  if (locale === "ko") {
+    if (months < 1) return "이번 달";
+    if (months < 12) return `약 ${months}개월 전`;
+    const years = Math.floor(months / 12);
+    const rem = months % 12;
+    return rem > 0 ? `약 ${years}년 ${rem}개월 전` : `약 ${years}년 전`;
+  } else {
+    if (months < 1) return "this month";
+    if (months < 12) return `~${months}mo ago`;
+    const years = Math.floor(months / 12);
+    const rem = months % 12;
+    return rem > 0 ? `~${years}y ${rem}mo ago` : `~${years}y ago`;
+  }
 }
 
 export default function FighterComparison({
@@ -56,6 +94,11 @@ export default function FighterComparison({
       label: t("style"),
       left: koStats.style[lang],
       right: opponent.fightingStyle[lang],
+    },
+    {
+      label: t("lastFightDate"),
+      left: formatFightDate(koStats.lastFightDate, locale),
+      right: formatFightDate(opponent.lastFightDate, locale),
     },
   ];
 
