@@ -9,6 +9,7 @@ export interface OpponentPrediction {
   height: string;
   weight: string;
   reach: string;
+  lastFightDate?: string;
   winProbability: number;
   matchReasoning: { ko: string; en: string };
   fightAnalysis: { ko: string; en: string };
@@ -50,6 +51,7 @@ export interface SelectedOpponent {
   weight: string;
   reach: string;
   country: string;
+  lastFightDate?: string;
   matchReasoning: { ko: string; en: string };
 }
 

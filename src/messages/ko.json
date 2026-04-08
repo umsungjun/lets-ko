@@ -117,7 +117,8 @@
     "confirmedEvent": "대회",
     "preparing": "다음 경기 준비 중",
     "preparingDesc": "최근 경기를 마친 후 다음 경기를 준비하고 있습니다. 상대가 확정되면 업데이트됩니다.",
-    "lastFight": "최근 경기: {date}"
+    "lastFight": "최근 경기: {date}",
+    "lastFightDate": "최근 경기"
   },
   "common": {
     "locale": "KO"

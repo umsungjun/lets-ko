@@ -46,9 +46,8 @@ async function main() {
 
   // 2. 예측 생성
   console.log("\n2. 예측 생성 중 (Gemini API 4회 호출)...");
-  const { generatePredictions } = await import(
-    "../src/lib/crawl/prediction-generator"
-  );
+  const { generatePredictions } =
+    await import("../src/lib/crawl/prediction-generator");
   const predictions = await generatePredictions(koStats);
 
   console.log(`\n3. 예측 완료! 후보 ${predictions.opponents.length}명:`);

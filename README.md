@@ -71,13 +71,13 @@ src/
 
 ## Supabase 테이블
 
-| 테이블                  | 설명                                                    |
-| ----------------------- | ------------------------------------------------------- |
-| `guestbook_messages`    | 방명록 메시지 (닉네임, 내용, IP 해시)                   |
-| `guestbook_reactions`   | 이모지 리액션 (message_id, emoji, IP 해시, UNIQUE 제약) |
-| `fighter_stats`         | UFC 선수 스탯 크롤링 데이터                             |
-| `ufc_rankings`          | UFC 체급별 랭킹 크롤링 데이터                           |
-| `opponent_predictions`  | AI 다음 상대 예측 데이터 (Gemini 분석 결과)             |
+| 테이블                 | 설명                                                    |
+| ---------------------- | ------------------------------------------------------- |
+| `guestbook_messages`   | 방명록 메시지 (닉네임, 내용, IP 해시)                   |
+| `guestbook_reactions`  | 이모지 리액션 (message_id, emoji, IP 해시, UNIQUE 제약) |
+| `fighter_stats`        | UFC 선수 스탯 크롤링 데이터                             |
+| `ufc_rankings`         | UFC 체급별 랭킹 크롤링 데이터                           |
+| `opponent_predictions` | AI 다음 상대 예측 데이터 (Gemini 분석 결과)             |
 
 ## 로컬 개발
 

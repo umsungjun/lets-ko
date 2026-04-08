@@ -59,8 +59,7 @@ export default function PredictionPreview({
             style={{
               opacity: isInView ? 1 : 0,
               transform: isInView ? "translateY(0)" : "translateY(16px)",
-              transition:
-                "opacity 0.5s ease 150ms, transform 0.5s ease 150ms",
+              transition: "opacity 0.5s ease 150ms, transform 0.5s ease 150ms",
             }}
           >
             <div className="flex items-center justify-center gap-6 mb-4">
@@ -71,9 +70,7 @@ export default function PredictionPreview({
                   className="w-full h-full object-cover object-top"
                 />
               </div>
-              <span className="text-xl font-black text-primary">
-                {t("vs")}
-              </span>
+              <span className="text-xl font-black text-primary">{t("vs")}</span>
               <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-blue-400/30 bg-gray-100">
                 {fight.opponent.imageUrl &&
                 !fight.opponent.imageUrl.includes("placeholder") ? (
@@ -94,8 +91,7 @@ export default function PredictionPreview({
               <strong>{t("confirmedDate")}:</strong> {fight.date}
             </p>
             <p className="text-sm text-muted mt-1">
-              <strong>{t("confirmedLocation")}:</strong>{" "}
-              {fight.location[lang]}
+              <strong>{t("confirmedLocation")}:</strong> {fight.location[lang]}
             </p>
           </div>
         </div>

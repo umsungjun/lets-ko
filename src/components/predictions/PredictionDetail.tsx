@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 
 import { useTranslations } from "next-intl";
 
-import FighterComparison from "./FighterComparison";
-import WinProbabilityBar from "./WinProbabilityBar";
-
 import { useInView } from "@/hooks/useInView";
 import type { PredictionData } from "@/types/prediction";
+
+import FighterComparison from "./FighterComparison";
+import WinProbabilityBar from "./WinProbabilityBar";
 
 interface PredictionDetailProps {
   predictions: PredictionData;
@@ -20,6 +20,7 @@ interface PredictionDetailProps {
     reach: string;
     style: { ko: string; en: string };
     fightMatrixRank: number;
+    lastFightDate?: string;
   };
   locale: string;
 }
@@ -41,7 +42,9 @@ export default function PredictionDetail({
     publishedAt: string;
   };
   // null = 로딩 중, [] = 결과 없음, [...] = 결과 있음
-  const [opponentVideos, setOpponentVideos] = useState<OpponentVideo[] | null>(null);
+  const [opponentVideos, setOpponentVideos] = useState<OpponentVideo[] | null>(
+    null
+  );
   const [activeVideo, setActiveVideo] = useState<OpponentVideo | null>(null);
 
   useEffect(() => {
@@ -298,7 +301,9 @@ export default function PredictionDetail({
             </div>
           ) : opponentVideos.length === 0 ? (
             <p className="text-xs text-muted/50 text-center py-4">
-              {locale === "ko" ? "관련 영상을 찾을 수 없습니다" : "No videos found"}
+              {locale === "ko"
+                ? "관련 영상을 찾을 수 없습니다"
+                : "No videos found"}
             </p>
           ) : (
             <div className="grid grid-cols-3 gap-2">
@@ -315,7 +320,11 @@ export default function PredictionDetail({
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
                     <div className="w-8 h-6 rounded-md bg-[#FF0000] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
-                      <svg className="w-3 h-3 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="w-3 h-3 text-white ml-0.5"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
@@ -346,8 +355,18 @@ export default function PredictionDetail({
                 onClick={() => setActiveVideo(null)}
                 className="absolute -top-10 right-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
               >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
               <div className="aspect-video rounded-xl overflow-hidden">

@@ -1,10 +1,9 @@
+import { analyzeOpponent, selectOpponents } from "@/lib/gemini";
 import type { FighterStats } from "@/types/fighter";
 import type { OpponentPrediction, PredictionData } from "@/types/prediction";
 
 import { crawlFightMatrixCandidates } from "./fightmatrix-crawler";
 import { scrapeUfcFighterImage } from "./ufc-image-scraper";
-
-import { analyzeOpponent, selectOpponents } from "@/lib/gemini";
 
 const DEFAULT_RANK = 46;
 // 최소 경과 일수 (최근 경기 후 이 기간이 지나야 예측 활성화)
@@ -63,7 +62,9 @@ export async function generatePredictions(
   try {
     candidates = await crawlFightMatrixCandidates(koRank);
   } catch {
-    console.log("FightMatrix crawl failed, Gemini will select from its own knowledge");
+    console.log(
+      "FightMatrix crawl failed, Gemini will select from its own knowledge"
+    );
   }
 
   // 4. Gemini 호출 1: 후보 3명 선정
@@ -92,6 +93,7 @@ export async function generatePredictions(
         height: op.height,
         weight: op.weight,
         reach: op.reach,
+        lastFightDate: op.lastFightDate,
         winProbability: analysis.winProbability,
         matchReasoning: op.matchReasoning,
         fightAnalysis: analysis.fightAnalysis,
@@ -110,6 +112,7 @@ export async function generatePredictions(
         height: op.height,
         weight: op.weight,
         reach: op.reach,
+        lastFightDate: op.lastFightDate,
         winProbability: 50,
         matchReasoning: op.matchReasoning,
         fightAnalysis: {

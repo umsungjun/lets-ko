@@ -1,11 +1,11 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-
 import type { FighterStats } from "@/types/fighter";
 import type {
   FightMatrixCandidate,
   OpponentAnalysis,
   SelectedOpponent,
 } from "@/types/prediction";
+
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -60,7 +60,8 @@ Select exactly 3 opponents. For each, provide detailed info.
 
 IMPORTANT:
 - Provide all text fields in both Korean (ko) and English (en).
-- Use METRIC units: height in cm (e.g. "180.3cm"), weight in kg (e.g. "77.1kg"), reach in cm (e.g. "185cm").`;
+- Use METRIC units: height in cm (e.g. "180.3cm"), weight in kg (e.g. "77.1kg"), reach in cm (e.g. "185cm").
+- Include lastFightDate (YYYY-MM-DD) if you know the opponent's most recent fight date.`;
 
   const result = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -99,6 +100,10 @@ IMPORTANT:
             weight: { type: SchemaType.STRING },
             reach: { type: SchemaType.STRING },
             country: { type: SchemaType.STRING },
+            lastFightDate: {
+              type: SchemaType.STRING,
+              description: "Date of most recent fight (YYYY-MM-DD format)",
+            },
             matchReasoning: {
               type: SchemaType.OBJECT,
               properties: {
@@ -119,6 +124,7 @@ IMPORTANT:
             "weight",
             "reach",
             "country",
+            "lastFightDate",
             "matchReasoning",
           ],
         },

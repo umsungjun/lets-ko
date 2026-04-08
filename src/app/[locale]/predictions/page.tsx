@@ -66,7 +66,10 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: locale === "ko" ? `${origin}/predictions` : `${origin}/${locale}/predictions`,
+      url:
+        locale === "ko"
+          ? `${origin}/predictions`
+          : `${origin}/${locale}/predictions`,
       siteName: "LET'S KO",
       locale: isKo ? "ko_KR" : "en_US",
       type: "website",
@@ -163,6 +166,8 @@ export default async function PredictionsPage({
     reach: "180.3cm",
     style: { ko: "유도 / 삼보", en: "Judo / Sambo" },
     fightMatrixRank: koFightMatrixRank,
+    // stats.fightHistory가 더 신뢰할 수 있는 ISO 형식이므로 우선 사용
+    lastFightDate: stats.fightHistory?.[0]?.date || predictions.lastFightDate,
   };
 
   return (
