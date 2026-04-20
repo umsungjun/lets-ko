@@ -120,9 +120,9 @@ export default function EventCard({
             <span className="text-sm text-white/30">{t("tba")}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-start gap-2 sm:gap-6">
             {/* 파이터 1 */}
-            <div className="flex-1 flex items-center gap-3 min-w-0">
+            <div className="flex-1 flex flex-col items-center gap-1.5 sm:flex-row sm:items-center sm:gap-3 min-w-0">
               <div
                 className={`shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden ring-2 ${isWinner1 ? "ring-primary/70" : "ring-white/10"}`}
               >
@@ -131,7 +131,7 @@ export default function EventCard({
                   name={fighter1.name}
                 />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 text-center sm:text-left">
                 <p className="text-sm sm:text-base font-black text-white leading-tight line-clamp-2">
                   {fighter1.name}
                 </p>
@@ -149,12 +149,12 @@ export default function EventCard({
             </div>
 
             {/* VS */}
-            <div className="shrink-0">
+            <div className="shrink-0 pt-7 sm:pt-0 sm:self-center">
               <span className="text-xl font-black text-white/20">VS</span>
             </div>
 
             {/* 파이터 2 */}
-            <div className="flex-1 flex items-center gap-3 flex-row-reverse min-w-0">
+            <div className="flex-1 flex flex-col items-center gap-1.5 sm:flex-row-reverse sm:items-center sm:gap-3 min-w-0">
               <div
                 className={`shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden ring-2 ${!isWinner1 && prediction ? "ring-primary/70" : "ring-white/10"}`}
               >
@@ -163,7 +163,7 @@ export default function EventCard({
                   name={fighter2.name}
                 />
               </div>
-              <div className="min-w-0 text-right">
+              <div className="min-w-0 text-center sm:text-right">
                 <p className="text-sm sm:text-base font-black text-white leading-tight line-clamp-2">
                   {fighter2.name}
                 </p>
@@ -173,7 +173,7 @@ export default function EventCard({
                   </p>
                 )}
                 {!isWinner1 && prediction && (
-                  <div className="flex justify-end mt-1.5">
+                  <div className="flex justify-center sm:justify-end mt-1.5">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold border border-primary/30">
                       {prediction.winProbability}%
                     </span>
