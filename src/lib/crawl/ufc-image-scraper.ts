@@ -9,7 +9,9 @@ const CRAWLER_HEADERS = {
 const PLACEHOLDER_IMAGE = "/images/fighter-placeholder.png";
 
 /**
- * 선수 이름을 UFC 슬러그로 변환 (e.g. "Phil Rowe" → "phil-rowe")
+ * @description 선수 이름을 UFC 슬러그로 변환
+ * @param name - 영문 파이터 이름 (예: "Phil Rowe")
+ * @returns URL 슬러그 (예: "phil-rowe")
  */
 function nameToSlug(name: string): string {
   return name
@@ -20,9 +22,10 @@ function nameToSlug(name: string): string {
 }
 
 /**
- * UFC 선수 페이지에서 프로필 이미지 URL을 추출.
- * kr.ufc.com 리다이렉트를 따르고, 여러 셀렉터를 시도.
- * 실패 시 플레이스홀더 반환.
+ * @description UFC 선수 페이지에서 프로필 헤드샷 URL을 스크레이핑.
+ * kr.ufc.com → www.ufc.com 순서로 시도하며, 여러 CSS 셀렉터를 폴백.
+ * @param fighterName - 영문 파이터 이름 (예: "Khamzat Chimaev")
+ * @returns 헤드샷 이미지 절대 URL. 실패 시 `/images/fighter-placeholder.png` 반환
  */
 export async function scrapeUfcFighterImage(
   fighterName: string
@@ -40,6 +43,7 @@ export async function scrapeUfcFighterImage(
       const res = await fetch(url, {
         headers: CRAWLER_HEADERS,
         redirect: "follow",
+        signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) continue;
 

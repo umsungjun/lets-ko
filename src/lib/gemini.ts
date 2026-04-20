@@ -4,6 +4,7 @@ import type {
   OpponentAnalysis,
   SelectedOpponent,
 } from "@/types/prediction";
+import type { EventPrediction } from "@/types/schedule";
 
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
@@ -209,6 +210,94 @@ IMPORTANT: Provide fightAnalysis in both Korean and English. Be specific about t
 
   // 승률을 0-100 범위로 제한
   parsed.winProbability = Math.max(0, Math.min(100, parsed.winProbability));
+
+  return parsed;
+}
+
+/**
+ * UFC 이벤트 메인 매치 승부 예측 생성
+ */
+export async function analyzeMainEvent(
+  fighter1Name: string,
+  fighter2Name: string,
+  eventName: string,
+  weightClass?: string
+): Promise<
+  Pick<EventPrediction, "winner" | "winProbability" | "method" | "analysis">
+> {
+  const prompt = `You are a UFC fight analyst. Analyze the upcoming main event:
+
+## ${eventName}
+${fighter1Name} vs ${fighter2Name}
+${weightClass ? `Weight Class: ${weightClass}` : ""}
+
+Provide:
+1. Predicted winner (spell the name exactly as given above)
+2. Win probability for the predicted winner (50-100, since it's the winner)
+3. Likely method of victory
+4. Fight analysis covering striking, grappling, cardio, likely game plan, and key deciding factors
+
+IMPORTANT:
+- winner.en: English name (exact spelling as given)
+- winner.ko: Korean phonetic transliteration of the winner's name
+- method.ko: use "KO/TKO", "제출기술", or "판정" depending on prediction
+- method.en: use "KO/TKO", "Submission", or "Decision"
+- analysis.ko and analysis.en: 3-4 sentences each, specific about techniques and game plans
+- winProbability is for the WINNER (always 50-100)`;
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          winner: {
+            type: SchemaType.OBJECT,
+            properties: {
+              ko: { type: SchemaType.STRING },
+              en: { type: SchemaType.STRING },
+            },
+            required: ["ko", "en"],
+          },
+          winProbability: {
+            type: SchemaType.NUMBER,
+            description: "Winner's win probability (50-100)",
+          },
+          method: {
+            type: SchemaType.OBJECT,
+            properties: {
+              ko: { type: SchemaType.STRING },
+              en: { type: SchemaType.STRING },
+            },
+            required: ["ko", "en"],
+          },
+          analysis: {
+            type: SchemaType.OBJECT,
+            properties: {
+              ko: { type: SchemaType.STRING },
+              en: { type: SchemaType.STRING },
+            },
+            required: ["ko", "en"],
+          },
+        },
+        required: ["winner", "winProbability", "method", "analysis"],
+      },
+    },
+  });
+
+  const text = result.response.text();
+  const parsed = JSON.parse(text) as Pick<
+    EventPrediction,
+    "winner" | "winProbability" | "method" | "analysis"
+  >;
+
+  if (typeof parsed.winProbability !== "number") {
+    throw new Error("Invalid main event analysis response from Gemini");
+  }
+
+  // 승자 기준이므로 50 이상 보장
+  parsed.winProbability = Math.max(50, Math.min(100, parsed.winProbability));
 
   return parsed;
 }

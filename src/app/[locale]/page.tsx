@@ -11,8 +11,10 @@ import PredictionPreview from "@/components/fighter/PredictionPreview";
 import StatsCard from "@/components/fighter/StatsCard";
 import VideoSection from "@/components/fighter/VideoSection";
 import ChampionsPreview from "@/components/rankings/ChampionsPreview";
+import SchedulePreview from "@/components/schedule/SchedulePreview";
 import cachedPredictions from "@/data/cached-predictions.json";
 import cachedRankings from "@/data/cached-rankings.json";
+import cachedSchedule from "@/data/cached-schedule.json";
 import cachedStats from "@/data/cached-stats.json";
 import careerHighlights from "@/data/career-highlights.json";
 import fighterBio from "@/data/fighter-bio.json";
@@ -25,6 +27,7 @@ import type {
 } from "@/types/fighter";
 import type { PredictionData } from "@/types/prediction";
 import type { UfcRankings } from "@/types/rankings";
+import type { UfcSchedule } from "@/types/schedule";
 
 export const revalidate = 86400;
 
@@ -143,6 +146,40 @@ async function getPredictions(): Promise<PredictionData> {
   return cachedPredictions as PredictionData;
 }
 
+async function getSchedule(): Promise<UfcSchedule> {
+  const { enrichFighterImages } = await import("@/lib/crawl/schedule-crawler");
+
+  if (
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    try {
+      const { createServerClient } = await import("@/lib/supabase/server");
+      const supabase = createServerClient();
+      const { data } = await supabase
+        .from("ufc_schedule")
+        .select("data")
+        .order("crawled_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data?.data) {
+        const schedule = data.data as UfcSchedule;
+        if (schedule.events?.length > 0) {
+          const enriched = await enrichFighterImages(schedule.events);
+          return { ...schedule, events: enriched };
+        }
+      }
+    } catch {
+      // Fall through to cached data
+    }
+  }
+
+  const base = cachedSchedule as UfcSchedule;
+  const enriched = await enrichFighterImages(base.events);
+  return { ...base, events: enriched };
+}
+
 export default async function HomePage({
   params,
 }: {
@@ -152,15 +189,23 @@ export default async function HomePage({
   setRequestLocale(locale);
 
   const t = await getTranslations("guestbook");
-  const [stats, videosByDate, videosByViews, news, rankings, predictions] =
-    await Promise.all([
-      getFighterStats(),
-      searchYouTubeVideos("date"),
-      searchYouTubeVideos("viewCount"),
-      fetchNews(),
-      getRankings(),
-      getPredictions(),
-    ]);
+  const [
+    stats,
+    videosByDate,
+    videosByViews,
+    news,
+    rankings,
+    predictions,
+    schedule,
+  ] = await Promise.all([
+    getFighterStats(),
+    searchYouTubeVideos("date"),
+    searchYouTubeVideos("viewCount"),
+    fetchNews(),
+    getRankings(),
+    getPredictions(),
+    getSchedule(),
+  ]);
 
   const siteOrigin = (() => {
     const raw =
@@ -202,6 +247,7 @@ export default async function HomePage({
         locale={locale}
       />
       <PredictionPreview predictions={predictions} locale={locale} />
+      <SchedulePreview schedule={schedule} locale={locale} />
       <StatsCard stats={stats} />
       <CareerTimeline
         highlights={careerHighlights as CareerHighlight[]}

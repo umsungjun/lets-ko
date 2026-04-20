@@ -1,9 +1,10 @@
 {
   "nav": {
     "home": "Home",
+    "predictions": "AI Prediction",
+    "schedule": "Schedule",
     "rankings": "UFC Rankings",
-    "cheer": "Cheer",
-    "predictions": "AI Prediction"
+    "cheer": "Cheer"
   },
   "hero": {
     "nickname": "The Korean Tyson",
@@ -119,6 +120,31 @@
     "preparingDesc": "Currently preparing after the recent fight. Updates will follow once the next opponent is confirmed.",
     "lastFight": "Last fight: {date}",
     "lastFightDate": "Last Fight"
+  },
+  "schedule": {
+    "title": "UFC Fight Schedule",
+    "subtitle": "Upcoming UFC Events",
+    "updatedAt": "Updated {date}",
+    "noEvents": "No upcoming events",
+    "mainEvent": "Main Event",
+    "coMainEvent": "Co-Main Event",
+    "titleFight": "Title Fight",
+    "vs": "VS",
+    "location": "Location",
+    "date": "Date",
+    "viewAll": "View Full Schedule",
+    "previewTitle": "Upcoming UFC Events",
+    "aiPrediction": "AI Prediction",
+    "winner": "Predicted Winner",
+    "winProbability": "Win Probability",
+    "method": "Predicted Method",
+    "analysis": "Fight Analysis",
+    "readMore": "Read more",
+    "collapse": "Show less",
+    "disclaimer": "AI-generated prediction. Actual results may differ.",
+    "poweredBy": "Powered by Gemini AI",
+    "weightClass": "Weight Class",
+    "tba": "TBA"
   },
   "common": {
     "locale": "EN"
