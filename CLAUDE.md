@@ -20,8 +20,10 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 ### 페이지 & 라우팅
 
-- `/[locale]` — 메인 페이지: 선수 프로필, 전적, 영상, 뉴스, 챔피언 프리뷰 (ISR 24시간, `revalidate: 86400`)
-- `/[locale]/rankings` — UFC 체급별 랭킹 페이지 (ISR 24시간, `revalidate: 86400`)
+- `/[locale]` — 메인 페이지: 선수 프로필, 전적, 영상, 뉴스, 챔피언 프리뷰, 다가오는 UFC 이벤트 프리뷰 (ISR 24시간, `revalidate: 86400`)
+- `/[locale]/schedule` — UFC 경기 일정 페이지: 예정 이벤트 목록 + AI 메인 이벤트 승부 예측 (ISR 24시간)
+- `/[locale]/predictions` — AI 상대 예측 페이지 (ISR 24시간)
+- `/[locale]/rankings` — UFC 체급별 랭킹 페이지 (ISR 24시간)
 - `/[locale]/cheer` — 응원 방명록 페이지 (`force-dynamic`, 항상 최신 데이터)
 - `/api/guestbook` — REST API (GET/POST/PATCH/DELETE)
 - `/api/guestbook/reactions` — 이모지 리액션 토글 (POST), 허용 이모지: 👊🔥💪❤️👏
@@ -33,54 +35,101 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - URL 기반 로케일: `/ko` (기본값), `/en`
 - `src/middleware.ts`에서 로케일 리다이렉트 처리 (`/` → `/ko`)
 - 루트 `i18n/` 디렉토리: `routing.ts` (로케일 정의), `request.ts` (메시지 로드) — `next.config.ts`에서 `createNextIntlPlugin("./i18n/request.ts")` 연결
-- 번역 파일: `src/messages/{ko,en}.json` (네임스페이스: `hero`, `nav`, `guestbook` 등)
+- 번역 파일: `src/messages/{ko,en}.json` (네임스페이스: `hero`, `nav`, `guestbook`, `schedule` 등)
 - Next.js 15+에서 `params`는 Promise — 반드시 `await params` 사용
 
 ### 데이터 흐름
 
-- **선수 통계**: Supabase `fighter_stats` 테이블 → `src/data/cached-stats.json` 폴백. Supabase 데이터가 비정상(전적 0-0-0 등)이면 캐시로 폴백
-- **YouTube 영상**: YouTube Data API v3 (`src/lib/youtube.ts`), ISR 24시간. 재생은 사이트 내 모달로 `youtube-nocookie.com` 임베드
+**Supabase → 캐시 JSON 폴백** 패턴이 모든 데이터에 공통 적용됩니다.
+
+- **선수 통계**: `fighter_stats` 테이블 → `cached-stats.json`. 전적 0-0-0 등 비정상 데이터면 캐시로 폴백
+- **UFC 랭킹**: `ufc_rankings` 테이블 → `cached-rankings.json`
+- **AI 상대 예측**: `opponent_predictions` 테이블 → `cached-predictions.json`
+- **UFC 경기 일정 + AI 승부 예측**: `ufc_schedule` 테이블 → `cached-schedule.json`. 두 데이터(이벤트 + 예측)를 하나의 JSONB blob(`UfcSchedule`)으로 저장
+- **YouTube 영상**: YouTube Data API v3 (`src/lib/youtube.ts`), ISR 24시간
 - **뉴스**: Google News RSS 파싱 (`src/lib/news.ts`), ISR 24시간
-- **방명록**: Supabase `guestbook_messages` 테이블, `/api/guestbook` API (GET/POST/PATCH/DELETE)
-- **UFC 크롤러**: Vercel Cron으로 매일 오전 3시 UTC 실행 (`/api/cron/crawl`). Cron 스케줄은 `vercel.json`에서 관리. 두 크롤러가 순차 실행되며, 부분 실패 시 HTTP 207 반환:
-  - `crawlUfcStats()` (`src/lib/crawl/ufc-crawler.ts`) — 선수 전적/스탯 크롤. 파싱 실패 시 `throw`하여 잘못된 데이터 저장 방지
-  - `crawlUfcRankings()` (`src/lib/crawl/rankings-crawler.ts`) — UFC 전 체급 랭킹 크롤
-  - 크롤 후 `revalidatePath()`로 `/ko`, `/en`, `/ko/rankings`, `/en/rankings` ISR 캐시 무효화
-- **외부 랭킹**: UFC 크롤 후 FightMatrix에서 랭킹 크롤, 결과를 `FighterStats.externalRankings`에 저장. 실패해도 메인 크롤 중단 없음. Supabase 데이터에 `externalRankings`가 없으면 `cached-stats.json`에서 병합 (page.tsx `getFighterStats()`). Tapology는 Cloudflare 차단으로 제거됨
-- **닉네임 생성**: `src/lib/nickname-generator.ts` — 방명록 작성 시 로케일 기반 랜덤 닉네임 생성 (예: "행복한 석현", "Happy Seokhyeon")
+- **방명록**: `guestbook_messages` 테이블, `/api/guestbook` API
+- **닉네임 생성**: `src/lib/nickname-generator.ts` — 로케일 기반 랜덤 닉네임 (예: "행복한 석현")
+
+### UFC 크롤러 체인 (`/api/cron/crawl`)
+
+Vercel Cron 매일 UTC 03:00 실행. `maxDuration = 60`. 4단계 순차 실행, 부분 실패 시 HTTP 207:
+
+1. `crawlUfcStats()` — 선수 전적/스탯. 파싱 실패 시 `throw` (잘못된 데이터 저장 방지)
+2. `crawlUfcRankings()` — UFC 전 체급 랭킹
+3. `generatePredictions()` — AI 상대 예측 (Gemini)
+4. **UFC 일정 + 예측**: `crawlUfcSchedule()` → `generateSchedulePredictions()` → `ufc_schedule` 저장
+   - 일정 크롤: CloudFront CDN API (`d29dxerjsp82wz.cloudfront.net`) → HTML 파싱 폴백
+   - 예측 생성: `eventId`로 중복 체크 — 기존 예측 재사용, 새 이벤트만 Gemini 호출
+   - 파이터 이미지: `enrichFighterImages()` — UFC 선수 페이지 병렬 스크레이핑 (최대 20명)
+
+크롤 완료 후 `revalidatePath()` + `fetch` 워밍으로 `/`, `/schedule`, `/predictions`, `/rankings` 한/영 캐시 갱신.
 
 ### Supabase
 
 - **서버 클라이언트** (`src/lib/supabase/server.ts`): `SUPABASE_SERVICE_ROLE_KEY` 사용, 라우트 핸들러 및 서버 컴포넌트용
 - **클라이언트** (`src/lib/supabase/client.ts`): `NEXT_PUBLIC_SUPABASE_ANON_KEY` 사용
-- **테이블**: `guestbook_messages` (RLS: read/insert/update/delete), `guestbook_reactions` (이모지 토글, IP당 1개), `fighter_stats` (RLS 없음, 서버 전용), `ufc_rankings` (체급별 랭킹, 서버 전용)
+- **테이블**:
+  - `guestbook_messages` (RLS: read/insert/update/delete)
+  - `guestbook_reactions` (이모지 토글, IP당 1개)
+  - `fighter_stats` (RLS 없음, 서버 전용)
+  - `ufc_rankings` (RLS 없음, 서버 전용)
+  - `ufc_schedule` (RLS 없음, 서버 전용) — `{ data: UfcSchedule }` JSONB, `crawled_at` 내림차순 인덱스
 
 ### OG 이미지
 
 - **동적 생성**: `/api/og/route.tsx` — Node.js 런타임 필수 (`runtime = "edge"` 불가). `fs.readFileSync`로 `public/images/ko-seokhyeon.png` 로드 후 base64 변환
-- **정적 파일**: `public/og.png` — 동적 라우트 대신 이 파일을 메타데이터에서 참조
-- **locale prefix 우회**: Next.js가 같은 origin URL에 locale prefix를 자동 추가하는 동작을 피하기 위해 `[locale]/layout.tsx`에서 `<head>`에 직접 `<meta property="og:image">` 주입
+- **정적 파일**: `public/og.png` — 메타데이터에서 이 파일 참조
+- **locale prefix 우회**: `[locale]/layout.tsx`에서 `<head>`에 직접 `<meta property="og:image">` 주입
 
 ### 정적 데이터 (`src/data/`)
 
-- `cached-stats.json` — 선수 통계 폴백 (Supabase 접근 불가 또는 크롤링 데이터 비정상 시 사용). `externalRankings` 배열 포함 (FightMatrix 최신 수동 확인값)
-- `cached-rankings.json` — UFC 전 체급 랭킹 폴백 (Supabase 접근 불가 시 사용)
+- `cached-stats.json` — 선수 통계 폴백. `externalRankings` 배열 포함 (FightMatrix 수동 확인값)
+- `cached-rankings.json` — UFC 전 체급 랭킹 폴백
+- `cached-schedule.json` — UFC 경기 일정 + AI 예측 폴백 (`UfcSchedule` 구조). 배포 초기 또는 Supabase 미접근 시 사용
+- `cached-predictions.json` — AI 상대 예측 폴백
 - `career-highlights.json` — 커리어 타임라인 이정표 (다국어)
-- `fighter-bio.json` — 선수 바이오 데이터 (다국어 필드)
-- `videos.json` — 정적 비디오 메타데이터 (YouTube API 할당량 초과 시 폴백)
+- `fighter-bio.json` — 선수 바이오 데이터 (다국어)
+- `videos.json` — YouTube API 할당량 초과 시 폴백 영상 메타데이터
 
 ### 주요 컨벤션
 
-- **스타일링**: Tailwind CSS v4, `globals.css`에 `@theme inline` 사용. 주요 색상: `#dc2626` (빨간색). 폰트: Pretendard (CDN)
+- **스타일링**: Tailwind CSS v4, `globals.css`에 `@theme inline` 사용. 주요 색상: `#dc2626`. 폰트: Pretendard (CDN)
 - **포맷팅**: Prettier + `@trivago/prettier-plugin-sort-imports` — 큰따옴표, 80자 너비, 2칸 들여쓰기, trailing comma. Import 정렬: CSS → react → next → `@/` 별칭 → node_modules
 - **경로 별칭**: `@/*` → `./src/*`
-- **스크롤 애니메이션**: `useInView` 커스텀 훅 (`src/hooks/useInView.ts`) + `globals.css` CSS 키프레임 (`fade-up`, `fade-in`, `scale-in`, `slide-left`). 모바일 IntersectionObserver 미감지 대비 800ms fallback timer 포함
-- **컴포넌트**: 서버 컴포넌트 기본, `"use client"`는 필요한 경우만 (애니메이션, 인터랙티브)
-- **방명록 레이트 리미팅**: IP당 30초 쿨다운 (SHA256 해시). 수정/삭제 권한은 localStorage 메시지 ID + 서버 IP 검증
-- **방명록 UI**: 댓글 작성 폼이 목록 최상단 위치. 이모지 리액션은 버튼 클릭 시 `max-w-0 → max-w-72` 슬라이딩 애니메이션으로 펼침. 이모지 피커(1행)와 리액션 카운트 배지(2행) 분리
-- **애널리틱스**: Microsoft Clarity 스크립트 (`[locale]/layout.tsx` `<head>`에 인라인 삽입, ID: `vkw0n969lk`)
-- **SEO**: 메인 페이지 Schema.org JSON-LD, `robots.ts`, `sitemap.ts`, `hreflang` 대체 링크
-- **DOM 사이드 이펙트**: `document.body.style` 등 컴포넌트 외부 DOM 변경은 반드시 `useEffect` 안에서 처리 (ESLint `react-hooks/immutability` 규칙)
+- **스크롤 애니메이션**: `useInView` 커스텀 훅 (`src/hooks/useInView.ts`) + CSS 키프레임 (`fade-up`, `fade-in`, `scale-in`, `slide-left`). 모바일 IntersectionObserver 미감지 대비 800ms fallback timer 포함
+- **컴포넌트**: 서버 컴포넌트 기본, `"use client"`는 애니메이션·인터랙티브에만
+- **TypeScript 타입**: `interface` — Props, API 계약 등 외부 계약. `type` — 유니온, 유틸리티 조합
+- **방명록 레이트 리미팅**: IP당 30초 쿨다운 (SHA256 해시). 수정/삭제는 localStorage ID + 서버 IP 검증
+- **방명록 UI**: 이모지 리액션 `max-w-0 → max-w-72` 슬라이딩 애니메이션
+- **애널리틱스**: Microsoft Clarity (ID: `vkw0n969lk`, `[locale]/layout.tsx` head 인라인)
+- **SEO**: 메인 페이지 Schema.org JSON-LD, `robots.ts`, `sitemap.ts`, `hreflang`
+- **DOM 사이드 이펙트**: 컴포넌트 외부 DOM 변경은 반드시 `useEffect` 안에서
+- **JSDoc**: 새로 작성하는 컴포넌트·유틸 함수에 반드시 JSDoc 작성. 설명은 한국어로. 컴포넌트는 `@description`, `@param`(props 각각), 유틸 함수는 `@description`, `@param`, `@returns`, 필요 시 `@throws`. 인터페이스 필드는 인라인 `/** */` 주석.
+
+  ```ts
+  // 컴포넌트 예시
+  /**
+   * @description 역할 설명
+   * @param props.locale - "ko" | "en"
+   */
+  export default function MyComponent({ locale }: Props) {}
+
+  // 유틸 함수 예시
+  /**
+   * @description 함수 역할 설명
+   * @param name - 파이터 이름 (영문)
+   * @returns 슬러그 문자열
+   * @throws 네트워크 오류 시
+   */
+  export async function myUtil(name: string): Promise<string> {}
+  ```
+
+### Gemini AI 연동 (`src/lib/gemini.ts`)
+
+- 모델: `gemini-2.5-flash`
+- `analyzeOpponent()` — 상대 선수 분석 (예측 페이지용)
+- `analyzeMainEvent(fighter1, fighter2, eventName, weightClass?)` — UFC 이벤트 메인 매치 승부 예측. `winProbability`는 승자 기준 50~100 보장
 
 ### 테스트
 
@@ -88,7 +137,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 ### 환경 변수
 
-공개: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`
-비밀: `YOUTUBE_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `CRON_SECRET`, `GOOGLE_SITE_VERIFICATION`
+공개: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`  
+비밀: `YOUTUBE_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `CRON_SECRET`, `GOOGLE_SITE_VERIFICATION`, `GOOGLE_GEMINI_API_KEY`
 
-> **주의**: `NEXT_PUBLIC_SITE_URL`은 path 없는 origin만 저장 (`https://example.com`). path 포함 시 (`https://example.com/ko`) OG 이미지 URL에 locale prefix가 중복 추가됨. 코드에서 `new URL(raw).origin`으로 정규화
+> **주의**: `NEXT_PUBLIC_SITE_URL`은 path 없는 origin만 저장 (`https://example.com`). 코드에서 `new URL(raw).origin`으로 정규화. path 포함 시 OG 이미지 URL에 locale prefix 중복 추가됨

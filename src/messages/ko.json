@@ -1,9 +1,10 @@
 {
   "nav": {
     "home": "홈",
+    "predictions": "AI 예측",
+    "schedule": "경기 일정",
     "rankings": "UFC 랭킹",
-    "cheer": "응원하기",
-    "predictions": "AI 예측"
+    "cheer": "응원하기"
   },
   "hero": {
     "nickname": "코리안 타이슨",
@@ -119,6 +120,31 @@
     "preparingDesc": "최근 경기를 마친 후 다음 경기를 준비하고 있습니다. 상대가 확정되면 업데이트됩니다.",
     "lastFight": "최근 경기: {date}",
     "lastFightDate": "최근 경기"
+  },
+  "schedule": {
+    "title": "UFC 경기 일정",
+    "subtitle": "예정된 UFC 이벤트",
+    "updatedAt": "{date} 업데이트",
+    "noEvents": "예정된 경기가 없습니다",
+    "mainEvent": "메인 이벤트",
+    "coMainEvent": "코-메인 이벤트",
+    "titleFight": "타이틀 매치",
+    "vs": "VS",
+    "location": "장소",
+    "date": "날짜",
+    "viewAll": "전체 일정 보기",
+    "previewTitle": "다가오는 UFC 이벤트",
+    "aiPrediction": "AI 예측",
+    "winner": "예측 승자",
+    "winProbability": "승률",
+    "method": "예측 결과",
+    "analysis": "경기 분석",
+    "readMore": "더 보기",
+    "collapse": "접기",
+    "disclaimer": "AI가 분석한 예측이며 실제 결과와 다를 수 있습니다",
+    "poweredBy": "Gemini AI 기반 분석",
+    "weightClass": "체급",
+    "tba": "미정"
   },
   "common": {
     "locale": "KO"

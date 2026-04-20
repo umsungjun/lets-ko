@@ -1,0 +1,337 @@
+{
+  "updatedAt": "2026-04-20T00:00:00.000Z",
+  "events": [
+    {
+      "id": "ufc-fight-night-burns-vs-malott",
+      "name": "UFC Fight Night: Burns vs. Malott",
+      "date": "2026-04-18",
+      "location": {
+        "en": "Winnipeg, Manitoba, Canada",
+        "ko": "위니펙, 매니토바, 캐나다"
+      },
+      "venue": "Canada Life Centre",
+      "mainEvent": {
+        "fighter1": {
+          "name": "Gilbert Burns",
+          "record": "22-7-0"
+        },
+        "fighter2": {
+          "name": "Mike Malott",
+          "record": "10-1-1"
+        },
+        "weightClass": "Welterweight"
+      }
+    },
+    {
+      "id": "ufc-fight-night-sterling-vs-zalal",
+      "name": "UFC Fight Night: Sterling vs. Zalal",
+      "date": "2026-04-25",
+      "location": {
+        "en": "Las Vegas, Nevada",
+        "ko": "라스베이거스, 네바다"
+      },
+      "venue": "UFC APEX",
+      "mainEvent": {
+        "fighter1": {
+          "name": "Aljamain Sterling",
+          "record": "23-5-0"
+        },
+        "fighter2": {
+          "name": "Youssef Zalal",
+          "record": "16-5-0"
+        },
+        "weightClass": "Featherweight"
+      }
+    },
+    {
+      "id": "ufc-fight-night-della-maddalena-vs-prates",
+      "name": "UFC Fight Night: Della Maddalena vs. Prates",
+      "date": "2026-05-02",
+      "location": {
+        "en": "Perth, Western Australia",
+        "ko": "퍼스, 서호주"
+      },
+      "venue": "RAC Arena",
+      "mainEvent": {
+        "fighter1": {
+          "name": "Jack Della Maddalena",
+          "record": "18-2-0"
+        },
+        "fighter2": {
+          "name": "Carlos Prates",
+          "record": "19-5-0"
+        },
+        "weightClass": "Welterweight"
+      }
+    },
+    {
+      "id": "ufc-328",
+      "name": "UFC 328: Chimaev vs. Strickland",
+      "date": "2026-05-09",
+      "location": {
+        "en": "Newark, New Jersey",
+        "ko": "뉴어크, 뉴저지"
+      },
+      "venue": "Prudential Center",
+      "mainEvent": {
+        "fighter1": {
+          "name": "Khamzat Chimaev",
+          "record": "14-0-0"
+        },
+        "fighter2": {
+          "name": "Sean Strickland",
+          "record": "30-6-0"
+        },
+        "titleFight": true,
+        "weightClass": "Middleweight"
+      }
+    },
+    {
+      "id": "ufc-fight-night-allen-vs-costa",
+      "name": "UFC Fight Night: Allen vs. Costa",
+      "date": "2026-05-16",
+      "location": {
+        "en": "Las Vegas, Nevada",
+        "ko": "라스베이거스, 네바다"
+      },
+      "venue": "UFC APEX",
+      "mainEvent": {
+        "fighter1": {
+          "name": "Arnold Allen",
+          "record": "18-3-0"
+        },
+        "fighter2": {
+          "name": "Melquizael Costa",
+          "record": "16-3-0"
+        },
+        "weightClass": "Featherweight"
+      }
+    },
+    {
+      "id": "ufc-fight-night-song-vs-figueiredo",
+      "name": "UFC Fight Night: Song vs. Figueiredo",
+      "date": "2026-05-30",
+      "location": {
+        "en": "Macao, China",
+        "ko": "마카오, 중국"
+      },
+      "venue": "Galaxy Arena",
+      "mainEvent": {
+        "fighter1": {
+          "name": "Song Yadong",
+          "record": "22-7-1"
+        },
+        "fighter2": {
+          "name": "Deiveson Figueiredo",
+          "record": "24-4-1"
+        },
+        "weightClass": "Bantamweight"
+      }
+    },
+    {
+      "id": "ufc-fight-night-muhammad-vs-bonfim",
+      "name": "UFC Fight Night: Muhammad vs. Bonfim",
+      "date": "2026-06-06",
+      "location": {
+        "en": "Las Vegas, Nevada",
+        "ko": "라스베이거스, 네바다"
+      },
+      "venue": "UFC APEX",
+      "mainEvent": {
+        "fighter1": {
+          "name": "Belal Muhammad",
+          "record": "25-3-0"
+        },
+        "fighter2": {
+          "name": "Rafael Bonfim",
+          "record": "17-3-0"
+        },
+        "weightClass": "Welterweight"
+      }
+    },
+    {
+      "id": "ufc-freedom-250",
+      "name": "UFC Freedom 250: Topuria vs. Gaethje",
+      "date": "2026-06-14",
+      "location": {
+        "en": "Washington, D.C.",
+        "ko": "워싱턴 D.C."
+      },
+      "venue": "Capital One Arena",
+      "mainEvent": {
+        "fighter1": {
+          "name": "Ilia Topuria",
+          "record": "16-0-0"
+        },
+        "fighter2": {
+          "name": "Justin Gaethje",
+          "record": "25-5-0"
+        },
+        "titleFight": true,
+        "weightClass": "Lightweight"
+      }
+    }
+  ],
+  "predictions": [
+    {
+      "eventId": "ufc-fight-night-burns-vs-malott",
+      "eventName": "UFC Fight Night: Burns vs. Malott",
+      "fighter1": "Gilbert Burns",
+      "fighter2": "Mike Malott",
+      "winner": {
+        "ko": "길버트 번스",
+        "en": "Gilbert Burns"
+      },
+      "winProbability": 62,
+      "method": {
+        "ko": "판정",
+        "en": "Decision"
+      },
+      "analysis": {
+        "ko": "번스는 엘리트 주짓수와 레슬링을 바탕으로 말롯을 상대로 우위를 점할 가능성이 높습니다. 말롯은 홈 관중의 지지와 강력한 그라운드 게임을 무기로 삼겠지만, 번스의 경험과 타격 조합이 5라운드를 통해 판정승으로 이어질 것으로 예상됩니다.",
+        "en": "Burns' elite jiu-jitsu and wrestling should give him the edge over Malott. While Malott will have home crowd support and brings strong ground work, Burns' experience and striking combinations are expected to carry him to a decision victory over five rounds."
+      },
+      "generatedAt": "2026-04-20T00:00:00.000Z"
+    },
+    {
+      "eventId": "ufc-fight-night-sterling-vs-zalal",
+      "eventName": "UFC Fight Night: Sterling vs. Zalal",
+      "fighter1": "Aljamain Sterling",
+      "fighter2": "Youssef Zalal",
+      "winner": {
+        "ko": "알자맹 스털링",
+        "en": "Aljamain Sterling"
+      },
+      "winProbability": 67,
+      "method": {
+        "ko": "판정",
+        "en": "Decision"
+      },
+      "analysis": {
+        "ko": "전 밴텀급 챔피언 스털링은 페더급에서도 그라운드 지배력을 이어갈 것으로 보입니다. 잘랄의 스트라이킹 기술이 위협적이지만, 스털링의 테이크다운 능력과 서브미션 게임이 결국 판정승을 이끌어낼 것으로 예상됩니다.",
+        "en": "Former bantamweight champion Sterling should continue to show his grappling dominance at featherweight. While Zalal's striking is dangerous, Sterling's takedown ability and submission game should lead him to a decision victory."
+      },
+      "generatedAt": "2026-04-20T00:00:00.000Z"
+    },
+    {
+      "eventId": "ufc-fight-night-della-maddalena-vs-prates",
+      "eventName": "UFC Fight Night: Della Maddalena vs. Prates",
+      "fighter1": "Jack Della Maddalena",
+      "fighter2": "Carlos Prates",
+      "winner": {
+        "ko": "잭 델라 마달레나",
+        "en": "Jack Della Maddalena"
+      },
+      "winProbability": 58,
+      "method": {
+        "ko": "KO/TKO",
+        "en": "KO/TKO"
+      },
+      "analysis": {
+        "ko": "두 선수 모두 강력한 타격가로 폭발적인 경기가 예상됩니다. 델라 마달레나는 홈 어드밴티지와 함께 파괴적인 원펀치 KO 능력을 보유하고 있으며, 프라테스의 공격적인 스타일이 델라 마달레나에게 KO 기회를 제공할 것으로 보입니다.",
+        "en": "Both fighters are powerful strikers, promising an explosive contest. Della Maddalena has the home advantage and devastating one-punch KO power, while Prates' aggressive style should create openings that Della Maddalena can capitalize on for a finish."
+      },
+      "generatedAt": "2026-04-20T00:00:00.000Z"
+    },
+    {
+      "eventId": "ufc-328",
+      "eventName": "UFC 328: Chimaev vs. Strickland",
+      "fighter1": "Khamzat Chimaev",
+      "fighter2": "Sean Strickland",
+      "winner": {
+        "ko": "함자트 치마에프",
+        "en": "Khamzat Chimaev"
+      },
+      "winProbability": 65,
+      "method": {
+        "ko": "판정",
+        "en": "Decision"
+      },
+      "analysis": {
+        "ko": "치마에프는 무패의 레슬링과 체력을 앞세워 스트릭랜드를 지속적으로 압박할 것입니다. 스트릭랜드는 탁월한 복싱과 내구력으로 맞서겠지만, 치마에프의 레슬링 지배력이 5라운드 판정승을 이끌 가능성이 높습니다.",
+        "en": "Chimaev will use his undefeated wrestling credentials and relentless pressure to control Strickland. Strickland will counter with his excellent boxing and durability, but Chimaev's wrestling dominance should carry him to a five-round decision."
+      },
+      "generatedAt": "2026-04-20T00:00:00.000Z"
+    },
+    {
+      "eventId": "ufc-fight-night-allen-vs-costa",
+      "eventName": "UFC Fight Night: Allen vs. Costa",
+      "fighter1": "Arnold Allen",
+      "fighter2": "Melquizael Costa",
+      "winner": {
+        "ko": "아놀드 알렌",
+        "en": "Arnold Allen"
+      },
+      "winProbability": 60,
+      "method": {
+        "ko": "판정",
+        "en": "Decision"
+      },
+      "analysis": {
+        "ko": "알렌은 균형 잡힌 MMA 기술과 경험을 바탕으로 코스타를 상대로 우위를 점할 것으로 보입니다. 코스타의 날카로운 타격이 위협이 되겠지만, 알렌의 그라운드 게임과 전술적 접근이 판정승으로 이어질 가능성이 높습니다.",
+        "en": "Allen's well-rounded MMA skills and experience should give him the edge over Costa. While Costa's sharp striking poses a threat, Allen's ground game and tactical approach are likely to secure a decision win."
+      },
+      "generatedAt": "2026-04-20T00:00:00.000Z"
+    },
+    {
+      "eventId": "ufc-fight-night-song-vs-figueiredo",
+      "eventName": "UFC Fight Night: Song vs. Figueiredo",
+      "fighter1": "Song Yadong",
+      "fighter2": "Deiveson Figueiredo",
+      "winner": {
+        "ko": "데이브슨 피게이레도",
+        "en": "Deiveson Figueiredo"
+      },
+      "winProbability": 56,
+      "method": {
+        "ko": "판정",
+        "en": "Decision"
+      },
+      "analysis": {
+        "ko": "피게이레도는 전 플라이급 챔피언으로 풍부한 빅매치 경험을 보유하고 있습니다. 송야동의 공격적인 스트라이킹이 위협적이지만, 피게이레도의 서브미션 능력과 다양한 공격 옵션이 박빙의 승부에서 판정 우세를 가져올 것으로 예상됩니다.",
+        "en": "Figueiredo brings extensive big-fight experience as a former flyweight champion. While Song Yadong's aggressive striking is dangerous, Figueiredo's submission arsenal and versatile attack options should edge him to a close decision victory."
+      },
+      "generatedAt": "2026-04-20T00:00:00.000Z"
+    },
+    {
+      "eventId": "ufc-fight-night-muhammad-vs-bonfim",
+      "eventName": "UFC Fight Night: Muhammad vs. Bonfim",
+      "fighter1": "Belal Muhammad",
+      "fighter2": "Rafael Bonfim",
+      "winner": {
+        "ko": "벨랄 무함마드",
+        "en": "Belal Muhammad"
+      },
+      "winProbability": 72,
+      "method": {
+        "ko": "판정",
+        "en": "Decision"
+      },
+      "analysis": {
+        "ko": "전 웰터급 챔피언 무함마드는 레슬링과 그라운드 컨트롤에서 본핌을 압도할 것으로 보입니다. 본핌의 타격 능력이 위협이 될 수 있지만, 무함마드의 경험 차이와 테이크다운 성공률이 결국 판정승으로 이어질 것입니다.",
+        "en": "Former welterweight champion Muhammad should dominate Bonfim with his wrestling and ground control. While Bonfim's striking ability poses a threat, Muhammad's experience advantage and takedown accuracy should lead to a comfortable decision win."
+      },
+      "generatedAt": "2026-04-20T00:00:00.000Z"
+    },
+    {
+      "eventId": "ufc-freedom-250",
+      "eventName": "UFC Freedom 250: Topuria vs. Gaethje",
+      "fighter1": "Ilia Topuria",
+      "fighter2": "Justin Gaethje",
+      "winner": {
+        "ko": "일리아 토푸리아",
+        "en": "Ilia Topuria"
+      },
+      "winProbability": 60,
+      "method": {
+        "ko": "KO/TKO",
+        "en": "KO/TKO"
+      },
+      "analysis": {
+        "ko": "무패의 라이트급 챔피언 토푸리아는 가에치에의 공격적인 전진 스타일에 맞서 카운터 펀치로 승부를 결정지을 가능성이 높습니다. 가에치에의 파괴적인 타격과 BMF 정신이 위협적이지만, 토푸리아의 원펀치 KO 능력이 경기를 조기에 끝낼 수 있습니다.",
+        "en": "Unbeaten lightweight champion Topuria is likely to land a counter-punch finish against Gaethje's aggressive forward pressure. While Gaethje's destructive striking and BMF mentality are dangerous, Topuria's one-punch KO power can end the fight early."
+      },
+      "generatedAt": "2026-04-20T00:00:00.000Z"
+    }
+  ]
+}

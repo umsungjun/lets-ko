@@ -15,6 +15,7 @@ UFC 웰터급 파이터 **고석현**(The Korean Tyson) 선수의 비공식 팬 
 - **선수 프로필** — 고석현 선수의 기본 정보, 전적, 스탯
 - **경기 기록** — 전체 경기 상세 기록 (결과·방식·라운드·날짜)
 - **커리어 하이라이트** — 주요 커리어 타임라인
+- **UFC 경기 일정** — 예정된 UFC 이벤트 일정 및 메인 이벤트 AI 승부 예측 (하루 1회 자동 갱신)
 - **AI 다음 상대 예측** — Gemini AI 기반 다음 경기 상대 분석 및 승률 예측 (하루 1회 갱신)
 - **UFC 랭킹** — 전 체급 공식 랭킹 및 챔피언 프리뷰 (하루 1회 갱신)
 - **관련 YouTube 영상** — YouTube API를 통한 최신·인기 영상 자동 수집 (하루 1회 갱신)
@@ -44,7 +45,8 @@ src/
 │   │   ├── page.tsx             # 메인 페이지
 │   │   ├── cheer/page.tsx       # 응원하기 페이지
 │   │   ├── predictions/page.tsx # AI 예측 페이지
-│   │   └── rankings/page.tsx    # UFC 랭킹 페이지
+│   │   ├── rankings/page.tsx    # UFC 랭킹 페이지
+│   │   └── schedule/page.tsx    # UFC 경기 일정 페이지
 │   ├── api/
 │   │   ├── guestbook/           # 응원 메시지 API (GET/POST/PATCH/DELETE)
 │   │   │   └── reactions/       # 이모지 리액션 API (POST 토글)
@@ -56,13 +58,14 @@ src/
 │   ├── guestbook/               # 응원 메시지 컴포넌트
 │   ├── predictions/             # AI 예측 컴포넌트
 │   ├── rankings/                # UFC 랭킹 컴포넌트
+│   ├── schedule/                # UFC 경기 일정 컴포넌트
 │   └── layout/                  # Header, Footer
 ├── lib/
-│   ├── gemini.ts                # Google Gemini API 연동
+│   ├── gemini.ts                # Google Gemini API 연동 (상대 분석 + 경기 승부 예측)
 │   ├── youtube.ts               # YouTube API 연동
 │   ├── news.ts                  # Google News RSS 파싱
 │   ├── supabase/                # Supabase 클라이언트
-│   └── crawl/                   # UFC 사이트 크롤러, AI 예측 생성기
+│   └── crawl/                   # UFC 크롤러, AI 예측 생성기, 이미지 스크레이퍼
 ├── messages/
 │   ├── ko.json                  # 한국어 번역
 │   └── en.json                  # 영어 번역

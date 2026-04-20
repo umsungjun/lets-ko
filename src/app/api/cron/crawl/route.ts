@@ -3,9 +3,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { generatePredictions } from "@/lib/crawl/prediction-generator";
 import { crawlUfcRankings } from "@/lib/crawl/rankings-crawler";
+import { crawlUfcSchedule } from "@/lib/crawl/schedule-crawler";
+import {
+  extractExistingPredictions,
+  generateSchedulePredictions,
+} from "@/lib/crawl/schedule-prediction-generator";
 import { crawlUfcStats } from "@/lib/crawl/ufc-crawler";
 import { createServerClient } from "@/lib/supabase/server";
 import type { FighterStats } from "@/types/fighter";
+import type { UfcSchedule } from "@/types/schedule";
+
+// 크론 함수 타임아웃 연장 (스케줄 크롤 + Gemini 호출 추가로 시간 증가)
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -66,6 +75,46 @@ export async function GET(request: NextRequest) {
     results.predictions = { success: false, error: String(error) };
   }
 
+  // Crawl UFC schedule + generate AI main event predictions
+  try {
+    // 기존 스케줄에서 이미 생성된 예측 재사용 (Gemini 호출 최소화)
+    const { data: existingRow } = await supabase
+      .from("ufc_schedule")
+      .select("data")
+      .order("crawled_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    const existingSchedule = existingRow?.data as UfcSchedule | null;
+    const existingPredictions = extractExistingPredictions(existingSchedule);
+
+    const events = await crawlUfcSchedule();
+    const predictions = await generateSchedulePredictions(
+      events,
+      existingPredictions
+    );
+
+    const scheduleBlob: UfcSchedule = {
+      updatedAt: new Date().toISOString(),
+      events,
+      predictions,
+    };
+
+    const { error } = await supabase
+      .from("ufc_schedule")
+      .insert({ data: scheduleBlob });
+    if (error) throw error;
+
+    results.schedule = {
+      success: true,
+      events: events.length,
+      predictions: predictions.length,
+    };
+  } catch (error) {
+    console.error("Schedule crawl failed:", error);
+    results.schedule = { success: false, error: String(error) };
+  }
+
   // Trigger revalidation (ko는 prefix 없음, localePrefix: "as-needed")
   revalidatePath("/");
   revalidatePath("/en");
@@ -73,12 +122,21 @@ export async function GET(request: NextRequest) {
   revalidatePath("/en/rankings");
   revalidatePath("/predictions");
   revalidatePath("/en/predictions");
+  revalidatePath("/schedule");
+  revalidatePath("/en/schedule");
 
   // revalidatePath는 stale 표시만 하고 즉시 재생성하지 않음
   // 직접 fetch로 워밍업해서 두 페이지가 동시에 최신 데이터를 갖도록 함
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (siteUrl) {
-    const pagesToWarm = ["/", "/en", "/predictions", "/en/predictions"];
+    const pagesToWarm = [
+      "/",
+      "/en",
+      "/predictions",
+      "/en/predictions",
+      "/schedule",
+      "/en/schedule",
+    ];
     await Promise.allSettled(
       pagesToWarm.map((path) =>
         fetch(`${siteUrl}${path}`, { cache: "no-store" })
