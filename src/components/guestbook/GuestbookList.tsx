@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { useTranslations } from "next-intl";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import type { GuestbookMessage } from "@/types/guestbook";
 
