@@ -164,7 +164,12 @@ async function getSchedule(): Promise<UfcSchedule> {
       if (data?.data) {
         const schedule = data.data as UfcSchedule;
         if (schedule.events?.length > 0) {
-          return schedule;
+          // 이미지 없는 파이터 보완 (크론 실패 또는 구형 데이터 대비)
+          const { enrichFighterImages } = await import(
+            "@/lib/crawl/schedule-crawler"
+          );
+          const enriched = await enrichFighterImages(schedule.events);
+          return { ...schedule, events: enriched };
         }
       }
     } catch {
@@ -172,7 +177,10 @@ async function getSchedule(): Promise<UfcSchedule> {
     }
   }
 
-  return cachedSchedule as UfcSchedule;
+  const { enrichFighterImages } = await import("@/lib/crawl/schedule-crawler");
+  const base = cachedSchedule as UfcSchedule;
+  const enriched = await enrichFighterImages(base.events);
+  return { ...base, events: enriched };
 }
 
 export default async function HomePage({
