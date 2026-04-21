@@ -147,8 +147,6 @@ async function getPredictions(): Promise<PredictionData> {
 }
 
 async function getSchedule(): Promise<UfcSchedule> {
-  const { enrichFighterImages } = await import("@/lib/crawl/schedule-crawler");
-
   if (
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -166,8 +164,7 @@ async function getSchedule(): Promise<UfcSchedule> {
       if (data?.data) {
         const schedule = data.data as UfcSchedule;
         if (schedule.events?.length > 0) {
-          const enriched = await enrichFighterImages(schedule.events);
-          return { ...schedule, events: enriched };
+          return schedule;
         }
       }
     } catch {
@@ -175,9 +172,7 @@ async function getSchedule(): Promise<UfcSchedule> {
     }
   }
 
-  const base = cachedSchedule as UfcSchedule;
-  const enriched = await enrichFighterImages(base.events);
-  return { ...base, events: enriched };
+  return cachedSchedule as UfcSchedule;
 }
 
 export default async function HomePage({
