@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { useTranslations } from "next-intl";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import type { GuestbookMessage } from "@/types/guestbook";
 
@@ -159,10 +158,8 @@ export default function GuestbookList() {
 
   const handleDeleteConfirm = async (id: string) => {
     try {
-      const res = await fetch("/api/guestbook", {
+      const res = await fetch(`/api/guestbook?id=${id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
       });
       if (res.ok) {
         setMessages((prev) => prev.filter((m) => m.id !== id));

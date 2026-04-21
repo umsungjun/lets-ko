@@ -147,8 +147,6 @@ async function getPredictions(): Promise<PredictionData> {
 }
 
 async function getSchedule(): Promise<UfcSchedule> {
-  const { enrichFighterImages } = await import("@/lib/crawl/schedule-crawler");
-
   if (
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -166,6 +164,10 @@ async function getSchedule(): Promise<UfcSchedule> {
       if (data?.data) {
         const schedule = data.data as UfcSchedule;
         if (schedule.events?.length > 0) {
+          // 이미지 없는 파이터 보완 (크론 실패 또는 구형 데이터 대비)
+          const { enrichFighterImages } = await import(
+            "@/lib/crawl/schedule-crawler"
+          );
           const enriched = await enrichFighterImages(schedule.events);
           return { ...schedule, events: enriched };
         }
@@ -175,6 +177,7 @@ async function getSchedule(): Promise<UfcSchedule> {
     }
   }
 
+  const { enrichFighterImages } = await import("@/lib/crawl/schedule-crawler");
   const base = cachedSchedule as UfcSchedule;
   const enriched = await enrichFighterImages(base.events);
   return { ...base, events: enriched };

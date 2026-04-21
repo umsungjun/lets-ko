@@ -71,7 +71,14 @@ export default function EventCard({
     fighter2.name === "TBA" ||
     fighter2.name === "";
 
-  const isWinner1 = prediction && prediction.winner.en === fighter1.name;
+  const isWinner1 =
+    prediction !== undefined &&
+    (prediction.winner.en
+      .toLowerCase()
+      .includes(fighter1.name.toLowerCase()) ||
+      fighter1.name
+        .toLowerCase()
+        .includes(prediction.winner.en.toLowerCase()));
 
   return (
     <div

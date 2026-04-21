@@ -72,7 +72,7 @@ async function getSchedule(): Promise<UfcSchedule> {
       if (data?.data) {
         const schedule = data.data as UfcSchedule;
         if (schedule.events?.length > 0) {
-          // 이미지 없는 파이터 보완 (크론 실패 시 대비)
+          // 이미지 없는 파이터 보완 (크론 실패 또는 구형 데이터 대비)
           const enriched = await enrichFighterImages(schedule.events);
           return { ...schedule, events: enriched };
         }
@@ -82,7 +82,6 @@ async function getSchedule(): Promise<UfcSchedule> {
     }
   }
 
-  // 캐시 데이터도 렌더링 시 이미지 보완
   const base = cachedSchedule as UfcSchedule;
   const enriched = await enrichFighterImages(base.events);
   return { ...base, events: enriched };

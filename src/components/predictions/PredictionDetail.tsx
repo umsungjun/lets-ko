@@ -10,6 +10,13 @@ import type { PredictionData } from "@/types/prediction";
 import FighterComparison from "./FighterComparison";
 import WinProbabilityBar from "./WinProbabilityBar";
 
+interface OpponentVideo {
+  id: string;
+  title: string;
+  thumbnail: string;
+  publishedAt: string;
+}
+
 interface PredictionDetailProps {
   predictions: PredictionData;
   koStats: {
@@ -35,12 +42,6 @@ export default function PredictionDetail({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const lang = locale === "ko" ? "ko" : "en";
 
-  type OpponentVideo = {
-    id: string;
-    title: string;
-    thumbnail: string;
-    publishedAt: string;
-  };
   // null = 로딩 중, [] = 결과 없음, [...] = 결과 있음
   const [opponentVideos, setOpponentVideos] = useState<OpponentVideo[] | null>(
     null
