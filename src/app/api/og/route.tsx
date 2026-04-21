@@ -189,7 +189,15 @@ export async function GET() {
             letterSpacing: "2px",
           }}
         >
-          lets-ko.vercel.app
+          {(() => {
+            try {
+              return new URL(
+                process.env.NEXT_PUBLIC_SITE_URL || ""
+              ).hostname;
+            } catch {
+              return "lets-ko.vercel.app";
+            }
+          })()}
         </div>
       </div>
 
