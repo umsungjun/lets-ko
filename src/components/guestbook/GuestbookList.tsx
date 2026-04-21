@@ -159,10 +159,8 @@ export default function GuestbookList() {
 
   const handleDeleteConfirm = async (id: string) => {
     try {
-      const res = await fetch("/api/guestbook", {
+      const res = await fetch(`/api/guestbook?id=${id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
       });
       if (res.ok) {
         setMessages((prev) => prev.filter((m) => m.id !== id));

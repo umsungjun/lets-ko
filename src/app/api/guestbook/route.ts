@@ -214,14 +214,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const { id } = body;
+  const id = request.nextUrl.searchParams.get("id");
 
   if (!id || typeof id !== "string") {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
