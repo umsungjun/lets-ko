@@ -5,6 +5,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { createHash } from "crypto";
 
 const ALLOWED_EMOJIS = ["👊", "🔥", "💪", "❤️", "👏"];
+const REACTION_RATE_LIMIT_MS = 3000;
 
 function hashIp(ip: string): string {
   return createHash("sha256").update(ip).digest("hex").slice(0, 16);
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
   // 이미 리액션이 있으면 제거(토글 off), 없으면 추가(토글 on)
   const { data: existing } = await supabase
     .from("guestbook_reactions")
-    .select("id")
+    .select("id, created_at")
     .eq("message_id", messageId)
     .eq("emoji", emoji)
     .eq("ip_hash", ipHash)
@@ -49,6 +50,26 @@ export async function POST(request: NextRequest) {
     await supabase.from("guestbook_reactions").delete().eq("id", existing.id);
     active = false;
   } else {
+    // 삽입 전 IP 전체 기준 레이트 리미팅 (3초 쿨다운)
+    const { data: recentReaction } = await supabase
+      .from("guestbook_reactions")
+      .select("created_at")
+      .eq("ip_hash", ipHash)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (recentReaction) {
+      const elapsed =
+        Date.now() - new Date(recentReaction.created_at).getTime();
+      if (elapsed < REACTION_RATE_LIMIT_MS) {
+        return NextResponse.json(
+          { error: "Too many requests" },
+          { status: 429 }
+        );
+      }
+    }
+
     const { error } = await supabase.from("guestbook_reactions").insert({
       message_id: messageId,
       emoji,
