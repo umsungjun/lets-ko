@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getIpHash } from "@/lib/guestbook-utils";
 import { createServerClient } from "@/lib/supabase/server";
-
-import { createHash } from "crypto";
 
 const PAGE_SIZE_DEFAULT = 20;
 const RATE_LIMIT_SECONDS = 30;
-
-function hashIp(ip: string): string {
-  return createHash("sha256").update(ip).digest("hex").slice(0, 16);
-}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -106,9 +101,7 @@ export async function POST(request: NextRequest) {
   const supabase = createServerClient();
 
   // Rate limiting by IP hash
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
-  const ipHash = hashIp(ip);
+  const ipHash = getIpHash(request);
 
   const { data: recent } = await supabase
     .from("guestbook_messages")
@@ -178,9 +171,7 @@ export async function PATCH(request: NextRequest) {
   const supabase = createServerClient();
 
   // IP 검증: 작성자 본인만 수정 가능
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
-  const ipHash = hashIp(ip);
+  const ipHash = getIpHash(request);
 
   const { data: existing } = await supabase
     .from("guestbook_messages")
@@ -223,9 +214,7 @@ export async function DELETE(request: NextRequest) {
   const supabase = createServerClient();
 
   // IP 검증: 작성자 본인만 삭제 가능
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
-  const ipHash = hashIp(ip);
+  const ipHash = getIpHash(request);
 
   const { data: existing } = await supabase
     .from("guestbook_messages")

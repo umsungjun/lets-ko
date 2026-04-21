@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getIpHash } from "@/lib/guestbook-utils";
 import { createServerClient } from "@/lib/supabase/server";
-
-import { createHash } from "crypto";
 
 const ALLOWED_EMOJIS = ["👊", "🔥", "💪", "❤️", "👏"];
 const REACTION_RATE_LIMIT_MS = 3000;
-
-function hashIp(ip: string): string {
-  return createHash("sha256").update(ip).digest("hex").slice(0, 16);
-}
 
 export async function POST(request: NextRequest) {
   let body;
@@ -31,9 +26,7 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServerClient();
 
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
-  const ipHash = hashIp(ip);
+  const ipHash = getIpHash(request);
 
   // 이미 리액션이 있으면 제거(토글 off), 없으면 추가(토글 on)
   const { data: existing } = await supabase
