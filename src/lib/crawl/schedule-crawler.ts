@@ -281,7 +281,24 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
 }
 
 /**
- * www.ufc.com/events HTML 파싱 (폴백)
+ * 파이터 헤드샷 이미지 URL에서 풀네임 추출.
+ * UFC 이미지 파일명 규칙: {LAST}_{FIRST}_{MM-YY}.png 또는 {LAST}_{FIRST}.png
+ * 예: ALLEN_ARNOLD_01-24.png → "Arnold Allen"
+ */
+function extractNameFromImageUrl(
+  url: string | undefined,
+  fallback: string
+): string {
+  if (!url) return fallback;
+  const match = url.match(/\/([A-Z]+)_([A-Z]+)(?:_[\d-]+)?\.png/);
+  if (!match) return fallback;
+  const toTitle = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
+  return `${toTitle(match[2])} ${toTitle(match[1])}`;
+}
+
+/**
+ * www.ufc.com/events HTML 파싱.
+ * 날짜: data-main-card-timestamp (유닉스 초), 파이터: 이미지 URL에서 추출
  */
 async function fetchFromHtml(): Promise<UfcEvent[] | null> {
   try {
@@ -295,81 +312,96 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
     const $ = cheerio.load(html);
     const today = new Date().toISOString().split("T")[0];
     const events: UfcEvent[] = [];
+    const seenIds = new Set<string>();
 
-    // UFC events 페이지의 이벤트 카드 셀렉터 (여러 패턴 시도)
-    const eventSelectors = [
-      ".c-card-event--result",
-      ".b-list-upcoming-events li",
-      "[class*='upcoming'] [class*='event']",
-      ".vc_event",
-    ];
+    $("article.c-card-event--result").each((_, el) => {
+      const card = $(el);
 
-    for (const selector of eventSelectors) {
-      const cards = $(selector);
-      if (cards.length === 0) continue;
+      // 날짜: data-main-card-timestamp (유닉스 초) → YYYY-MM-DD
+      const tsAttr = card.find(".tz-change-data").attr("data-main-card-timestamp");
+      if (!tsAttr) return;
+      const dateStr = new Date(parseInt(tsAttr, 10) * 1000)
+        .toISOString()
+        .split("T")[0];
+      if (dateStr < today) return;
 
-      cards.each((_, el) => {
-        const card = $(el);
+      // ID: 이벤트 URL 슬러그 (프래그먼트 제거)
+      const eventUrl =
+        card.find(".c-card-event--result__logo a").first().attr("href") || "";
+      const id = eventUrl.replace("/event/", "").replace(/#.*$/, "").trim();
+      if (!id || seenIds.has(id)) return;
+      seenIds.add(id);
 
-        // 날짜 추출
-        const timeEl = card.find("time").first();
-        const dateStr =
-          timeEl.attr("datetime")?.split("T")[0] ||
-          timeEl.attr("content")?.split("T")[0];
-        if (!dateStr || dateStr < today) return;
+      // 이벤트명: UFC 번호 이벤트 vs Fight Night 구분
+      const ufcNumbered = id.match(/^ufc-(\d+)$/);
+      const ufcBranded = id.match(/^ufc-([a-z-]+?)-(\d+)$/);
+      let eventName: string;
+      if (ufcNumbered) {
+        eventName = `UFC ${ufcNumbered[1]}`;
+      } else if (ufcBranded) {
+        const subtitle = ufcBranded[1]
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
+        eventName = `UFC ${subtitle} ${ufcBranded[2]}`;
+      } else {
+        eventName = "UFC Fight Night";
+      }
 
-        // 이벤트명
-        const eventName =
-          card
-            .find(
-              "[class*='headline'], [class*='title'], h2, h3, .field--name-node-title"
-            )
-            .first()
-            .text()
-            .trim() || "UFC Event";
+      // 메인 이벤트 라벨 (예: "Allen vs Costa") 추가
+      const fightLabel = card
+        .find("[data-fight-label]")
+        .first()
+        .attr("data-fight-label");
+      if (fightLabel) eventName += `: ${fightLabel}`;
 
-        // 장소
-        const locationText = card
-          .find(
-            "[class*='location'], [class*='meta'], .c-card-event--result__info"
-          )
-          .first()
-          .text()
-          .trim();
+      // 파이터 이미지 + 풀네임 (이미지 URL 파일명에서 추출)
+      const imgEls = card.find(".c-card--red-blue img");
+      const f1Src = imgEls.eq(0).attr("src");
+      const f2Src = imgEls.eq(1).attr("src");
+      const [f1RawName, f2RawName] = (fightLabel ?? "").split(" vs ").map((n) => n.trim());
+      const f1Name = extractNameFromImageUrl(f1Src, f1RawName || "TBA");
+      const f2Name = extractNameFromImageUrl(f2Src, f2RawName || "TBA");
 
-        const locationEn = locationText || "TBA";
-        const locationKo = localizeCity(locationEn);
+      // 위치 (도시 + 국가)
+      const city = card.find(".address .locality").text().trim();
+      const country = card.find(".address .country").text().trim();
+      const locationEn = city
+        ? country === "United States"
+          ? city
+          : `${city}, ${country}`
+        : "TBA";
+      const locationKo = localizeCity(locationEn);
 
-        const id = eventName
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "");
+      // 경기장
+      const venue =
+        card.find(".field--name-taxonomy-term-title h5").text().trim() ||
+        undefined;
 
-        // 파이터 이름 (메인 이벤트)
-        const fighterEls = card.find(
-          "[class*='athlete'], [class*='fighter'], .c-card-athlete"
-        );
-        let fighter1: UfcEventFighter = { name: "TBA" };
-        let fighter2: UfcEventFighter = { name: "TBA" };
-
-        if (fighterEls.length >= 2) {
-          const f1Name = fighterEls.eq(0).text().trim();
-          const f2Name = fighterEls.eq(1).text().trim();
-          if (f1Name) fighter1 = { name: f1Name };
-          if (f2Name) fighter2 = { name: f2Name };
-        }
-
-        events.push({
-          id,
-          name: eventName,
-          date: dateStr,
-          location: { en: locationEn, ko: locationKo },
-          mainEvent: { fighter1, fighter2 },
-        });
+      events.push({
+        id,
+        name: eventName,
+        date: dateStr,
+        location: { en: locationEn, ko: locationKo },
+        venue,
+        mainEvent: {
+          fighter1: {
+            name: f1Name,
+            imageUrl:
+              f1Name !== "TBA" && f1Src?.startsWith("https://")
+                ? f1Src
+                : undefined,
+          },
+          fighter2: {
+            name: f2Name,
+            imageUrl:
+              f2Name !== "TBA" && f2Src?.startsWith("https://")
+                ? f2Src
+                : undefined,
+          },
+        },
       });
-
-      if (events.length >= 1) break;
-    }
+    });
 
     return events.length >= 1 ? events.slice(0, 8) : null;
   } catch {
