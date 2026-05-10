@@ -10,14 +10,19 @@ import {
 } from "@/lib/crawl/schedule-prediction-generator";
 import { crawlUfcStats } from "@/lib/crawl/ufc-crawler";
 import { createServerClient } from "@/lib/supabase/server";
-import type { FighterStats } from "@/types/fighter";
 import type { UfcSchedule } from "@/types/schedule";
 
-// 크론 함수 타임아웃 연장 (스케줄 크롤 + Gemini 호출 추가로 시간 증가)
 export const maxDuration = 60;
 
+function serializeError(reason: unknown): string {
+  if (reason instanceof Error) return reason.message;
+  if (reason && typeof reason === "object" && "message" in reason) {
+    return String((reason as { message: unknown }).message);
+  }
+  return String(reason);
+}
+
 export async function GET(request: NextRequest) {
-  // Verify cron secret
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,97 +30,157 @@ export async function GET(request: NextRequest) {
 
   const supabase = createServerClient();
   const results: Record<string, unknown> = {};
-  let latestStats: FighterStats | undefined;
 
-  // Crawl fighter stats
-  try {
-    const stats = await crawlUfcStats();
-    const { error } = await supabase.from("fighter_stats").insert({
-      data: stats,
-      source: "ufc_korea",
-    });
-    if (error) throw error;
-    latestStats = stats;
-    results.stats = { success: true, record: stats.record };
-  } catch (error) {
-    console.error("Stats crawl failed:", error);
-    results.stats = { success: false, error: String(error) };
+  // Phase 1: 독립 크롤링 병렬 실행 (stats/rankings/schedule은 서로 의존성 없음)
+  const [statsResult, rankingsResult, scheduleRawResult] =
+    await Promise.allSettled([
+      crawlUfcStats(),
+      crawlUfcRankings(),
+      (async () => {
+        const { data: existingRow } = await supabase
+          .from("ufc_schedule")
+          .select("data")
+          .order("crawled_at", { ascending: false })
+          .limit(1)
+          .single();
+        const existingPredictions = extractExistingPredictions(
+          existingRow?.data as UfcSchedule | null
+        );
+        const events = await crawlUfcSchedule();
+        return { events, existingPredictions };
+      })(),
+    ]);
+
+  const latestStats =
+    statsResult.status === "fulfilled" ? statsResult.value : undefined;
+  const scheduleData =
+    scheduleRawResult.status === "fulfilled" ? scheduleRawResult.value : null;
+
+  if (statsResult.status === "rejected") {
+    console.error("Stats crawl failed:", statsResult.reason);
+  }
+  if (rankingsResult.status === "rejected") {
+    console.error("Rankings crawl failed:", rankingsResult.reason);
+  }
+  if (scheduleRawResult.status === "rejected") {
+    console.error("Schedule crawl failed:", scheduleRawResult.reason);
   }
 
-  // Crawl UFC rankings
-  try {
-    const rankings = await crawlUfcRankings();
-    const { error } = await supabase.from("ufc_rankings").insert({
-      data: rankings,
-      source: "ufc_korea",
-    });
-    if (error) throw error;
-    results.rankings = {
-      success: true,
-      divisions: rankings.divisions.length,
-    };
-  } catch (error) {
-    console.error("Rankings crawl failed:", error);
-    results.rankings = { success: false, error: String(error) };
+  // Phase 2: DB 저장(stats/rankings) + AI 예측 병렬 실행
+  // DB 저장은 I/O 위주라 Gemini 호출과 병렬로 실행 가능
+  // 두 Gemini 태스크는 각 내부가 순차이므로 동시 최대 호출 수 = 2
+  const [statsSave, rankingsSave, predictionsResult, schedulePredResult] =
+    await Promise.allSettled([
+      statsResult.status === "fulfilled"
+        ? supabase
+            .from("fighter_stats")
+            .insert({ data: statsResult.value, source: "ufc_korea" })
+            .then(({ error }) => {
+              if (error) throw error;
+            })
+        : Promise.reject(statsResult.reason),
+      rankingsResult.status === "fulfilled"
+        ? supabase
+            .from("ufc_rankings")
+            .insert({ data: rankingsResult.value, source: "ufc_korea" })
+            .then(({ error }) => {
+              if (error) throw error;
+            })
+        : Promise.reject(rankingsResult.reason),
+      generatePredictions(latestStats),
+      scheduleData
+        ? generateSchedulePredictions(
+            scheduleData.events,
+            scheduleData.existingPredictions
+          )
+        : Promise.reject(
+            scheduleRawResult.status === "rejected"
+              ? scheduleRawResult.reason
+              : new Error("schedule data unavailable")
+          ),
+    ]);
+
+  if (predictionsResult.status === "rejected") {
+    console.error("Prediction generation failed:", predictionsResult.reason);
+  }
+  if (schedulePredResult.status === "rejected") {
+    console.error("Schedule prediction failed:", schedulePredResult.reason);
   }
 
-  // Generate AI opponent predictions (depends on fresh stats)
-  try {
-    const predictions = await generatePredictions(latestStats);
-    const { error } = await supabase.from("opponent_predictions").insert({
-      data: predictions,
-    });
-    if (error) throw error;
-    results.predictions = {
-      success: true,
-      opponents: predictions.opponents.length,
-    };
-  } catch (error) {
-    console.error("Prediction generation failed:", error);
-    results.predictions = { success: false, error: String(error) };
-  }
+  // Phase 3: AI 결과 DB 저장
+  const [predSave, scheduleSave] = await Promise.allSettled([
+    predictionsResult.status === "fulfilled"
+      ? supabase
+          .from("opponent_predictions")
+          .insert({ data: predictionsResult.value })
+          .then(({ error }) => {
+            if (error) throw error;
+          })
+      : Promise.reject(predictionsResult.reason),
+    scheduleData && schedulePredResult.status === "fulfilled"
+      ? supabase
+          .from("ufc_schedule")
+          .insert({
+            data: {
+              updatedAt: new Date().toISOString(),
+              events: scheduleData.events,
+              predictions: schedulePredResult.value,
+            } satisfies UfcSchedule,
+          })
+          .then(({ error }) => {
+            if (error) throw error;
+          })
+      : Promise.reject(
+          scheduleRawResult.status === "rejected"
+            ? scheduleRawResult.reason
+            : schedulePredResult.status === "rejected"
+              ? schedulePredResult.reason
+              : new Error("schedule save skipped: unknown state")
+        ),
+  ]);
 
-  // Crawl UFC schedule + generate AI main event predictions
-  try {
-    // 기존 스케줄에서 이미 생성된 예측 재사용 (Gemini 호출 최소화)
-    const { data: existingRow } = await supabase
-      .from("ufc_schedule")
-      .select("data")
-      .order("crawled_at", { ascending: false })
-      .limit(1)
-      .single();
+  // Collect results
+  results.stats =
+    statsSave.status === "fulfilled"
+      ? { success: true, record: latestStats?.record }
+      : { success: false, error: serializeError(statsSave.reason) };
 
-    const existingSchedule = existingRow?.data as UfcSchedule | null;
-    const existingPredictions = extractExistingPredictions(existingSchedule);
+  results.rankings =
+    rankingsSave.status === "fulfilled"
+      ? {
+          success: true,
+          divisions:
+            rankingsResult.status === "fulfilled"
+              ? rankingsResult.value.divisions.length
+              : 0,
+        }
+      : { success: false, error: serializeError(rankingsSave.reason) };
 
-    const events = await crawlUfcSchedule();
-    const predictions = await generateSchedulePredictions(
-      events,
-      existingPredictions
-    );
+  results.predictions =
+    predSave.status === "fulfilled"
+      ? {
+          success: true,
+          opponents:
+            predictionsResult.status === "fulfilled"
+              ? predictionsResult.value.opponents.length
+              : 0,
+        }
+      : { success: false, error: serializeError(predSave.reason) };
 
-    const scheduleBlob: UfcSchedule = {
-      updatedAt: new Date().toISOString(),
-      events,
-      predictions,
-    };
+  results.schedule =
+    scheduleSave.status === "fulfilled"
+      ? {
+          success: true,
+          events: scheduleData?.events.length ?? 0,
+          predictions:
+            schedulePredResult.status === "fulfilled"
+              ? schedulePredResult.value.length
+              : 0,
+        }
+      : { success: false, error: serializeError(scheduleSave.reason) };
 
-    const { error } = await supabase
-      .from("ufc_schedule")
-      .insert({ data: scheduleBlob });
-    if (error) throw error;
-
-    results.schedule = {
-      success: true,
-      events: events.length,
-      predictions: predictions.length,
-    };
-  } catch (error) {
-    console.error("Schedule crawl failed:", error);
-    results.schedule = { success: false, error: String(error) };
-  }
-
-  // Trigger revalidation (ko는 prefix 없음, localePrefix: "as-needed")
+  // revalidatePath는 stale 표시만 하고 즉시 재생성하지 않음
+  // 직접 fetch로 워밍업해서 두 페이지가 동시에 최신 데이터를 갖도록 함
   revalidatePath("/");
   revalidatePath("/en");
   revalidatePath("/rankings");
@@ -125,13 +190,13 @@ export async function GET(request: NextRequest) {
   revalidatePath("/schedule");
   revalidatePath("/en/schedule");
 
-  // revalidatePath는 stale 표시만 하고 즉시 재생성하지 않음
-  // 직접 fetch로 워밍업해서 두 페이지가 동시에 최신 데이터를 갖도록 함
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (siteUrl) {
     const pagesToWarm = [
       "/",
       "/en",
+      "/rankings",
+      "/en/rankings",
       "/predictions",
       "/en/predictions",
       "/schedule",
