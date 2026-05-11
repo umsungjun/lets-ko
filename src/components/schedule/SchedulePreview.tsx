@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useInView } from "@/hooks/useInView";
+import { isTbaMatchup } from "@/lib/schedule-utils";
 import type { UfcSchedule } from "@/types/schedule";
 
 interface SchedulePreviewProps {
@@ -65,11 +66,7 @@ export default function SchedulePreview({
     (p) => p.eventId === nextEvent.id
   );
   const { fighter1, fighter2 } = nextEvent.mainEvent;
-  const isTba =
-    fighter1.name === "TBA" ||
-    fighter1.name === "" ||
-    fighter2.name === "TBA" ||
-    fighter2.name === "";
+  const isTba = isTbaMatchup(fighter1.name, fighter2.name);
 
   const formattedDate = new Date(
     nextEvent.date + "T12:00:00Z"

@@ -1,4 +1,5 @@
 import { analyzeMainEvent } from "@/lib/gemini";
+import { isTbaMatchup } from "@/lib/schedule-utils";
 import type { EventPrediction, UfcEvent, UfcSchedule } from "@/types/schedule";
 
 import { scrapeUfcFighterImage } from "./ufc-image-scraper";
@@ -20,8 +21,8 @@ export async function generateSchedulePredictions(
   const eventsNeedingPrediction = events.filter((event) => {
     if (existingIds.has(event.id)) return false;
     const { fighter1, fighter2 } = event.mainEvent;
-    // 둘 다 TBA면 건너뜀
-    if (fighter1.name === "TBA" || fighter2.name === "TBA") return false;
+    // 미확정 파이터(TBA/TBD 등) 포함 매치는 건너뜀
+    if (isTbaMatchup(fighter1.name, fighter2.name)) return false;
     return true;
   });
 
