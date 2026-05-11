@@ -1,3 +1,4 @@
+import { isTbaFighter } from "@/lib/schedule-utils";
 import type {
   UfcEvent,
   UfcEventFight,
@@ -318,7 +319,9 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
       const card = $(el);
 
       // 날짜: data-main-card-timestamp (유닉스 초) → YYYY-MM-DD
-      const tsAttr = card.find(".tz-change-data").attr("data-main-card-timestamp");
+      const tsAttr = card
+        .find(".tz-change-data")
+        .attr("data-main-card-timestamp");
       if (!tsAttr) return;
       const dateStr = new Date(parseInt(tsAttr, 10) * 1000)
         .toISOString()
@@ -359,7 +362,9 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
       const imgEls = card.find(".c-card--red-blue img");
       const f1Src = imgEls.eq(0).attr("src");
       const f2Src = imgEls.eq(1).attr("src");
-      const [f1RawName, f2RawName] = (fightLabel ?? "").split(" vs ").map((n) => n.trim());
+      const [f1RawName, f2RawName] = (fightLabel ?? "")
+        .split(" vs ")
+        .map((n) => n.trim());
       const f1Name = extractNameFromImageUrl(f1Src, f1RawName || "TBA");
       const f2Name = extractNameFromImageUrl(f2Src, f2RawName || "TBA");
 
@@ -388,14 +393,14 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
           fighter1: {
             name: f1Name,
             imageUrl:
-              f1Name !== "TBA" && f1Src?.startsWith("https://")
+              !isTbaFighter(f1Name) && f1Src?.startsWith("https://")
                 ? f1Src
                 : undefined,
           },
           fighter2: {
             name: f2Name,
             imageUrl:
-              f2Name !== "TBA" && f2Src?.startsWith("https://")
+              !isTbaFighter(f2Name) && f2Src?.startsWith("https://")
                 ? f2Src
                 : undefined,
           },
@@ -424,10 +429,10 @@ export async function enrichFighterImages(
 
   for (const event of events) {
     const { fighter1, fighter2 } = event.mainEvent;
-    if (fighter1.name !== "TBA" && !fighter1.imageUrl) {
+    if (!isTbaFighter(fighter1.name) && !fighter1.imageUrl) {
       fightersToFetch.set(fighter1.name, "");
     }
-    if (fighter2.name !== "TBA" && !fighter2.imageUrl) {
+    if (!isTbaFighter(fighter2.name) && !fighter2.imageUrl) {
       fightersToFetch.set(fighter2.name, "");
     }
   }

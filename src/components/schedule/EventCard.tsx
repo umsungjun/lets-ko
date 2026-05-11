@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
+import { isTbaMatchup } from "@/lib/schedule-utils";
 import type { EventPrediction, UfcEvent } from "@/types/schedule";
 
 interface EventCardProps {
@@ -65,20 +66,12 @@ export default function EventCard({
   );
 
   const { fighter1, fighter2 } = event.mainEvent;
-  const isTba =
-    fighter1.name === "TBA" ||
-    fighter1.name === "" ||
-    fighter2.name === "TBA" ||
-    fighter2.name === "";
+  const isTba = isTbaMatchup(fighter1.name, fighter2.name);
 
   const isWinner1 =
     prediction !== undefined &&
-    (prediction.winner.en
-      .toLowerCase()
-      .includes(fighter1.name.toLowerCase()) ||
-      fighter1.name
-        .toLowerCase()
-        .includes(prediction.winner.en.toLowerCase()));
+    (prediction.winner.en.toLowerCase().includes(fighter1.name.toLowerCase()) ||
+      fighter1.name.toLowerCase().includes(prediction.winner.en.toLowerCase()));
 
   return (
     <div
