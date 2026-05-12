@@ -2,7 +2,6 @@ import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 import { generatePredictions } from "@/lib/crawl/prediction-generator";
-import { crawlUfcRankings } from "@/lib/crawl/rankings-crawler";
 import { crawlUfcSchedule } from "@/lib/crawl/schedule-crawler";
 import {
   extractExistingPredictions,
@@ -31,25 +30,23 @@ export async function GET(request: NextRequest) {
   const supabase = createServerClient();
   const results: Record<string, unknown> = {};
 
-  // Phase 1: 독립 크롤링 병렬 실행 (stats/rankings/schedule은 서로 의존성 없음)
-  const [statsResult, rankingsResult, scheduleRawResult] =
-    await Promise.allSettled([
-      crawlUfcStats(),
-      crawlUfcRankings(),
-      (async () => {
-        const { data: existingRow } = await supabase
-          .from("ufc_schedule")
-          .select("data")
-          .order("crawled_at", { ascending: false })
-          .limit(1)
-          .single();
-        const existingPredictions = extractExistingPredictions(
-          existingRow?.data as UfcSchedule | null
-        );
-        const events = await crawlUfcSchedule();
-        return { events, existingPredictions };
-      })(),
-    ]);
+  // Phase 1: 독립 크롤링 병렬 실행 (stats/schedule은 서로 의존성 없음)
+  const [statsResult, scheduleRawResult] = await Promise.allSettled([
+    crawlUfcStats(),
+    (async () => {
+      const { data: existingRow } = await supabase
+        .from("ufc_schedule")
+        .select("data")
+        .order("crawled_at", { ascending: false })
+        .limit(1)
+        .single();
+      const existingPredictions = extractExistingPredictions(
+        existingRow?.data as UfcSchedule | null
+      );
+      const events = await crawlUfcSchedule();
+      return { events, existingPredictions };
+    })(),
+  ]);
 
   const latestStats =
     statsResult.status === "fulfilled" ? statsResult.value : undefined;
@@ -59,17 +56,14 @@ export async function GET(request: NextRequest) {
   if (statsResult.status === "rejected") {
     console.error("Stats crawl failed:", statsResult.reason);
   }
-  if (rankingsResult.status === "rejected") {
-    console.error("Rankings crawl failed:", rankingsResult.reason);
-  }
   if (scheduleRawResult.status === "rejected") {
     console.error("Schedule crawl failed:", scheduleRawResult.reason);
   }
 
-  // Phase 2: DB 저장(stats/rankings) + AI 예측 병렬 실행
+  // Phase 2: DB 저장(stats) + AI 예측 병렬 실행
   // DB 저장은 I/O 위주라 Gemini 호출과 병렬로 실행 가능
   // 두 Gemini 태스크는 각 내부가 순차이므로 동시 최대 호출 수 = 2
-  const [statsSave, rankingsSave, predictionsResult, schedulePredResult] =
+  const [statsSave, predictionsResult, schedulePredResult] =
     await Promise.allSettled([
       statsResult.status === "fulfilled"
         ? supabase
@@ -79,14 +73,6 @@ export async function GET(request: NextRequest) {
               if (error) throw error;
             })
         : Promise.reject(statsResult.reason),
-      rankingsResult.status === "fulfilled"
-        ? supabase
-            .from("ufc_rankings")
-            .insert({ data: rankingsResult.value, source: "ufc_korea" })
-            .then(({ error }) => {
-              if (error) throw error;
-            })
-        : Promise.reject(rankingsResult.reason),
       generatePredictions(latestStats),
       scheduleData
         ? generateSchedulePredictions(
@@ -145,17 +131,6 @@ export async function GET(request: NextRequest) {
       ? { success: true, record: latestStats?.record }
       : { success: false, error: serializeError(statsSave.reason) };
 
-  results.rankings =
-    rankingsSave.status === "fulfilled"
-      ? {
-          success: true,
-          divisions:
-            rankingsResult.status === "fulfilled"
-              ? rankingsResult.value.divisions.length
-              : 0,
-        }
-      : { success: false, error: serializeError(rankingsSave.reason) };
-
   results.predictions =
     predSave.status === "fulfilled"
       ? {
@@ -183,8 +158,6 @@ export async function GET(request: NextRequest) {
   // 직접 fetch로 워밍업해서 두 페이지가 동시에 최신 데이터를 갖도록 함
   revalidatePath("/");
   revalidatePath("/en");
-  revalidatePath("/rankings");
-  revalidatePath("/en/rankings");
   revalidatePath("/predictions");
   revalidatePath("/en/predictions");
   revalidatePath("/schedule");
@@ -195,8 +168,6 @@ export async function GET(request: NextRequest) {
     const pagesToWarm = [
       "/",
       "/en",
-      "/rankings",
-      "/en/rankings",
       "/predictions",
       "/en/predictions",
       "/schedule",

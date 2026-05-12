@@ -30,6 +30,16 @@ function toSlug(name: string): string {
     .replace(/\s+/g, "-");
 }
 
+// UFC 사이트가 상대/절대 URL을 섞어 반환하므로 항상 절대 URL로 정규화
+function normalizeImageUrl(src: string | undefined): string {
+  if (!src) return "";
+  try {
+    return new URL(src, UFC_RANKINGS_URL).href;
+  } catch {
+    return "";
+  }
+}
+
 function parseRankedFighters(
   $: cheerio.CheerioAPI,
   table: ReturnType<cheerio.CheerioAPI>
@@ -102,7 +112,7 @@ export async function crawlUfcRankings(): Promise<UfcRankings> {
 
       if (champion$.length > 0) {
         const name = champion$.find("h5 a").text().trim();
-        const imageUrl = champion$.find("img").attr("src") || "";
+        const imageUrl = normalizeImageUrl(champion$.find("img").attr("src"));
         if (name) {
           topFighter = { name, imageUrl };
         }
@@ -124,7 +134,7 @@ export async function crawlUfcRankings(): Promise<UfcRankings> {
 
     if (champion$.length > 0) {
       const champName = champion$.find("h5 a").text().trim();
-      const champImg = champion$.find("img").attr("src") || "";
+      const champImg = normalizeImageUrl(champion$.find("img").attr("src"));
 
       if (champName) {
         champion = { name: champName, imageUrl: champImg };

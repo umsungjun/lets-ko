@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/crawl",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/rankings",
+      "schedule": "0 6 * * 0"
     }
   ]
 }
