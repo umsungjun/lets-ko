@@ -28,7 +28,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - `/api/guestbook` — REST API (GET/POST/PATCH/DELETE)
 - `/api/guestbook/reactions` — 이모지 리액션 토글 (POST), 허용 이모지: 👊🔥💪❤️👏
 - `/api/og` — OG 이미지 동적 생성 (Node.js 런타임, `ImageResponse`)
-- `/api/cron/crawl` — Vercel Cron 엔드포인트 (매일 UTC 03:00 = KST 12:00, `CRON_SECRET` 필요)
+- `/api/cron/crawl` — Vercel Cron 엔드포인트 (매일 UTC 05:00 = KST 14:00, `CRON_SECRET` 필요)
 
 ### 다국어 (i18n)
 
@@ -53,7 +53,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 ### UFC 크롤러 체인 (`/api/cron/crawl`)
 
-Vercel Cron 매일 UTC 03:00 실행. `maxDuration = 60`. 4단계 순차 실행, 부분 실패 시 HTTP 207:
+Vercel Cron 매일 UTC 05:00 (KST 14:00) 실행. `maxDuration = 60`. 4단계 순차 실행, 부분 실패 시 HTTP 207:
 
 1. `crawlUfcStats()` — 선수 전적/스탯. 파싱 실패 시 `throw` (잘못된 데이터 저장 방지)
 2. `crawlUfcRankings()` — UFC 전 체급 랭킹
