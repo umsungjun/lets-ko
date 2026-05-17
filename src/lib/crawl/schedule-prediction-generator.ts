@@ -6,24 +6,29 @@ import { scrapeUfcFighterImage } from "./ufc-image-scraper";
 
 /**
  * @description 예정 UFC 이벤트 목록에 대해 Gemini AI 메인 이벤트 승부 예측 생성.
- * 기존 예측이 있는 이벤트는 건너뛰어 Gemini 호출 비용 절감.
+ * 같은 eventId의 기존 예측이 있고 파이터까지 동일하면 재사용해 Gemini 호출 비용 절감,
+ * 파이터가 변경(TBA→확정, 부상 교체 등)된 경우 stale 예측을 폐기하고 새로 생성.
  * @param events - 크롤링된 UFC 이벤트 배열
- * @param existingPredictions - DB에서 로드한 기존 예측 배열 (중복 방지용)
- * @returns 기존 예측 + 새로 생성된 예측 합산 배열
+ * @param existingPredictions - DB에서 로드한 기존 예측 배열 (재사용/대체 판단용)
+ * @returns 유효한 기존 예측 + 새로 생성된 예측 합산 배열
  */
 export async function generateSchedulePredictions(
   events: UfcEvent[],
   existingPredictions: EventPrediction[]
 ): Promise<EventPrediction[]> {
-  const existingIds = new Set(existingPredictions.map((p) => p.eventId));
+  const existingById = new Map(existingPredictions.map((p) => [p.eventId, p]));
 
-  // 새 이벤트만 필터: 기존 예측 없고, 파이터 확정된 경우
+  // 재예측 대상: 파이터 확정 + (신규 이벤트 OR 기존 예측의 파이터가 현재와 다름)
+  // 같은 eventId라도 매치업 변경(TBA→확정, 부상 교체 등) 시 stale 예측 갱신
   const eventsNeedingPrediction = events.filter((event) => {
-    if (existingIds.has(event.id)) return false;
     const { fighter1, fighter2 } = event.mainEvent;
-    // 미확정 파이터(TBA/TBD 등) 포함 매치는 건너뜀
     if (isTbaMatchup(fighter1.name, fighter2.name)) return false;
-    return true;
+
+    const existing = existingById.get(event.id);
+    if (!existing) return true;
+    return (
+      existing.fighter1 !== fighter1.name || existing.fighter2 !== fighter2.name
+    );
   });
 
   const newPredictions: EventPrediction[] = [];
@@ -72,8 +77,12 @@ export async function generateSchedulePredictions(
     }
   }
 
-  // 기존 예측 + 신규 예측 합산해서 반환
-  return [...existingPredictions, ...newPredictions];
+  // 재생성된 eventId의 기존(stale) 예측은 제외하고 신규로 대체
+  const regeneratedIds = new Set(newPredictions.map((p) => p.eventId));
+  const keptExisting = existingPredictions.filter(
+    (p) => !regeneratedIds.has(p.eventId)
+  );
+  return [...keptExisting, ...newPredictions];
 }
 
 /**
