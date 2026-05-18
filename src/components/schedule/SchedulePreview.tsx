@@ -7,6 +7,8 @@ import { useInView } from "@/hooks/useInView";
 import { isTbaMatchup } from "@/lib/schedule-utils";
 import type { UfcSchedule } from "@/types/schedule";
 
+import FightCardTabs from "./FightCardTabs";
+
 interface SchedulePreviewProps {
   schedule: UfcSchedule;
   locale: string;
@@ -247,6 +249,11 @@ export default function SchedulePreview({
                 {prediction.analysis[lang]}
               </p>
             </div>
+          )}
+
+          {/* 전체 카드 탭 (메인/예선/얼리예선) */}
+          {nextEvent.fightCard && (
+            <FightCardTabs fightCard={nextEvent.fightCard} locale={locale} />
           )}
         </div>
 

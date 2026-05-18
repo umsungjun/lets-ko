@@ -144,7 +144,10 @@
     "disclaimer": "AI가 분석한 예측이며 실제 결과와 다를 수 있습니다",
     "poweredBy": "Gemini AI 기반 분석",
     "weightClass": "체급",
-    "tba": "미정"
+    "tba": "미정",
+    "mainCard": "메인 카드",
+    "prelimCard": "예선 카드",
+    "earlyPrelimCard": "얼리 예선"
   },
   "common": {
     "locale": "KO"

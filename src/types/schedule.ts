@@ -18,6 +18,13 @@ export interface UfcEventFight {
   weightClass?: string;
 }
 
+/** 메인 카드 / 예선 카드 / 얼리 예선으로 그룹화된 이벤트 전체 fight card */
+export interface UfcFightCard {
+  mainCard: UfcEventFight[];
+  prelimCard: UfcEventFight[];
+  earlyPrelimCard?: UfcEventFight[];
+}
+
 /** UFC 이벤트 단건 */
 export interface UfcEvent {
   /** CloudFront 이벤트명을 slug 변환한 고유 ID */
@@ -30,6 +37,8 @@ export interface UfcEvent {
   venue?: string;
   mainEvent: UfcEventFight;
   coMainEvent?: UfcEventFight;
+  /** 이벤트 상세 페이지에서 크롤한 전체 카드. 크롤 실패 시 미설정 */
+  fightCard?: UfcFightCard;
 }
 
 /** Gemini AI가 생성한 메인 이벤트 승부 예측 */

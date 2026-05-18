@@ -3,6 +3,7 @@ import type {
   UfcEvent,
   UfcEventFight,
   UfcEventFighter,
+  UfcFightCard,
 } from "@/types/schedule";
 
 import * as cheerio from "cheerio";
@@ -473,59 +474,170 @@ export async function enrichFighterImages(
   }));
 }
 
+const UFC_BASE_URL = "https://www.ufc.com";
+
 /**
- * @description 단일 UFC 이벤트 상세 페이지에서 메인 이벤트의 체급 추출.
- * 이벤트 페이지의 첫 c-listing-fight__class-text가 메인 이벤트 체급. 텍스트는 지오 IP에 따라
- * 영문/한국어 + " Bout" 접미사로 반환되므로 정규화는 formatWeightClass 측에서 처리.
- * @param eventId - UFC 이벤트 슬러그 (예: "ufc-329")
- * @returns 체급 원문 (예: "Welterweight Bout"), 추출 실패 시 undefined
+ * 상대 경로 img src를 절대 URL로 변환.
+ * 절대 URL은 그대로, 잘못된 URL은 undefined 반환.
  */
-async function fetchEventWeightClass(
-  eventId: string
-): Promise<string | undefined> {
+function normalizeFightImageUrl(src: string | undefined): string | undefined {
+  if (!src) return undefined;
   try {
-    const res = await fetch(`https://www.ufc.com/event/${eventId}`, {
-      headers: CRAWLER_HEADERS,
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return undefined;
-    const html = await res.text();
-    const $ = cheerio.load(html);
-    const text = $(".c-listing-fight__class-text").first().text().trim();
-    return text || undefined;
+    return new URL(src, UFC_BASE_URL).href;
   } catch {
     return undefined;
   }
 }
 
+type EventDetail = {
+  weightClass?: string;
+  fightCard?: UfcFightCard;
+};
+
 /**
- * @description weightClass가 없는 이벤트의 메인 이벤트 체급을 상세 페이지에서 병렬 스크레이핑.
- * UFC CloudFront API가 죽으면서 HTML 폴백 경로에선 체급 정보가 누락되므로 보강 필요.
- * @param events - 체급이 누락됐을 수 있는 UfcEvent 배열
- * @returns 체급이 보완된 UfcEvent 배열
+ * @description 단일 UFC 이벤트 상세 페이지에서 메인 이벤트 체급 + 전체 fight card 추출.
+ * 카드 섹션 구분:
+ * - #main-card → 메인 카드
+ * - .fight-card-prelims (단, .fight-card-prelims-early 후손은 제외) → 예선 카드
+ * - .fight-card-prelims-early → 얼리 예선
+ *
+ * 파이터 이름 a 태그는 plain text 또는 given/family-name span 분리 둘 다 지원
+ * (cheerio .text()가 모든 자식 텍스트를 합쳐 반환).
+ * @param eventId - UFC 이벤트 슬러그 (예: "ufc-329")
+ * @returns 체급(원문) + fight card. 페이지 fetch 실패 시 빈 객체
  */
-async function enrichWeightClasses(events: UfcEvent[]): Promise<UfcEvent[]> {
-  const targets = events
-    .map((e, i) => ({ i, e }))
-    .filter(({ e }) => !e.mainEvent.weightClass && e.id);
+async function fetchEventDetail(eventId: string): Promise<EventDetail> {
+  try {
+    const res = await fetch(`${UFC_BASE_URL}/event/${eventId}`, {
+      headers: CRAWLER_HEADERS,
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return {};
+    const html = await res.text();
+    const $ = cheerio.load(html);
 
-  if (targets.length === 0) return events;
+    const weightClass =
+      $(".c-listing-fight__class-text").first().text().trim() || undefined;
 
+    // 단일 .c-listing-fight 요소에서 UfcEventFight 추출 (closure로 $ 캡처)
+    // el 타입은 cheerio each 콜백 파라미터 그대로 (domhandler.AnyNode가 직접 의존성이 아님)
+    const parseFight = ($fight: ReturnType<typeof $>): UfcEventFight => {
+      const wc =
+        $fight.find(".c-listing-fight__class-text").first().text().trim() ||
+        undefined;
+
+      const f1Name = $fight
+        .find(".c-listing-fight__corner-name--red a")
+        .first()
+        .text()
+        .replace(/\s+/g, " ")
+        .trim();
+      const f2Name = $fight
+        .find(".c-listing-fight__corner-name--blue a")
+        .first()
+        .text()
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const f1ImgSrc = $fight
+        .find(".c-listing-fight__corner-image--red img")
+        .first()
+        .attr("src");
+      const f2ImgSrc = $fight
+        .find(".c-listing-fight__corner-image--blue img")
+        .first()
+        .attr("src");
+
+      return {
+        fighter1: {
+          name: f1Name || "TBA",
+          imageUrl: normalizeFightImageUrl(f1ImgSrc),
+        },
+        fighter2: {
+          name: f2Name || "TBA",
+          imageUrl: normalizeFightImageUrl(f2ImgSrc),
+        },
+        weightClass: wc,
+      };
+    };
+
+    const mainCard: UfcEventFight[] = [];
+    const prelimCard: UfcEventFight[] = [];
+    const earlyPrelimCard: UfcEventFight[] = [];
+
+    $("#main-card .c-listing-fight").each((_, el) => {
+      mainCard.push(parseFight($(el)));
+    });
+
+    // 예선 카드: early-prelim 후손은 제외 (둘이 nested인 경우 중복 방지)
+    $(".fight-card-prelims .c-listing-fight").each((_, el) => {
+      const $el = $(el);
+      if ($el.closest(".fight-card-prelims-early").length === 0) {
+        prelimCard.push(parseFight($el));
+      }
+    });
+
+    $(".fight-card-prelims-early .c-listing-fight").each((_, el) => {
+      earlyPrelimCard.push(parseFight($(el)));
+    });
+
+    // 폴백: 메인/예선 섹션이 아직 분리 안 된 미래 이벤트는 평면 리스트로 옴.
+    // 모든 .c-listing-fight를 메인 카드로 취급해서 노출.
+    if (
+      mainCard.length === 0 &&
+      prelimCard.length === 0 &&
+      earlyPrelimCard.length === 0
+    ) {
+      $(".c-listing-fight").each((_, el) => {
+        mainCard.push(parseFight($(el)));
+      });
+    }
+
+    const totalFights =
+      mainCard.length + prelimCard.length + earlyPrelimCard.length;
+    const fightCard: UfcFightCard | undefined =
+      totalFights === 0
+        ? undefined
+        : {
+            mainCard,
+            prelimCard,
+            ...(earlyPrelimCard.length > 0 ? { earlyPrelimCard } : {}),
+          };
+
+    return { weightClass, fightCard };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * @description 모든 이벤트의 상세 페이지를 병렬 스크레이핑해 fight card와 메인 이벤트 체급 보완.
+ * fightCard는 이벤트마다 전체 카드(메인/예선/얼리예선)를 추가하고,
+ * weightClass는 누락된 이벤트만 보완.
+ * @param events - 보완 대상 UfcEvent 배열
+ * @returns fightCard·weightClass가 보완된 UfcEvent 배열
+ */
+async function enrichEventDetails(events: UfcEvent[]): Promise<UfcEvent[]> {
   const fetched = await Promise.allSettled(
-    targets.map(({ e }) => fetchEventWeightClass(e.id))
+    events.map((e) =>
+      e.id ? fetchEventDetail(e.id) : Promise.resolve<EventDetail>({})
+    )
   );
 
-  const result = [...events];
-  targets.forEach(({ i }, idx) => {
-    const r = fetched[idx];
-    if (r.status === "fulfilled" && r.value) {
-      result[i] = {
-        ...result[i],
-        mainEvent: { ...result[i].mainEvent, weightClass: r.value },
-      };
-    }
+  return events.map((event, i) => {
+    const r = fetched[i];
+    if (r.status !== "fulfilled") return event;
+    const detail = r.value;
+
+    return {
+      ...event,
+      mainEvent: {
+        ...event.mainEvent,
+        weightClass: event.mainEvent.weightClass || detail.weightClass,
+      },
+      ...(detail.fightCard ? { fightCard: detail.fightCard } : {}),
+    };
   });
-  return result;
 }
 
 /**
@@ -551,9 +663,9 @@ export async function crawlUfcSchedule(): Promise<UfcEvent[]> {
   // 날짜 오름차순 정렬
   events.sort((a, b) => a.date.localeCompare(b.date));
 
-  // 파이터 이미지·체급 보완 (HTML 폴백 경로일 때 둘 다 누락 가능)
+  // 파이터 이미지 보완 + 상세 페이지에서 fight card·체급 가져오기
   events = await enrichFighterImages(events);
-  events = await enrichWeightClasses(events);
+  events = await enrichEventDetails(events);
 
   return events;
 }

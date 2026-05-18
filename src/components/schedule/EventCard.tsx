@@ -8,6 +8,8 @@ import { useInView } from "@/hooks/useInView";
 import { formatWeightClass, isTbaMatchup } from "@/lib/schedule-utils";
 import type { EventPrediction, UfcEvent } from "@/types/schedule";
 
+import FightCardTabs from "./FightCardTabs";
+
 interface EventCardProps {
   event: UfcEvent;
   prediction?: EventPrediction;
@@ -246,6 +248,11 @@ export default function EventCard({
             </button>
           )}
         </div>
+      )}
+
+      {/* 전체 카드 탭 (메인/예선/얼리예선) */}
+      {event.fightCard && (
+        <FightCardTabs fightCard={event.fightCard} locale={locale} />
       )}
     </div>
   );
