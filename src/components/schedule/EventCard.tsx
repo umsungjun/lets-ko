@@ -95,7 +95,7 @@ export default function EventCard({
                 </span>
               )}
               {formatWeightClass(event.mainEvent.weightClass, lang) && (
-                <span className="text-[11px] text-white/40 font-medium">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/10 text-white/80 text-[10px] font-bold border border-white/15">
                   {formatWeightClass(event.mainEvent.weightClass, lang)}
                 </span>
               )}
