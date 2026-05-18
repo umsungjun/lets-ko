@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
-import { isTbaMatchup } from "@/lib/schedule-utils";
+import { formatWeightClass, isTbaMatchup } from "@/lib/schedule-utils";
 import type { EventPrediction, UfcEvent } from "@/types/schedule";
 
 interface EventCardProps {
@@ -94,9 +94,9 @@ export default function EventCard({
                   {t("titleFight")}
                 </span>
               )}
-              {event.mainEvent.weightClass && (
+              {formatWeightClass(event.mainEvent.weightClass, lang) && (
                 <span className="text-[11px] text-white/40 font-medium">
-                  {event.mainEvent.weightClass}
+                  {formatWeightClass(event.mainEvent.weightClass, lang)}
                 </span>
               )}
             </div>

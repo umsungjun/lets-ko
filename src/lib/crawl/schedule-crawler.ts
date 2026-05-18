@@ -474,10 +474,65 @@ export async function enrichFighterImages(
 }
 
 /**
+ * @description 단일 UFC 이벤트 상세 페이지에서 메인 이벤트의 체급 추출.
+ * 이벤트 페이지의 첫 c-listing-fight__class-text가 메인 이벤트 체급. 텍스트는 지오 IP에 따라
+ * 영문/한국어 + " Bout" 접미사로 반환되므로 정규화는 formatWeightClass 측에서 처리.
+ * @param eventId - UFC 이벤트 슬러그 (예: "ufc-329")
+ * @returns 체급 원문 (예: "Welterweight Bout"), 추출 실패 시 undefined
+ */
+async function fetchEventWeightClass(
+  eventId: string
+): Promise<string | undefined> {
+  try {
+    const res = await fetch(`https://www.ufc.com/event/${eventId}`, {
+      headers: CRAWLER_HEADERS,
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return undefined;
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const text = $(".c-listing-fight__class-text").first().text().trim();
+    return text || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * @description weightClass가 없는 이벤트의 메인 이벤트 체급을 상세 페이지에서 병렬 스크레이핑.
+ * UFC CloudFront API가 죽으면서 HTML 폴백 경로에선 체급 정보가 누락되므로 보강 필요.
+ * @param events - 체급이 누락됐을 수 있는 UfcEvent 배열
+ * @returns 체급이 보완된 UfcEvent 배열
+ */
+async function enrichWeightClasses(events: UfcEvent[]): Promise<UfcEvent[]> {
+  const targets = events
+    .map((e, i) => ({ i, e }))
+    .filter(({ e }) => !e.mainEvent.weightClass && e.id);
+
+  if (targets.length === 0) return events;
+
+  const fetched = await Promise.allSettled(
+    targets.map(({ e }) => fetchEventWeightClass(e.id))
+  );
+
+  const result = [...events];
+  targets.forEach(({ i }, idx) => {
+    const r = fetched[idx];
+    if (r.status === "fulfilled" && r.value) {
+      result[i] = {
+        ...result[i],
+        mainEvent: { ...result[i].mainEvent, weightClass: r.value },
+      };
+    }
+  });
+  return result;
+}
+
+/**
  * @description UFC 예정 경기 일정 크롤링.
  * 1차: CloudFront CDN API (구조화 JSON) → 실패 시 2차: ufc.com HTML 파싱.
  * 오늘 이후 이벤트만 포함하며 날짜 오름차순 정렬 후 최대 8개 반환.
- * @returns 이미지가 보완된 UfcEvent 배열
+ * @returns 이미지·체급이 보완된 UfcEvent 배열
  * @throws 두 소스 모두 실패해 이벤트를 가져오지 못한 경우
  */
 export async function crawlUfcSchedule(): Promise<UfcEvent[]> {
@@ -496,8 +551,9 @@ export async function crawlUfcSchedule(): Promise<UfcEvent[]> {
   // 날짜 오름차순 정렬
   events.sort((a, b) => a.date.localeCompare(b.date));
 
-  // 파이터 이미지 보완
+  // 파이터 이미지·체급 보완 (HTML 폴백 경로일 때 둘 다 누락 가능)
   events = await enrichFighterImages(events);
+  events = await enrichWeightClasses(events);
 
   return events;
 }

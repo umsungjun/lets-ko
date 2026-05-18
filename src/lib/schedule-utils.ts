@@ -21,3 +21,75 @@ export const isTbaMatchup = (
   fighter1Name: string | undefined,
   fighter2Name: string | undefined
 ): boolean => isTbaFighter(fighter1Name) || isTbaFighter(fighter2Name);
+
+// UFC 공식 체급 상한 (kg). 영문·한국어 둘 다 키로 받도록 추가하여
+// 크롤러가 어느 로케일의 텍스트(예: "Welterweight" vs "웰터급")를 저장해도 매핑 가능.
+type WeightClassInfo = { ko: string; en: string; kg?: number };
+const WEIGHT_CLASS_MAP: Record<string, WeightClassInfo> = {
+  Strawweight: { ko: "스트로급", en: "Strawweight", kg: 52 },
+  스트로급: { ko: "스트로급", en: "Strawweight", kg: 52 },
+  Flyweight: { ko: "플라이급", en: "Flyweight", kg: 57 },
+  플라이급: { ko: "플라이급", en: "Flyweight", kg: 57 },
+  Bantamweight: { ko: "밴텀급", en: "Bantamweight", kg: 61 },
+  밴텀급: { ko: "밴텀급", en: "Bantamweight", kg: 61 },
+  Featherweight: { ko: "페더급", en: "Featherweight", kg: 66 },
+  페더급: { ko: "페더급", en: "Featherweight", kg: 66 },
+  Lightweight: { ko: "라이트급", en: "Lightweight", kg: 70 },
+  라이트급: { ko: "라이트급", en: "Lightweight", kg: 70 },
+  Welterweight: { ko: "웰터급", en: "Welterweight", kg: 77 },
+  웰터급: { ko: "웰터급", en: "Welterweight", kg: 77 },
+  Middleweight: { ko: "미들급", en: "Middleweight", kg: 84 },
+  미들급: { ko: "미들급", en: "Middleweight", kg: 84 },
+  "Light Heavyweight": { ko: "라이트헤비급", en: "Light Heavyweight", kg: 93 },
+  "라이트 헤비급": { ko: "라이트헤비급", en: "Light Heavyweight", kg: 93 },
+  라이트헤비급: { ko: "라이트헤비급", en: "Light Heavyweight", kg: 93 },
+  Heavyweight: { ko: "헤비급", en: "Heavyweight", kg: 120 },
+  헤비급: { ko: "헤비급", en: "Heavyweight", kg: 120 },
+  "Women's Strawweight": {
+    ko: "여성 스트로급",
+    en: "Women's Strawweight",
+    kg: 52,
+  },
+  "여성 스트로급": { ko: "여성 스트로급", en: "Women's Strawweight", kg: 52 },
+  "Women's Flyweight": {
+    ko: "여성 플라이급",
+    en: "Women's Flyweight",
+    kg: 57,
+  },
+  "여성 플라이급": { ko: "여성 플라이급", en: "Women's Flyweight", kg: 57 },
+  "Women's Bantamweight": {
+    ko: "여성 밴텀급",
+    en: "Women's Bantamweight",
+    kg: 61,
+  },
+  "여성 밴텀급": { ko: "여성 밴텀급", en: "Women's Bantamweight", kg: 61 },
+  "Women's Featherweight": {
+    ko: "여성 페더급",
+    en: "Women's Featherweight",
+    kg: 66,
+  },
+  "여성 페더급": { ko: "여성 페더급", en: "Women's Featherweight", kg: 66 },
+  Catchweight: { ko: "캐치웨이트", en: "Catchweight" },
+  캐치웨이트: { ko: "캐치웨이트", en: "Catchweight" },
+};
+
+/**
+ * @description UFC 체급명을 로케일별 라벨 + kg 상한으로 포맷.
+ * 데이터 소스(UFC.com)가 지오 IP에 따라 영문/한국어를 섞어 반환하므로
+ * 양쪽 입력을 모두 받아 일관된 포맷("웰터급 (77kg)" / "Welterweight (77kg)")으로 출력.
+ * @param weightClass - 데이터 소스의 체급명 (영문 또는 한국어, " Bout" 접미사 허용)
+ * @param locale - "ko" | "en"
+ * @returns 포맷된 라벨, 미확정/매핑 실패 시 원문 또는 undefined
+ */
+export const formatWeightClass = (
+  weightClass: string | undefined,
+  locale: "ko" | "en"
+): string | undefined => {
+  if (!weightClass) return undefined;
+  // UFC 이벤트 페이지에 "웰터급 Bout"처럼 접미사가 붙는 케이스 대응
+  const cleaned = weightClass.replace(/\s*Bout\s*$/i, "").trim();
+  const info = WEIGHT_CLASS_MAP[cleaned];
+  if (!info) return cleaned;
+  const name = locale === "ko" ? info.ko : info.en;
+  return info.kg !== undefined ? `${name} (${info.kg}kg)` : name;
+};
