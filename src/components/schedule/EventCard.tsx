@@ -71,7 +71,7 @@ export default function EventCard({
     locale === "ko" ? "ko-KR" : "en-US",
     { month: "short", day: "numeric", weekday: "short" }
   );
-  // 메인 이벤트(타이틀 매치) 예상 시작 시각 KST
+  // 메인 이벤트(헤드라이너) 예상 시작 시각 KST — 타이틀 매치 여부와 무관하게 항상 표시
   // 메인 카드는 하위→상위로 진행되므로 헤드라이너는 마지막 → 경기당 30분 가정
   const mainEventEtaKst = formatKstCardTime(
     estimateMainEventStart(

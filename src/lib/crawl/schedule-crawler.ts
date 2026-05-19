@@ -175,6 +175,36 @@ function localizeCity(location: string): string {
   return location;
 }
 
+/**
+ * 임의 timestamp 값을 안전하게 ISO 8601 문자열로 변환.
+ * - undefined / null / 빈 문자열 → undefined
+ * - 잘못된 ISO 문자열 / NaN / 음수 등 → undefined
+ *
+ * 이전 구현은 `new Date(...).toISOString()`을 검증 없이 호출해
+ * 잘못된 timestamp 1건이 들어와도 RangeError로 크롤 전체가 중단됐다.
+ * 부분 실패 허용을 위해 invalid 값은 조용히 버린다.
+ *
+ * @param value - ISO 문자열(CloudFront) 또는 Date 입력 가능 값
+ */
+function toIsoSafe(
+  value: string | number | undefined | null
+): string | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+/**
+ * UFC HTML의 `data-*-timestamp` 속성(유닉스 초)을 ISO 문자열로 변환.
+ * 비숫자·범위 외 값은 undefined 반환 (toIsoSafe와 동일한 부분 실패 정책).
+ */
+function secToIsoSafe(seconds: string | undefined): string | undefined {
+  if (!seconds) return undefined;
+  const n = Number(seconds);
+  if (!Number.isFinite(n)) return undefined;
+  return toIsoSafe(n * 1000);
+}
+
 // UFC CloudFront API 응답 타입
 interface CloudFrontEvent {
   EventId: number;
@@ -233,7 +263,10 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
       const events: UfcEvent[] = [];
 
       for (const raw of rawEvents) {
-        const dateStr = raw.StartTime ? raw.StartTime.split("T")[0] : undefined;
+        // 메인 카드 시작 시각(또는 StartTime 폴백)을 단일 source-of-truth로 사용
+        // → dateStr과 cardTimes.main이 같은 값에서 파생돼 일관성 보장
+        const mainTimeIso = toIsoSafe(raw.MainCardStartTime || raw.StartTime);
+        const dateStr = mainTimeIso?.split("T")[0];
         if (!dateStr || dateStr < today) continue;
 
         const eventName = raw.EventName || raw.EventTitle || "UFC Event";
@@ -269,25 +302,15 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
           };
         }
 
-        // 카드별 시작 시각 — CloudFront 응답에 별도 필드가 있으면 우선 사용,
-        // 없으면 메인 카드 시작 시각으로 StartTime 사용
-        const mainTime = raw.MainCardStartTime || raw.StartTime;
+        // 카드별 시작 시각 — invalid 값은 toIsoSafe가 undefined로 떨어뜨려 부분 실패 허용
+        const prelimIso = toIsoSafe(raw.PrelimsCardStartTime);
+        const earlyIso = toIsoSafe(raw.EarlyPrelimsCardStartTime);
         const cardTimes =
-          mainTime || raw.PrelimsCardStartTime || raw.EarlyPrelimsCardStartTime
+          mainTimeIso || prelimIso || earlyIso
             ? {
-                ...(mainTime ? { main: new Date(mainTime).toISOString() } : {}),
-                ...(raw.PrelimsCardStartTime
-                  ? {
-                      prelim: new Date(raw.PrelimsCardStartTime).toISOString(),
-                    }
-                  : {}),
-                ...(raw.EarlyPrelimsCardStartTime
-                  ? {
-                      earlyPrelim: new Date(
-                        raw.EarlyPrelimsCardStartTime
-                      ).toISOString(),
-                    }
-                  : {}),
+                ...(mainTimeIso ? { main: mainTimeIso } : {}),
+                ...(prelimIso ? { prelim: prelimIso } : {}),
+                ...(earlyIso ? { earlyPrelim: earlyIso } : {}),
               }
             : undefined;
 
@@ -349,26 +372,36 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
       const card = $(el);
 
       // 날짜·카드별 시작시각: data-*-timestamp 속성 (유닉스 초)
-      // tz-change-data가 여러 요소에 분산돼 있을 수 있어 .filter로 첫 매치를 찾음
-      const $tz = card.find(".tz-change-data");
-      const mainTsSec = $tz.attr("data-main-card-timestamp");
-      const prelimTsSec = $tz.attr("data-prelims-card-timestamp");
-      const earlyPrelimTsSec = $tz.attr("data-early-prelims-timestamp");
-      if (!mainTsSec) return;
-      const mainTsMs = parseInt(mainTsSec, 10) * 1000;
-      const dateStr = new Date(mainTsMs).toISOString().split("T")[0];
+      // tz-change-data가 여러 요소에 분산될 수 있으므로 각 속성 셀렉터로 찾음
+      // (단일 요소 .attr() 호출은 첫 매치만 검사해서 분산 시 누락 가능)
+      const mainIso = secToIsoSafe(
+        card
+          .find("[data-main-card-timestamp]")
+          .first()
+          .attr("data-main-card-timestamp")
+      );
+      const prelimIso = secToIsoSafe(
+        card
+          .find("[data-prelims-card-timestamp]")
+          .first()
+          .attr("data-prelims-card-timestamp")
+      );
+      const earlyIso = secToIsoSafe(
+        card
+          .find("[data-early-prelims-timestamp]")
+          .first()
+          .attr("data-early-prelims-timestamp")
+      );
+      if (!mainIso) return;
+      const dateStr = mainIso.split("T")[0];
       if (dateStr < today) return;
 
-      const secToIso = (s: string | undefined): string | undefined =>
-        s ? new Date(parseInt(s, 10) * 1000).toISOString() : undefined;
       const cardTimes =
-        mainTsSec || prelimTsSec || earlyPrelimTsSec
+        mainIso || prelimIso || earlyIso
           ? {
-              ...(mainTsSec ? { main: secToIso(mainTsSec)! } : {}),
-              ...(prelimTsSec ? { prelim: secToIso(prelimTsSec)! } : {}),
-              ...(earlyPrelimTsSec
-                ? { earlyPrelim: secToIso(earlyPrelimTsSec)! }
-                : {}),
+              ...(mainIso ? { main: mainIso } : {}),
+              ...(prelimIso ? { prelim: prelimIso } : {}),
+              ...(earlyIso ? { earlyPrelim: earlyIso } : {}),
             }
           : undefined;
 
@@ -568,19 +601,27 @@ async function fetchEventDetail(eventId: string): Promise<EventDetail> {
     const weightClass =
       $(".c-listing-fight__class-text").first().text().trim() || undefined;
 
-    // 카드별 시작 시각 — 이벤트 상세 페이지의 tz-change-data 속성에서 추출
-    const $tzDetail = $(".tz-change-data");
-    const secToIso = (s: string | undefined): string | undefined =>
-      s ? new Date(parseInt(s, 10) * 1000).toISOString() : undefined;
-    const detailMainTs = $tzDetail.attr("data-main-card-timestamp");
-    const detailPrelimTs = $tzDetail.attr("data-prelims-card-timestamp");
-    const detailEarlyTs = $tzDetail.attr("data-early-prelims-timestamp");
+    // 카드별 시작 시각 — 각 timestamp 속성을 가진 요소를 개별 탐색
+    // (tz-change-data가 여러 요소에 분산될 수 있어 단일 .attr() 호출은 누락 위험)
+    const detailMainIso = secToIsoSafe(
+      $("[data-main-card-timestamp]").first().attr("data-main-card-timestamp")
+    );
+    const detailPrelimIso = secToIsoSafe(
+      $("[data-prelims-card-timestamp]")
+        .first()
+        .attr("data-prelims-card-timestamp")
+    );
+    const detailEarlyIso = secToIsoSafe(
+      $("[data-early-prelims-timestamp]")
+        .first()
+        .attr("data-early-prelims-timestamp")
+    );
     const cardTimes =
-      detailMainTs || detailPrelimTs || detailEarlyTs
+      detailMainIso || detailPrelimIso || detailEarlyIso
         ? {
-            ...(detailMainTs ? { main: secToIso(detailMainTs)! } : {}),
-            ...(detailPrelimTs ? { prelim: secToIso(detailPrelimTs)! } : {}),
-            ...(detailEarlyTs ? { earlyPrelim: secToIso(detailEarlyTs)! } : {}),
+            ...(detailMainIso ? { main: detailMainIso } : {}),
+            ...(detailPrelimIso ? { prelim: detailPrelimIso } : {}),
+            ...(detailEarlyIso ? { earlyPrelim: detailEarlyIso } : {}),
           }
         : undefined;
 
