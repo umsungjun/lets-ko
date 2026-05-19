@@ -18,7 +18,7 @@ export interface UfcEventFight {
   weightClass?: string;
 }
 
-/** 메인 카드 / 예선 카드 / 얼리 예선으로 그룹화된 이벤트 전체 fight card */
+/** 메인 카드 / 예선 카드 / 초기 예선으로 그룹화된 이벤트 전체 fight card */
 export interface UfcFightCard {
   mainCard: UfcEventFight[];
   prelimCard: UfcEventFight[];

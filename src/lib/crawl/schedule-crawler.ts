@@ -185,7 +185,7 @@ interface CloudFrontEvent {
   MainCardStartTime?: string;
   /** 예선 카드 시작 시각 */
   PrelimsCardStartTime?: string;
-  /** 얼리 예선 시작 시각 */
+  /** 초기 예선 시작 시각 */
   EarlyPrelimsCardStartTime?: string;
   EventLocation?: string;
   Venue?: string;
@@ -548,7 +548,7 @@ type EventDetail = {
  * 카드 섹션 구분:
  * - #main-card → 메인 카드
  * - .fight-card-prelims (단, .fight-card-prelims-early 후손은 제외) → 예선 카드
- * - .fight-card-prelims-early → 얼리 예선
+ * - .fight-card-prelims-early → 초기 예선
  *
  * 파이터 이름 a 태그는 plain text 또는 given/family-name span 분리 둘 다 지원
  * (cheerio .text()가 모든 자식 텍스트를 합쳐 반환).
@@ -677,7 +677,7 @@ async function fetchEventDetail(eventId: string): Promise<EventDetail> {
 
 /**
  * @description 모든 이벤트의 상세 페이지를 병렬 스크레이핑해 fight card와 메인 이벤트 체급 보완.
- * fightCard는 이벤트마다 전체 카드(메인/예선/얼리예선)를 추가하고,
+ * fightCard는 이벤트마다 전체 카드(메인/예선/초기예선)를 추가하고,
  * weightClass는 누락된 이벤트만 보완.
  * @param events - 보완 대상 UfcEvent 배열
  * @returns fightCard·weightClass가 보완된 UfcEvent 배열

@@ -108,7 +108,7 @@ function FightRow({
 }
 
 /**
- * @description 이벤트의 전체 fight card를 메인/예선/얼리 예선 탭으로 표시.
+ * @description 이벤트의 전체 fight card를 메인/예선/초기 예선 탭으로 표시.
  * 메인 카드의 첫 경기(메인 이벤트)는 상위 EventCard/SchedulePreview에서 AI 예측과 함께
  * 강조 표시되므로 제거하고 나머지 경기만 노출. 데이터가 있는 카드 섹션만 탭 버튼 노출.
  *

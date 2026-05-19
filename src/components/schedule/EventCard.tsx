@@ -269,7 +269,7 @@ export default function EventCard({
         </div>
       )}
 
-      {/* 전체 카드 탭 (메인/예선/얼리예선) */}
+      {/* 전체 카드 탭 (메인/예선/초기예선) */}
       {event.fightCard && (
         <FightCardTabs
           fightCard={event.fightCard}
