@@ -172,10 +172,19 @@ export default function FightCardTabs({
   return (
     <div className="bg-linear-to-br from-gray-900 via-gray-850 to-gray-900 border-t border-white/6">
       {/* 탭 헤더 — 타이틀 매치 date chip과 동일한 primary red 액센트 사용 */}
-      <div className="px-4 sm:px-5 pt-4 pb-3 flex items-center gap-2 flex-wrap">
+      <div
+        role="tablist"
+        aria-label={t("mainCard")}
+        className="px-4 sm:px-5 pt-4 pb-3 flex items-center gap-2 flex-wrap"
+      >
         {tabs.map((tab) => (
           <button
             key={tab.key}
+            type="button"
+            role="tab"
+            id={`fight-card-tab-${tab.key}`}
+            aria-selected={activeTab === tab.key}
+            aria-controls={`fight-card-panel-${tab.key}`}
             onClick={() => setActiveTab(tab.key)}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide transition-all cursor-pointer border ${
               activeTab === tab.key
@@ -202,6 +211,7 @@ export default function FightCardTabs({
             stroke="currentColor"
             strokeWidth="2"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" strokeLinecap="round" />
@@ -213,7 +223,12 @@ export default function FightCardTabs({
       )}
 
       {/* 활성 탭 fight 리스트 */}
-      <div className="divide-y divide-white/4">
+      <div
+        role="tabpanel"
+        id={`fight-card-panel-${activeTab}`}
+        aria-labelledby={`fight-card-tab-${activeTab}`}
+        className="divide-y divide-white/4"
+      >
         {activeFights.map((fight, i) => (
           <FightRow key={`${activeTab}-${i}`} fight={fight} lang={lang} />
         ))}

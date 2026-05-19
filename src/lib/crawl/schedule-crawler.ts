@@ -1,5 +1,6 @@
 import { isTbaFighter } from "@/lib/schedule-utils";
 import type {
+  UfcCardTimes,
   UfcEvent,
   UfcEventFight,
   UfcEventFighter,
@@ -190,8 +191,10 @@ function toIsoSafe(
   value: string | number | undefined | null
 ): string | undefined {
   if (value === undefined || value === null || value === "") return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+  const time = new Date(value).getTime();
+  // 음수(epoch 이전)·NaN은 잘못된 데이터로 간주 — UFC 이벤트는 모두 미래 시각
+  if (Number.isNaN(time) || time < 0) return undefined;
+  return new Date(time).toISOString();
 }
 
 /**
@@ -569,11 +572,7 @@ function normalizeFightImageUrl(src: string | undefined): string | undefined {
 type EventDetail = {
   weightClass?: string;
   fightCard?: UfcFightCard;
-  cardTimes?: {
-    main?: string;
-    prelim?: string;
-    earlyPrelim?: string;
-  };
+  cardTimes?: UfcCardTimes;
 };
 
 /**
@@ -736,13 +735,17 @@ async function enrichEventDetails(events: UfcEvent[]): Promise<UfcEvent[]> {
     const detail = r.value;
 
     // cardTimes 병합: 기존 값(목록 페이지/CloudFront) 우선, 누락분만 상세 페이지로 보완
-    const mergedCardTimes =
-      event.cardTimes || detail.cardTimes
+    // 값이 있는 키만 포함해 빈 객체({ main: undefined, ... }) 생성을 방지
+    const main = event.cardTimes?.main ?? detail.cardTimes?.main;
+    const prelim = event.cardTimes?.prelim ?? detail.cardTimes?.prelim;
+    const earlyPrelim =
+      event.cardTimes?.earlyPrelim ?? detail.cardTimes?.earlyPrelim;
+    const mergedCardTimes: UfcCardTimes | undefined =
+      main || prelim || earlyPrelim
         ? {
-            main: event.cardTimes?.main ?? detail.cardTimes?.main,
-            prelim: event.cardTimes?.prelim ?? detail.cardTimes?.prelim,
-            earlyPrelim:
-              event.cardTimes?.earlyPrelim ?? detail.cardTimes?.earlyPrelim,
+            ...(main ? { main } : {}),
+            ...(prelim ? { prelim } : {}),
+            ...(earlyPrelim ? { earlyPrelim } : {}),
           }
         : undefined;
 
