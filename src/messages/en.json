@@ -147,7 +147,9 @@
     "tba": "TBA",
     "mainCard": "Main Card",
     "prelimCard": "Prelims",
-    "earlyPrelimCard": "Early Prelims"
+    "earlyPrelimCard": "Early Prelims",
+    "startKst": "KST",
+    "estimatedStartKst": "Est. KST"
   },
   "common": {
     "locale": "EN"

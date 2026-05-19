@@ -4,7 +4,11 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useInView } from "@/hooks/useInView";
-import { isTbaMatchup } from "@/lib/schedule-utils";
+import {
+  estimateMainEventStart,
+  formatKstCardTime,
+  isTbaMatchup,
+} from "@/lib/schedule-utils";
 import type { UfcSchedule } from "@/types/schedule";
 
 import FightCardTabs from "./FightCardTabs";
@@ -77,6 +81,15 @@ export default function SchedulePreview({
     day: "numeric",
     weekday: "short",
   });
+  // 메인 이벤트(타이틀 매치) 예상 시작 시각 KST
+  // 메인 카드는 하위→상위로 진행되므로 헤드라이너는 마지막 → 경기당 30분 가정
+  const mainEventEtaKst = formatKstCardTime(
+    estimateMainEventStart(
+      nextEvent.cardTimes?.main,
+      nextEvent.fightCard?.mainCard.length ?? 0
+    ),
+    lang
+  );
 
   const isWinner1 = prediction && prediction.winner.en === fighter1.name;
 
@@ -130,6 +143,11 @@ export default function SchedulePreview({
                 <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary/20 text-primary text-xs font-bold border border-primary/30">
                   {formattedDate}
                 </span>
+                {mainEventEtaKst && (
+                  <p className="text-[11px] text-white/60 tabular-nums mt-1">
+                    {t("estimatedStartKst")} {mainEventEtaKst}
+                  </p>
+                )}
                 <p className="text-[11px] text-white/40 mt-1">
                   {nextEvent.location[lang]}
                 </p>
@@ -253,7 +271,11 @@ export default function SchedulePreview({
 
           {/* 전체 카드 탭 (메인/예선/얼리예선) */}
           {nextEvent.fightCard && (
-            <FightCardTabs fightCard={nextEvent.fightCard} locale={locale} />
+            <FightCardTabs
+              fightCard={nextEvent.fightCard}
+              locale={locale}
+              cardTimes={nextEvent.cardTimes}
+            />
           )}
         </div>
 

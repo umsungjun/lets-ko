@@ -181,6 +181,12 @@ interface CloudFrontEvent {
   EventName: string;
   EventTitle?: string;
   StartTime?: string;
+  /** 메인 카드 시작 시각 (응답 변형에 따라 둘 다 대응) */
+  MainCardStartTime?: string;
+  /** 예선 카드 시작 시각 */
+  PrelimsCardStartTime?: string;
+  /** 얼리 예선 시작 시각 */
+  EarlyPrelimsCardStartTime?: string;
   EventLocation?: string;
   Venue?: string;
   MainCardFighters?: CloudFrontFighter[];
@@ -263,6 +269,28 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
           };
         }
 
+        // 카드별 시작 시각 — CloudFront 응답에 별도 필드가 있으면 우선 사용,
+        // 없으면 메인 카드 시작 시각으로 StartTime 사용
+        const mainTime = raw.MainCardStartTime || raw.StartTime;
+        const cardTimes =
+          mainTime || raw.PrelimsCardStartTime || raw.EarlyPrelimsCardStartTime
+            ? {
+                ...(mainTime ? { main: new Date(mainTime).toISOString() } : {}),
+                ...(raw.PrelimsCardStartTime
+                  ? {
+                      prelim: new Date(raw.PrelimsCardStartTime).toISOString(),
+                    }
+                  : {}),
+                ...(raw.EarlyPrelimsCardStartTime
+                  ? {
+                      earlyPrelim: new Date(
+                        raw.EarlyPrelimsCardStartTime
+                      ).toISOString(),
+                    }
+                  : {}),
+              }
+            : undefined;
+
         events.push({
           id,
           name: eventName,
@@ -270,6 +298,7 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
           location: { en: locationEn, ko: locationKo },
           venue: raw.Venue,
           mainEvent,
+          ...(cardTimes ? { cardTimes } : {}),
         });
       }
 
@@ -319,15 +348,29 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
     $("article.c-card-event--result").each((_, el) => {
       const card = $(el);
 
-      // 날짜: data-main-card-timestamp (유닉스 초) → YYYY-MM-DD
-      const tsAttr = card
-        .find(".tz-change-data")
-        .attr("data-main-card-timestamp");
-      if (!tsAttr) return;
-      const dateStr = new Date(parseInt(tsAttr, 10) * 1000)
-        .toISOString()
-        .split("T")[0];
+      // 날짜·카드별 시작시각: data-*-timestamp 속성 (유닉스 초)
+      // tz-change-data가 여러 요소에 분산돼 있을 수 있어 .filter로 첫 매치를 찾음
+      const $tz = card.find(".tz-change-data");
+      const mainTsSec = $tz.attr("data-main-card-timestamp");
+      const prelimTsSec = $tz.attr("data-prelims-card-timestamp");
+      const earlyPrelimTsSec = $tz.attr("data-early-prelims-timestamp");
+      if (!mainTsSec) return;
+      const mainTsMs = parseInt(mainTsSec, 10) * 1000;
+      const dateStr = new Date(mainTsMs).toISOString().split("T")[0];
       if (dateStr < today) return;
+
+      const secToIso = (s: string | undefined): string | undefined =>
+        s ? new Date(parseInt(s, 10) * 1000).toISOString() : undefined;
+      const cardTimes =
+        mainTsSec || prelimTsSec || earlyPrelimTsSec
+          ? {
+              ...(mainTsSec ? { main: secToIso(mainTsSec)! } : {}),
+              ...(prelimTsSec ? { prelim: secToIso(prelimTsSec)! } : {}),
+              ...(earlyPrelimTsSec
+                ? { earlyPrelim: secToIso(earlyPrelimTsSec)! }
+                : {}),
+            }
+          : undefined;
 
       // ID: 이벤트 URL 슬러그 (프래그먼트 제거)
       const eventUrl =
@@ -406,6 +449,7 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
                 : undefined,
           },
         },
+        ...(cardTimes ? { cardTimes } : {}),
       });
     });
 
@@ -492,6 +536,11 @@ function normalizeFightImageUrl(src: string | undefined): string | undefined {
 type EventDetail = {
   weightClass?: string;
   fightCard?: UfcFightCard;
+  cardTimes?: {
+    main?: string;
+    prelim?: string;
+    earlyPrelim?: string;
+  };
 };
 
 /**
@@ -518,6 +567,22 @@ async function fetchEventDetail(eventId: string): Promise<EventDetail> {
 
     const weightClass =
       $(".c-listing-fight__class-text").first().text().trim() || undefined;
+
+    // 카드별 시작 시각 — 이벤트 상세 페이지의 tz-change-data 속성에서 추출
+    const $tzDetail = $(".tz-change-data");
+    const secToIso = (s: string | undefined): string | undefined =>
+      s ? new Date(parseInt(s, 10) * 1000).toISOString() : undefined;
+    const detailMainTs = $tzDetail.attr("data-main-card-timestamp");
+    const detailPrelimTs = $tzDetail.attr("data-prelims-card-timestamp");
+    const detailEarlyTs = $tzDetail.attr("data-early-prelims-timestamp");
+    const cardTimes =
+      detailMainTs || detailPrelimTs || detailEarlyTs
+        ? {
+            ...(detailMainTs ? { main: secToIso(detailMainTs)! } : {}),
+            ...(detailPrelimTs ? { prelim: secToIso(detailPrelimTs)! } : {}),
+            ...(detailEarlyTs ? { earlyPrelim: secToIso(detailEarlyTs)! } : {}),
+          }
+        : undefined;
 
     // 단일 .c-listing-fight 요소에서 UfcEventFight 추출 (closure로 $ 캡처)
     // el 타입은 cheerio each 콜백 파라미터 그대로 (domhandler.AnyNode가 직접 의존성이 아님)
@@ -604,7 +669,7 @@ async function fetchEventDetail(eventId: string): Promise<EventDetail> {
             ...(earlyPrelimCard.length > 0 ? { earlyPrelimCard } : {}),
           };
 
-    return { weightClass, fightCard };
+    return { weightClass, fightCard, cardTimes };
   } catch {
     return {};
   }
@@ -629,6 +694,17 @@ async function enrichEventDetails(events: UfcEvent[]): Promise<UfcEvent[]> {
     if (r.status !== "fulfilled") return event;
     const detail = r.value;
 
+    // cardTimes 병합: 기존 값(목록 페이지/CloudFront) 우선, 누락분만 상세 페이지로 보완
+    const mergedCardTimes =
+      event.cardTimes || detail.cardTimes
+        ? {
+            main: event.cardTimes?.main ?? detail.cardTimes?.main,
+            prelim: event.cardTimes?.prelim ?? detail.cardTimes?.prelim,
+            earlyPrelim:
+              event.cardTimes?.earlyPrelim ?? detail.cardTimes?.earlyPrelim,
+          }
+        : undefined;
+
     return {
       ...event,
       mainEvent: {
@@ -636,6 +712,7 @@ async function enrichEventDetails(events: UfcEvent[]): Promise<UfcEvent[]> {
         weightClass: event.mainEvent.weightClass || detail.weightClass,
       },
       ...(detail.fightCard ? { fightCard: detail.fightCard } : {}),
+      ...(mergedCardTimes ? { cardTimes: mergedCardTimes } : {}),
     };
   });
 }

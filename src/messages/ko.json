@@ -147,7 +147,9 @@
     "tba": "미정",
     "mainCard": "메인 카드",
     "prelimCard": "예선 카드",
-    "earlyPrelimCard": "얼리 예선"
+    "earlyPrelimCard": "얼리 예선",
+    "startKst": "KST",
+    "estimatedStartKst": "예상 KST"
   },
   "common": {
     "locale": "KO"

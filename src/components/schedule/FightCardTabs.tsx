@@ -4,12 +4,22 @@ import { useState } from "react";
 
 import { useTranslations } from "next-intl";
 
-import { formatWeightClass, isTbaMatchup } from "@/lib/schedule-utils";
-import type { UfcEventFight, UfcFightCard } from "@/types/schedule";
+import {
+  formatKstCardTime,
+  formatWeightClass,
+  isTbaMatchup,
+} from "@/lib/schedule-utils";
+import type {
+  UfcCardTimes,
+  UfcEventFight,
+  UfcFightCard,
+} from "@/types/schedule";
 
 interface FightCardTabsProps {
   fightCard: UfcFightCard;
   locale: string;
+  /** 카드별 시작 시각 (KST 표시용). 데이터 없으면 시각 미노출 */
+  cardTimes?: UfcCardTimes;
 }
 
 type CardKey = "mainCard" | "prelimCard" | "earlyPrelimCard";
@@ -110,6 +120,7 @@ function FightRow({
 export default function FightCardTabs({
   fightCard,
   locale,
+  cardTimes,
 }: FightCardTabsProps) {
   const t = useTranslations("schedule");
   const lang = locale === "ko" ? "ko" : "en";
@@ -117,17 +128,25 @@ export default function FightCardTabs({
   // 메인 이벤트 중복 제거 — mainCard[0]은 이미 상위 카드에서 AI 예측과 함께 노출
   const mainCardWithoutHeadliner = fightCard.mainCard.slice(1);
 
-  type Tab = { key: CardKey; label: string; fights: UfcEventFight[] };
+  type Tab = {
+    key: CardKey;
+    label: string;
+    fights: UfcEventFight[];
+    /** KST 표시용 카드 시작 시각 (ISO UTC) */
+    startTime?: string;
+  };
   const allTabs: Tab[] = [
     {
       key: "mainCard",
       label: t("mainCard"),
       fights: mainCardWithoutHeadliner,
+      startTime: cardTimes?.main,
     },
     {
       key: "prelimCard",
       label: t("prelimCard"),
       fights: fightCard.prelimCard,
+      startTime: cardTimes?.prelim,
     },
   ];
   if (fightCard.earlyPrelimCard && fightCard.earlyPrelimCard.length > 0) {
@@ -135,6 +154,7 @@ export default function FightCardTabs({
       key: "earlyPrelimCard",
       label: t("earlyPrelimCard"),
       fights: fightCard.earlyPrelimCard,
+      startTime: cardTimes?.earlyPrelim,
     });
   }
   const tabs = allTabs.filter((tab) => tab.fights.length > 0);
@@ -145,7 +165,9 @@ export default function FightCardTabs({
 
   if (tabs.length === 0) return null;
 
-  const activeFights = tabs.find((tab) => tab.key === activeTab)?.fights ?? [];
+  const activeTabData = tabs.find((tab) => tab.key === activeTab);
+  const activeFights = activeTabData?.fights ?? [];
+  const activeStartKst = formatKstCardTime(activeTabData?.startTime, lang);
 
   return (
     <div className="bg-linear-to-br from-gray-900 via-gray-850 to-gray-900 border-t border-white/6">
@@ -170,6 +192,25 @@ export default function FightCardTabs({
           </button>
         ))}
       </div>
+
+      {/* 활성 탭 KST 시작 시각 — 데이터 있을 때만 노출 */}
+      {activeStartKst && (
+        <div className="px-4 sm:px-5 pb-3 -mt-1 flex items-center gap-1.5 text-[11px] text-white/45">
+          <svg
+            className="w-3 h-3 text-white/35"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" strokeLinecap="round" />
+          </svg>
+          <span className="tabular-nums">
+            {t("startKst")} {activeStartKst}
+          </span>
+        </div>
+      )}
 
       {/* 활성 탭 fight 리스트 */}
       <div className="divide-y divide-white/4">
