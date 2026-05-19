@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import {
   formatKstCardTime,
   formatWeightClass,
+  isTbaFighter,
   isTbaMatchup,
 } from "@/lib/schedule-utils";
 import type {
@@ -57,13 +58,19 @@ function FighterAvatar({
 function FightRow({
   fight,
   lang,
+  tbaLabel,
 }: {
   fight: UfcEventFight;
   lang: "ko" | "en";
+  /** i18n으로 현지화된 "TBA" 라벨 (ko: "미정", en: "TBA") */
+  tbaLabel: string;
 }) {
   const { fighter1, fighter2 } = fight;
   const isTba = isTbaMatchup(fighter1.name, fighter2.name);
   const weightLabel = formatWeightClass(fight.weightClass, lang);
+  // 파이터별 미정 여부 — 매치업 한쪽만 TBA인 경우도 일관되게 처리
+  const f1Display = isTbaFighter(fighter1.name) ? tbaLabel : fighter1.name;
+  const f2Display = isTbaFighter(fighter2.name) ? tbaLabel : fighter2.name;
 
   return (
     <div className="px-4 sm:px-5 py-4 hover:bg-white/2 transition-colors">
@@ -84,7 +91,7 @@ function FightRow({
             <FighterAvatar imageUrl={fighter1.imageUrl} name={fighter1.name} />
           </div>
           <p className="text-[13px] sm:text-sm font-bold text-white leading-tight truncate">
-            {fighter1.name}
+            {f1Display}
           </p>
         </div>
 
@@ -99,7 +106,7 @@ function FightRow({
             <FighterAvatar imageUrl={fighter2.imageUrl} name={fighter2.name} />
           </div>
           <p className="text-[13px] sm:text-sm font-bold text-white leading-tight truncate text-right">
-            {fighter2.name}
+            {f2Display}
           </p>
         </div>
       </div>
@@ -174,7 +181,7 @@ export default function FightCardTabs({
       {/* 탭 헤더 — 타이틀 매치 date chip과 동일한 primary red 액센트 사용 */}
       <div
         role="tablist"
-        aria-label={t("mainCard")}
+        aria-label={t("fightCard")}
         className="px-4 sm:px-5 pt-4 pb-3 flex items-center gap-2 flex-wrap"
       >
         {tabs.map((tab) => (
@@ -230,7 +237,12 @@ export default function FightCardTabs({
         className="divide-y divide-white/4"
       >
         {activeFights.map((fight, i) => (
-          <FightRow key={`${activeTab}-${i}`} fight={fight} lang={lang} />
+          <FightRow
+            key={`${activeTab}-${i}`}
+            fight={fight}
+            lang={lang}
+            tbaLabel={t("tba")}
+          />
         ))}
       </div>
     </div>

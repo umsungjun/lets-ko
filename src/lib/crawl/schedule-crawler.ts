@@ -185,7 +185,7 @@ function localizeCity(location: string): string {
  * 잘못된 timestamp 1건이 들어와도 RangeError로 크롤 전체가 중단됐다.
  * 부분 실패 허용을 위해 invalid 값은 조용히 버린다.
  *
- * @param value - ISO 문자열(CloudFront) 또는 Date 입력 가능 값
+ * @param value - ISO 8601 문자열(CloudFront) 또는 epoch milliseconds 숫자
  */
 function toIsoSafe(
   value: string | number | undefined | null
@@ -723,9 +723,18 @@ async function fetchEventDetail(eventId: string): Promise<EventDetail> {
  * @returns fightCard·weightClass가 보완된 UfcEvent 배열
  */
 async function enrichEventDetails(events: UfcEvent[]): Promise<UfcEvent[]> {
+  // 상세 페이지에서 가져올 항목(fightCard / weightClass / cardTimes) 중
+  // 하나라도 누락된 이벤트만 fetch — 이미 모두 채워졌다면 8초 timeout fetch 스킵
+  const needsFetch = (e: UfcEvent) =>
+    !!e.id &&
+    (!e.fightCard ||
+      !e.mainEvent.weightClass ||
+      !e.cardTimes?.main ||
+      !e.cardTimes?.prelim);
+
   const fetched = await Promise.allSettled(
     events.map((e) =>
-      e.id ? fetchEventDetail(e.id) : Promise.resolve<EventDetail>({})
+      needsFetch(e) ? fetchEventDetail(e.id) : Promise.resolve<EventDetail>({})
     )
   );
 
