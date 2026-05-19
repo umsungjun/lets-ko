@@ -5,8 +5,15 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
-import { formatWeightClass, isTbaMatchup } from "@/lib/schedule-utils";
+import {
+  estimateMainEventStart,
+  formatKstCardTime,
+  formatWeightClass,
+  isTbaMatchup,
+} from "@/lib/schedule-utils";
 import type { EventPrediction, UfcEvent } from "@/types/schedule";
+
+import FightCardTabs from "./FightCardTabs";
 
 interface EventCardProps {
   event: UfcEvent;
@@ -64,6 +71,15 @@ export default function EventCard({
     locale === "ko" ? "ko-KR" : "en-US",
     { month: "short", day: "numeric", weekday: "short" }
   );
+  // 메인 이벤트(헤드라이너) 예상 시작 시각 KST — 타이틀 매치 여부와 무관하게 항상 표시
+  // 메인 카드는 하위→상위로 진행되므로 헤드라이너는 마지막 → 경기당 30분 가정
+  const mainEventEtaKst = formatKstCardTime(
+    estimateMainEventStart(
+      event.cardTimes?.main,
+      event.fightCard?.mainCard.length ?? 0
+    ),
+    lang
+  );
 
   const { fighter1, fighter2 } = event.mainEvent;
   const isTba = isTbaMatchup(fighter1.name, fighter2.name);
@@ -108,6 +124,11 @@ export default function EventCard({
             <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary/20 text-primary text-xs font-bold border border-primary/30">
               {formattedDate}
             </span>
+            {mainEventEtaKst && (
+              <p className="text-[11px] text-white/60 tabular-nums mt-1.5">
+                {t("estimatedStartKst")} {mainEventEtaKst}
+              </p>
+            )}
             <p className="text-[11px] text-white/35 mt-1.5">
               {event.location[lang]}
             </p>
@@ -246,6 +267,15 @@ export default function EventCard({
             </button>
           )}
         </div>
+      )}
+
+      {/* 전체 카드 탭 (메인/예선/초기예선) */}
+      {event.fightCard && (
+        <FightCardTabs
+          fightCard={event.fightCard}
+          locale={locale}
+          cardTimes={event.cardTimes}
+        />
       )}
     </div>
   );

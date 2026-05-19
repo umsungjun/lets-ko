@@ -1,8 +1,10 @@
 import { isTbaFighter } from "@/lib/schedule-utils";
 import type {
+  UfcCardTimes,
   UfcEvent,
   UfcEventFight,
   UfcEventFighter,
+  UfcFightCard,
 } from "@/types/schedule";
 
 import * as cheerio from "cheerio";
@@ -174,12 +176,50 @@ function localizeCity(location: string): string {
   return location;
 }
 
+/**
+ * 임의 timestamp 값을 안전하게 ISO 8601 문자열로 변환.
+ * - undefined / null / 빈 문자열 → undefined
+ * - 잘못된 ISO 문자열 / NaN / 음수 등 → undefined
+ *
+ * 이전 구현은 `new Date(...).toISOString()`을 검증 없이 호출해
+ * 잘못된 timestamp 1건이 들어와도 RangeError로 크롤 전체가 중단됐다.
+ * 부분 실패 허용을 위해 invalid 값은 조용히 버린다.
+ *
+ * @param value - ISO 8601 문자열(CloudFront) 또는 epoch milliseconds 숫자
+ */
+function toIsoSafe(
+  value: string | number | undefined | null
+): string | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const time = new Date(value).getTime();
+  // 음수(epoch 이전)·NaN은 잘못된 데이터로 간주 — UFC 이벤트는 모두 미래 시각
+  if (Number.isNaN(time) || time < 0) return undefined;
+  return new Date(time).toISOString();
+}
+
+/**
+ * UFC HTML의 `data-*-timestamp` 속성(유닉스 초)을 ISO 문자열로 변환.
+ * 비숫자·범위 외 값은 undefined 반환 (toIsoSafe와 동일한 부분 실패 정책).
+ */
+function secToIsoSafe(seconds: string | undefined): string | undefined {
+  if (!seconds) return undefined;
+  const n = Number(seconds);
+  if (!Number.isFinite(n)) return undefined;
+  return toIsoSafe(n * 1000);
+}
+
 // UFC CloudFront API 응답 타입
 interface CloudFrontEvent {
   EventId: number;
   EventName: string;
   EventTitle?: string;
   StartTime?: string;
+  /** 메인 카드 시작 시각 (응답 변형에 따라 둘 다 대응) */
+  MainCardStartTime?: string;
+  /** 예선 카드 시작 시각 */
+  PrelimsCardStartTime?: string;
+  /** 초기 예선 시작 시각 */
+  EarlyPrelimsCardStartTime?: string;
   EventLocation?: string;
   Venue?: string;
   MainCardFighters?: CloudFrontFighter[];
@@ -226,7 +266,10 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
       const events: UfcEvent[] = [];
 
       for (const raw of rawEvents) {
-        const dateStr = raw.StartTime ? raw.StartTime.split("T")[0] : undefined;
+        // 메인 카드 시작 시각(또는 StartTime 폴백)을 단일 source-of-truth로 사용
+        // → dateStr과 cardTimes.main이 같은 값에서 파생돼 일관성 보장
+        const mainTimeIso = toIsoSafe(raw.MainCardStartTime || raw.StartTime);
+        const dateStr = mainTimeIso?.split("T")[0];
         if (!dateStr || dateStr < today) continue;
 
         const eventName = raw.EventName || raw.EventTitle || "UFC Event";
@@ -262,6 +305,18 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
           };
         }
 
+        // 카드별 시작 시각 — invalid 값은 toIsoSafe가 undefined로 떨어뜨려 부분 실패 허용
+        const prelimIso = toIsoSafe(raw.PrelimsCardStartTime);
+        const earlyIso = toIsoSafe(raw.EarlyPrelimsCardStartTime);
+        const cardTimes =
+          mainTimeIso || prelimIso || earlyIso
+            ? {
+                ...(mainTimeIso ? { main: mainTimeIso } : {}),
+                ...(prelimIso ? { prelim: prelimIso } : {}),
+                ...(earlyIso ? { earlyPrelim: earlyIso } : {}),
+              }
+            : undefined;
+
         events.push({
           id,
           name: eventName,
@@ -269,6 +324,7 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
           location: { en: locationEn, ko: locationKo },
           venue: raw.Venue,
           mainEvent,
+          ...(cardTimes ? { cardTimes } : {}),
         });
       }
 
@@ -318,15 +374,39 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
     $("article.c-card-event--result").each((_, el) => {
       const card = $(el);
 
-      // 날짜: data-main-card-timestamp (유닉스 초) → YYYY-MM-DD
-      const tsAttr = card
-        .find(".tz-change-data")
-        .attr("data-main-card-timestamp");
-      if (!tsAttr) return;
-      const dateStr = new Date(parseInt(tsAttr, 10) * 1000)
-        .toISOString()
-        .split("T")[0];
+      // 날짜·카드별 시작시각: data-*-timestamp 속성 (유닉스 초)
+      // tz-change-data가 여러 요소에 분산될 수 있으므로 각 속성 셀렉터로 찾음
+      // (단일 요소 .attr() 호출은 첫 매치만 검사해서 분산 시 누락 가능)
+      const mainIso = secToIsoSafe(
+        card
+          .find("[data-main-card-timestamp]")
+          .first()
+          .attr("data-main-card-timestamp")
+      );
+      const prelimIso = secToIsoSafe(
+        card
+          .find("[data-prelims-card-timestamp]")
+          .first()
+          .attr("data-prelims-card-timestamp")
+      );
+      const earlyIso = secToIsoSafe(
+        card
+          .find("[data-early-prelims-timestamp]")
+          .first()
+          .attr("data-early-prelims-timestamp")
+      );
+      if (!mainIso) return;
+      const dateStr = mainIso.split("T")[0];
       if (dateStr < today) return;
+
+      const cardTimes =
+        mainIso || prelimIso || earlyIso
+          ? {
+              ...(mainIso ? { main: mainIso } : {}),
+              ...(prelimIso ? { prelim: prelimIso } : {}),
+              ...(earlyIso ? { earlyPrelim: earlyIso } : {}),
+            }
+          : undefined;
 
       // ID: 이벤트 URL 슬러그 (프래그먼트 제거)
       const eventUrl =
@@ -405,6 +485,7 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
                 : undefined,
           },
         },
+        ...(cardTimes ? { cardTimes } : {}),
       });
     });
 
@@ -473,59 +554,220 @@ export async function enrichFighterImages(
   }));
 }
 
+const UFC_BASE_URL = "https://www.ufc.com";
+
 /**
- * @description 단일 UFC 이벤트 상세 페이지에서 메인 이벤트의 체급 추출.
- * 이벤트 페이지의 첫 c-listing-fight__class-text가 메인 이벤트 체급. 텍스트는 지오 IP에 따라
- * 영문/한국어 + " Bout" 접미사로 반환되므로 정규화는 formatWeightClass 측에서 처리.
- * @param eventId - UFC 이벤트 슬러그 (예: "ufc-329")
- * @returns 체급 원문 (예: "Welterweight Bout"), 추출 실패 시 undefined
+ * 상대 경로 img src를 절대 URL로 변환.
+ * 절대 URL은 그대로, 잘못된 URL은 undefined 반환.
  */
-async function fetchEventWeightClass(
-  eventId: string
-): Promise<string | undefined> {
+function normalizeFightImageUrl(src: string | undefined): string | undefined {
+  if (!src) return undefined;
   try {
-    const res = await fetch(`https://www.ufc.com/event/${eventId}`, {
-      headers: CRAWLER_HEADERS,
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return undefined;
-    const html = await res.text();
-    const $ = cheerio.load(html);
-    const text = $(".c-listing-fight__class-text").first().text().trim();
-    return text || undefined;
+    return new URL(src, UFC_BASE_URL).href;
   } catch {
     return undefined;
   }
 }
 
-/**
- * @description weightClass가 없는 이벤트의 메인 이벤트 체급을 상세 페이지에서 병렬 스크레이핑.
- * UFC CloudFront API가 죽으면서 HTML 폴백 경로에선 체급 정보가 누락되므로 보강 필요.
- * @param events - 체급이 누락됐을 수 있는 UfcEvent 배열
- * @returns 체급이 보완된 UfcEvent 배열
- */
-async function enrichWeightClasses(events: UfcEvent[]): Promise<UfcEvent[]> {
-  const targets = events
-    .map((e, i) => ({ i, e }))
-    .filter(({ e }) => !e.mainEvent.weightClass && e.id);
+type EventDetail = {
+  weightClass?: string;
+  fightCard?: UfcFightCard;
+  cardTimes?: UfcCardTimes;
+};
 
-  if (targets.length === 0) return events;
+/**
+ * @description 단일 UFC 이벤트 상세 페이지에서 메인 이벤트 체급 + 전체 fight card 추출.
+ * 카드 섹션 구분:
+ * - #main-card → 메인 카드
+ * - .fight-card-prelims (단, .fight-card-prelims-early 후손은 제외) → 예선 카드
+ * - .fight-card-prelims-early → 초기 예선
+ *
+ * 파이터 이름 a 태그는 plain text 또는 given/family-name span 분리 둘 다 지원
+ * (cheerio .text()가 모든 자식 텍스트를 합쳐 반환).
+ * @param eventId - UFC 이벤트 슬러그 (예: "ufc-329")
+ * @returns 체급(원문) + fight card. 페이지 fetch 실패 시 빈 객체
+ */
+async function fetchEventDetail(eventId: string): Promise<EventDetail> {
+  try {
+    const res = await fetch(`${UFC_BASE_URL}/event/${eventId}`, {
+      headers: CRAWLER_HEADERS,
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return {};
+    const html = await res.text();
+    const $ = cheerio.load(html);
+
+    const weightClass =
+      $(".c-listing-fight__class-text").first().text().trim() || undefined;
+
+    // 카드별 시작 시각 — 각 timestamp 속성을 가진 요소를 개별 탐색
+    // (tz-change-data가 여러 요소에 분산될 수 있어 단일 .attr() 호출은 누락 위험)
+    const detailMainIso = secToIsoSafe(
+      $("[data-main-card-timestamp]").first().attr("data-main-card-timestamp")
+    );
+    const detailPrelimIso = secToIsoSafe(
+      $("[data-prelims-card-timestamp]")
+        .first()
+        .attr("data-prelims-card-timestamp")
+    );
+    const detailEarlyIso = secToIsoSafe(
+      $("[data-early-prelims-timestamp]")
+        .first()
+        .attr("data-early-prelims-timestamp")
+    );
+    const cardTimes =
+      detailMainIso || detailPrelimIso || detailEarlyIso
+        ? {
+            ...(detailMainIso ? { main: detailMainIso } : {}),
+            ...(detailPrelimIso ? { prelim: detailPrelimIso } : {}),
+            ...(detailEarlyIso ? { earlyPrelim: detailEarlyIso } : {}),
+          }
+        : undefined;
+
+    // 단일 .c-listing-fight 요소에서 UfcEventFight 추출 (closure로 $ 캡처)
+    // el 타입은 cheerio each 콜백 파라미터 그대로 (domhandler.AnyNode가 직접 의존성이 아님)
+    const parseFight = ($fight: ReturnType<typeof $>): UfcEventFight => {
+      const wc =
+        $fight.find(".c-listing-fight__class-text").first().text().trim() ||
+        undefined;
+
+      const f1Name = $fight
+        .find(".c-listing-fight__corner-name--red a")
+        .first()
+        .text()
+        .replace(/\s+/g, " ")
+        .trim();
+      const f2Name = $fight
+        .find(".c-listing-fight__corner-name--blue a")
+        .first()
+        .text()
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const f1ImgSrc = $fight
+        .find(".c-listing-fight__corner-image--red img")
+        .first()
+        .attr("src");
+      const f2ImgSrc = $fight
+        .find(".c-listing-fight__corner-image--blue img")
+        .first()
+        .attr("src");
+
+      return {
+        fighter1: {
+          name: f1Name || "TBA",
+          imageUrl: normalizeFightImageUrl(f1ImgSrc),
+        },
+        fighter2: {
+          name: f2Name || "TBA",
+          imageUrl: normalizeFightImageUrl(f2ImgSrc),
+        },
+        weightClass: wc,
+      };
+    };
+
+    const mainCard: UfcEventFight[] = [];
+    const prelimCard: UfcEventFight[] = [];
+    const earlyPrelimCard: UfcEventFight[] = [];
+
+    $("#main-card .c-listing-fight").each((_, el) => {
+      mainCard.push(parseFight($(el)));
+    });
+
+    // 예선 카드: early-prelim 후손은 제외 (둘이 nested인 경우 중복 방지)
+    $(".fight-card-prelims .c-listing-fight").each((_, el) => {
+      const $el = $(el);
+      if ($el.closest(".fight-card-prelims-early").length === 0) {
+        prelimCard.push(parseFight($el));
+      }
+    });
+
+    $(".fight-card-prelims-early .c-listing-fight").each((_, el) => {
+      earlyPrelimCard.push(parseFight($(el)));
+    });
+
+    // 폴백: 메인/예선 섹션이 아직 분리 안 된 미래 이벤트는 평면 리스트로 옴.
+    // 모든 .c-listing-fight를 메인 카드로 취급해서 노출.
+    if (
+      mainCard.length === 0 &&
+      prelimCard.length === 0 &&
+      earlyPrelimCard.length === 0
+    ) {
+      $(".c-listing-fight").each((_, el) => {
+        mainCard.push(parseFight($(el)));
+      });
+    }
+
+    const totalFights =
+      mainCard.length + prelimCard.length + earlyPrelimCard.length;
+    const fightCard: UfcFightCard | undefined =
+      totalFights === 0
+        ? undefined
+        : {
+            mainCard,
+            prelimCard,
+            ...(earlyPrelimCard.length > 0 ? { earlyPrelimCard } : {}),
+          };
+
+    return { weightClass, fightCard, cardTimes };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * @description 모든 이벤트의 상세 페이지를 병렬 스크레이핑해 fight card와 메인 이벤트 체급 보완.
+ * fightCard는 이벤트마다 전체 카드(메인/예선/초기예선)를 추가하고,
+ * weightClass는 누락된 이벤트만 보완.
+ * @param events - 보완 대상 UfcEvent 배열
+ * @returns fightCard·weightClass가 보완된 UfcEvent 배열
+ */
+async function enrichEventDetails(events: UfcEvent[]): Promise<UfcEvent[]> {
+  // 상세 페이지에서 가져올 항목(fightCard / weightClass / cardTimes) 중
+  // 하나라도 누락된 이벤트만 fetch — 이미 모두 채워졌다면 8초 timeout fetch 스킵
+  const needsFetch = (e: UfcEvent) =>
+    !!e.id &&
+    (!e.fightCard ||
+      !e.mainEvent.weightClass ||
+      !e.cardTimes?.main ||
+      !e.cardTimes?.prelim);
 
   const fetched = await Promise.allSettled(
-    targets.map(({ e }) => fetchEventWeightClass(e.id))
+    events.map((e) =>
+      needsFetch(e) ? fetchEventDetail(e.id) : Promise.resolve<EventDetail>({})
+    )
   );
 
-  const result = [...events];
-  targets.forEach(({ i }, idx) => {
-    const r = fetched[idx];
-    if (r.status === "fulfilled" && r.value) {
-      result[i] = {
-        ...result[i],
-        mainEvent: { ...result[i].mainEvent, weightClass: r.value },
-      };
-    }
+  return events.map((event, i) => {
+    const r = fetched[i];
+    if (r.status !== "fulfilled") return event;
+    const detail = r.value;
+
+    // cardTimes 병합: 기존 값(목록 페이지/CloudFront) 우선, 누락분만 상세 페이지로 보완
+    // 값이 있는 키만 포함해 빈 객체({ main: undefined, ... }) 생성을 방지
+    const main = event.cardTimes?.main ?? detail.cardTimes?.main;
+    const prelim = event.cardTimes?.prelim ?? detail.cardTimes?.prelim;
+    const earlyPrelim =
+      event.cardTimes?.earlyPrelim ?? detail.cardTimes?.earlyPrelim;
+    const mergedCardTimes: UfcCardTimes | undefined =
+      main || prelim || earlyPrelim
+        ? {
+            ...(main ? { main } : {}),
+            ...(prelim ? { prelim } : {}),
+            ...(earlyPrelim ? { earlyPrelim } : {}),
+          }
+        : undefined;
+
+    return {
+      ...event,
+      mainEvent: {
+        ...event.mainEvent,
+        weightClass: event.mainEvent.weightClass || detail.weightClass,
+      },
+      ...(detail.fightCard ? { fightCard: detail.fightCard } : {}),
+      ...(mergedCardTimes ? { cardTimes: mergedCardTimes } : {}),
+    };
   });
-  return result;
 }
 
 /**
@@ -551,9 +793,9 @@ export async function crawlUfcSchedule(): Promise<UfcEvent[]> {
   // 날짜 오름차순 정렬
   events.sort((a, b) => a.date.localeCompare(b.date));
 
-  // 파이터 이미지·체급 보완 (HTML 폴백 경로일 때 둘 다 누락 가능)
+  // 파이터 이미지 보완 + 상세 페이지에서 fight card·체급 가져오기
   events = await enrichFighterImages(events);
-  events = await enrichWeightClasses(events);
+  events = await enrichEventDetails(events);
 
   return events;
 }

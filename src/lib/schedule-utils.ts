@@ -93,3 +93,51 @@ export const formatWeightClass = (
   const name = locale === "ko" ? info.ko : info.en;
   return info.kg !== undefined ? `${name} (${info.kg}kg)` : name;
 };
+
+/**
+ * @description ISO 8601 UTC 시각을 한국 표준시(KST, UTC+9)로 변환해 사람이 읽기 좋은 라벨로 포맷.
+ * UFC 이벤트는 미국 새벽~오전 시작이라 KST로 보면 거의 항상 오후·심야로 넘어가므로
+ * 날짜(요일)까지 함께 노출해 사용자가 헷갈리지 않도록 한다.
+ * @param iso - 시작 시각 (ISO 8601, UTC). 잘못된 값이면 undefined 반환
+ * @param locale - "ko" | "en"
+ * @returns 예: "5월 25일(일) 오전 11:00" / "Sun, May 25, 11:00 AM" — 파싱 실패 시 undefined
+ */
+export const formatKstCardTime = (
+  iso: string | undefined,
+  locale: "ko" | "en"
+): string | undefined => {
+  if (!iso) return undefined;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return date.toLocaleString(locale === "ko" ? "ko-KR" : "en-US", {
+    timeZone: "Asia/Seoul",
+    month: "short",
+    day: "numeric",
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+/** 메인 이벤트 예상 시각 계산 시 한 경기당 가정 시간(분) */
+const MINUTES_PER_FIGHT = 30;
+
+/**
+ * @description 메인 카드 시작 시각 + 경기 수로 메인 이벤트(타이틀 매치) 예상 시작 시각을 계산.
+ * 메인 카드는 하위 경기부터 위로 진행되어 헤드라이너(메인 이벤트)가 마지막이므로
+ * (총 메인 카드 경기 - 1) × 30분을 시작 시각에 더한 값이 메인 이벤트 예상 시각.
+ * 데이터 부족(시작 시각 미상 / 경기 수 0)이면 undefined.
+ * @param mainCardStartIso - 메인 카드 방송 시작 시각 (ISO 8601 UTC)
+ * @param mainCardFightCount - 메인 카드 전체 경기 수 (헤드라이너 포함)
+ * @returns 메인 이벤트 예상 시작 시각 (ISO 8601 UTC) — 추정 불가 시 undefined
+ */
+export const estimateMainEventStart = (
+  mainCardStartIso: string | undefined,
+  mainCardFightCount: number
+): string | undefined => {
+  if (!mainCardStartIso || mainCardFightCount < 1) return undefined;
+  const start = new Date(mainCardStartIso);
+  if (Number.isNaN(start.getTime())) return undefined;
+  const offsetMs = (mainCardFightCount - 1) * MINUTES_PER_FIGHT * 60 * 1000;
+  return new Date(start.getTime() + offsetMs).toISOString();
+};

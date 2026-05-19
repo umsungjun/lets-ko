@@ -144,7 +144,13 @@
     "disclaimer": "AI-generated prediction. Actual results may differ.",
     "poweredBy": "Powered by Gemini AI",
     "weightClass": "Weight Class",
-    "tba": "TBA"
+    "tba": "TBA",
+    "fightCard": "Fight card",
+    "mainCard": "Main Card",
+    "prelimCard": "Prelims",
+    "earlyPrelimCard": "Early Prelims",
+    "startKst": "KST",
+    "estimatedStartKst": "Est. KST"
   },
   "common": {
     "locale": "EN"
