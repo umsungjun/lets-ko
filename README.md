@@ -36,69 +36,6 @@ UFC 웰터급 파이터 **고석현**(The Korean Tyson) 선수의 비공식 팬 
 | 다국어       | next-intl               |
 | 배포         | Vercel                  |
 
-## 프로젝트 구조
-
-```
-src/
-├── app/
-│   ├── [locale]/
-│   │   ├── page.tsx             # 메인 페이지
-│   │   ├── cheer/page.tsx       # 응원하기 페이지
-│   │   ├── predictions/page.tsx # AI 예측 페이지
-│   │   ├── rankings/page.tsx    # UFC 랭킹 페이지
-│   │   └── schedule/page.tsx    # UFC 경기 일정 페이지
-│   ├── api/
-│   │   ├── guestbook/           # 응원 메시지 API (GET/POST/PATCH/DELETE)
-│   │   │   └── reactions/       # 이모지 리액션 API (POST 토글)
-│   │   └── cron/crawl/          # UFC 전적·랭킹·AI예측 크롤링 (일 1회, KST 12:00)
-│   ├── robots.ts                # SEO
-│   └── sitemap.ts               # SEO
-├── components/
-│   ├── fighter/                 # 선수 관련 컴포넌트
-│   ├── guestbook/               # 응원 메시지 컴포넌트
-│   ├── predictions/             # AI 예측 컴포넌트
-│   ├── rankings/                # UFC 랭킹 컴포넌트
-│   ├── schedule/                # UFC 경기 일정 컴포넌트
-│   └── layout/                  # Header, Footer
-├── lib/
-│   ├── gemini.ts                # Google Gemini API 연동 (상대 분석 + 경기 승부 예측)
-│   ├── youtube.ts               # YouTube API 연동
-│   ├── news.ts                  # Google News RSS 파싱
-│   ├── supabase/                # Supabase 클라이언트
-│   └── crawl/                   # UFC 크롤러, AI 예측 생성기, 이미지 스크레이퍼
-├── messages/
-│   ├── ko.json                  # 한국어 번역
-│   └── en.json                  # 영어 번역
-└── data/                        # 정적 데이터 (전적, 바이오 등)
-```
-
-## Supabase 테이블
-
-| 테이블                 | 설명                                                    |
-| ---------------------- | ------------------------------------------------------- |
-| `guestbook_messages`   | 방명록 메시지 (닉네임, 내용, IP 해시)                   |
-| `guestbook_reactions`  | 이모지 리액션 (message_id, emoji, IP 해시, UNIQUE 제약) |
-| `fighter_stats`        | UFC 선수 스탯 크롤링 데이터                             |
-| `ufc_rankings`         | UFC 체급별 랭킹 크롤링 데이터                           |
-| `opponent_predictions` | AI 다음 상대 예측 데이터 (Gemini 분석 결과)             |
-
-## 로컬 개발
-
-```bash
-# 의존성 설치
-pnpm install
-
-# 환경변수 설정
-cp .env.local.example .env.local
-# .env.local에 Supabase, YouTube API, Gemini API 키 입력
-
-# DB 테이블 생성
-npx tsx --env-file=.env.local scripts/setup-db.ts
-
-# 개발 서버 실행
-pnpm dev
-```
-
 ## 연락처
 
 문의나 피드백은 **umseongjun@naver.com**으로 보내주시면 됩니다.

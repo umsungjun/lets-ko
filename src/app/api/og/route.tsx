@@ -191,9 +191,7 @@ export async function GET() {
         >
           {(() => {
             try {
-              return new URL(
-                process.env.NEXT_PUBLIC_SITE_URL || ""
-              ).hostname;
+              return new URL(process.env.NEXT_PUBLIC_SITE_URL || "").hostname;
             } catch {
               return "lets-ko.vercel.app";
             }

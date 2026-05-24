@@ -19,6 +19,7 @@ export default function Header() {
     { href: `/${locale}/predictions`, label: t("predictions") },
     { href: `/${locale}/schedule`, label: t("schedule") },
     { href: `/${locale}/rankings`, label: t("rankings") },
+    { href: `/${locale}/youtube`, label: t("youtube") },
     { href: `/${locale}/cheer`, label: t("cheer") },
   ];
 
