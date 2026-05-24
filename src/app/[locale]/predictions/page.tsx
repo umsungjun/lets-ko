@@ -101,7 +101,13 @@ async function getPredictions(): Promise<PredictionData> {
 
       if (data?.data) {
         const predictions = data.data as PredictionData;
-        if (predictions.opponents?.length > 0) return predictions;
+        // 데이터 품질 체크: 모든 opponent의 imageUrl이 placeholder면 크롤이 실패한 상태이므로
+        // cached로 폴백 (다른 페이지의 0-0-0 검증과 동일한 사상)
+        const hasRealImage = predictions.opponents?.some(
+          (o) => o.imageUrl && !o.imageUrl.includes("placeholder")
+        );
+        if (predictions.opponents?.length > 0 && hasRealImage)
+          return predictions;
       }
     } catch {
       // Fall through to cached data
