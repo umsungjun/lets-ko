@@ -4,6 +4,7 @@
     "predictions": "AI Prediction",
     "schedule": "Schedule",
     "rankings": "UFC Rankings",
+    "youtube": "YouTube",
     "cheer": "Cheer"
   },
   "hero": {
@@ -64,10 +65,23 @@
     "cheerCta": "Cheer for Ko Seokhyeon"
   },
   "videos": {
-    "title": "Related YouTube Videos",
+    "title": "Ko Seokhyeon YouTube Videos",
     "latest": "Latest",
     "popular": "Most Viewed",
     "moreOnYoutube": "More on YouTube"
+  },
+  "youtubePage": {
+    "title": "YouTube Channels",
+    "subtitle": "Latest uploads from UFC-related YouTube channels",
+    "metaTitle": "YouTube Channels | LET'S KO",
+    "metaDescription": "Latest videos from UFC-related YouTube channels including StungunTV, Korean Zombie, and UFC official.",
+    "byChannel": "By Channel",
+    "allLatest": "All Latest",
+    "visitChannel": "Visit Channel",
+    "subscribers": "{count} subscribers",
+    "updatedAt": "Updated {date}",
+    "empty": "No videos to show.",
+    "close": "Close"
   },
   "news": {
     "title": "Related News",

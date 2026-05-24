@@ -29,7 +29,10 @@ import type { PredictionData } from "@/types/prediction";
 import type { UfcRankings } from "@/types/rankings";
 import type { UfcSchedule } from "@/types/schedule";
 
-export const revalidate = 86400;
+// 메인 페이지 ISR 30분. VideoSection 최신 영상 노출 속도와 quota 안전성의 절충점.
+//  - search.list(date) fetch는 자체 30분 캐시 → 일 ~4,800 unit (한도 10k의 48%)
+//  - search.list(viewCount)는 24시간 캐시 유지 (인기 영상 변동 미미)
+export const revalidate = 1800;
 
 export async function generateMetadata({
   params,
@@ -165,9 +168,8 @@ async function getSchedule(): Promise<UfcSchedule> {
         const schedule = data.data as UfcSchedule;
         if (schedule.events?.length > 0) {
           // 이미지 없는 파이터 보완 (크론 실패 또는 구형 데이터 대비)
-          const { enrichFighterImages } = await import(
-            "@/lib/crawl/schedule-crawler"
-          );
+          const { enrichFighterImages } =
+            await import("@/lib/crawl/schedule-crawler");
           const enriched = await enrichFighterImages(schedule.events);
           return { ...schedule, events: enriched };
         }

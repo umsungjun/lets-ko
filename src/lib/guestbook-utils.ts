@@ -1,6 +1,6 @@
-import { createHash } from "crypto";
-
 import type { NextRequest } from "next/server";
+
+import { createHash } from "crypto";
 
 /**
  * @description 요청 IP를 SHA256으로 해시하여 처음 16자를 반환

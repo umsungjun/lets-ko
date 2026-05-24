@@ -4,6 +4,7 @@
     "predictions": "AI 예측",
     "schedule": "경기 일정",
     "rankings": "UFC 랭킹",
+    "youtube": "유튜브",
     "cheer": "응원하기"
   },
   "hero": {
@@ -64,10 +65,23 @@
     "cheerCta": "고석현 선수에게 응원 남기기"
   },
   "videos": {
-    "title": "관련 YouTube 영상",
+    "title": "고석현 관련 YouTube 영상",
     "latest": "최신순",
     "popular": "조회순",
     "moreOnYoutube": "더보러가기"
+  },
+  "youtubePage": {
+    "title": "유튜브 채널",
+    "subtitle": "UFC 관련 유튜브 채널의 최신 업로드를 한눈에",
+    "metaTitle": "유튜브 채널 | LET'S KO",
+    "metaDescription": "UFC 관련 YouTube 채널의 최신 영상을 모아 봅니다. 스턴건TV, 코리안 좀비, UFC 공식 채널 등.",
+    "byChannel": "채널별",
+    "allLatest": "전체 최신순",
+    "visitChannel": "채널 방문",
+    "subscribers": "구독자 {count}",
+    "updatedAt": "{date} 업데이트",
+    "empty": "표시할 영상이 없습니다.",
+    "close": "닫기"
   },
   "news": {
     "title": "관련 뉴스",
