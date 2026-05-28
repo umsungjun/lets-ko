@@ -59,11 +59,13 @@ Vercel Cron 매일 UTC 05:00 (KST 14:00) 실행. `maxDuration = 60`. 4단계 순
 2. `crawlUfcRankings()` — UFC 전 체급 랭킹
 3. `generatePredictions()` — AI 상대 예측 (Gemini)
 4. **UFC 일정 + 예측**: `crawlUfcSchedule()` → `generateSchedulePredictions()` → `ufc_schedule` 저장
-   - 일정 크롤: CloudFront CDN API (`d29dxerjsp82wz.cloudfront.net`) → HTML 파싱 폴백
+   - 일정 크롤: CloudFront CDN API(`d29dxerjsp82wz.cloudfront.net`)는 폐기됨(404) → 실질적으로 `www.ufc.com/events` HTML 파싱이 주 소스
    - 예측 생성: `eventId`로 중복 체크 — 기존 예측 재사용, 새 이벤트만 Gemini 호출
    - 파이터 이미지: `enrichFighterImages()` — UFC 선수 페이지 병렬 스크레이핑 (최대 20명)
 
 크롤 완료 후 `revalidatePath()` + `fetch` 워밍으로 `/`, `/schedule`, `/predictions`, `/rankings` 한/영 캐시 갱신.
+
+> **⚠️ Vercel 함수 리전은 반드시 US여야 함** (예: `sfo1`). UFC는 `kr.ufc.com`을 봇/지오 차단하므로 서울(`icn1`) 리전이면 모든 UFC 크롤러가 403으로 실패. 따라서 크롤러는 전부 `www.ufc.com`을 사용하며 영문 페이지가 반환됨 — 스탯 파서는 영/한 라벨을 모두 처리하고, 랭킹은 영문 체급명을 `DIVISION_NAME_KO`로 한글화함. Hobby 플랜은 리전 1개 제한이라 cron만 분리 불가 → 프로젝트 전체가 US 리전 (대시보드 Settings → Functions → Region). 트레이드오프: 동적 라우트(방명록 등)의 한국 사용자 지연 약간 증가, ISR/정적 페이지는 엣지 서빙이라 영향 없음.
 
 ### Supabase
 

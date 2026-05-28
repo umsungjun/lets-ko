@@ -7,27 +7,27 @@ import type {
 
 import * as cheerio from "cheerio";
 
-const UFC_RANKINGS_URL = "https://kr.ufc.com/rankings";
+// Vercel 함수 리전이 US라 www.ufc.com 사용 (kr.ufc.com은 한국 사이트라 US IP에 403).
+// 영문 페이지가 반환되므로 헤더(체급명)는 영문 → 아래 영→한 매핑으로 한국어명 생성.
+const UFC_RANKINGS_URL = "https://www.ufc.com/rankings";
 
-const DIVISION_NAME_MAP: Record<string, string> = {
-  플라이급: "Flyweight",
-  밴텀급: "Bantamweight",
-  페더급: "Featherweight",
-  라이트급: "Lightweight",
-  웰터급: "Welterweight",
-  미들급: "Middleweight",
-  "라이트 헤비급": "Light Heavyweight",
-  헤비급: "Heavyweight",
-  "여성 스트로급": "Women's Strawweight",
-  "여성 플라이급": "Women's Flyweight",
-  "여성 밴텀급": "Women's Bantamweight",
+// 영문 체급명 → 한국어 체급명 (한국어 로케일 표시용). 없으면 영문 그대로 사용.
+const DIVISION_NAME_KO: Record<string, string> = {
+  Flyweight: "플라이급",
+  Bantamweight: "밴텀급",
+  Featherweight: "페더급",
+  Lightweight: "라이트급",
+  Welterweight: "웰터급",
+  Middleweight: "미들급",
+  "Light Heavyweight": "라이트 헤비급",
+  Heavyweight: "헤비급",
+  "Women's Strawweight": "여성 스트로급",
+  "Women's Flyweight": "여성 플라이급",
+  "Women's Bantamweight": "여성 밴텀급",
 };
 
-function toSlug(name: string): string {
-  return (DIVISION_NAME_MAP[name] || name)
-    .toLowerCase()
-    .replace(/'/g, "")
-    .replace(/\s+/g, "-");
+function toSlug(nameEn: string): string {
+  return nameEn.toLowerCase().replace(/'/g, "").replace(/\s+/g, "-");
 }
 
 // UFC 사이트가 상대/절대 URL을 섞어 반환하므로 항상 절대 URL로 정규화
@@ -83,7 +83,7 @@ export async function crawlUfcRankings(): Promise<UfcRankings> {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
     },
   });
 
@@ -141,14 +141,14 @@ export async function crawlUfcRankings(): Promise<UfcRankings> {
       }
     }
 
-    const divisionName = header;
-    const divisionNameEn = DIVISION_NAME_MAP[divisionName] || divisionName;
+    const divisionNameEn = header;
+    const divisionName = DIVISION_NAME_KO[divisionNameEn] || divisionNameEn;
     const rankedFighters = parseRankedFighters($, table);
 
     divisions.push({
       divisionName,
       divisionNameEn,
-      divisionSlug: toSlug(divisionName),
+      divisionSlug: toSlug(divisionNameEn),
       champion,
       rankedFighters,
     });
