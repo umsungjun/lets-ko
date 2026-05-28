@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
 import PredictionDetail from "@/components/predictions/PredictionDetail";
-import cachedPredictions from "@/data/cached-predictions.json";
 import cachedStats from "@/data/cached-stats.json";
+import { getPredictions } from "@/lib/data/predictions";
 import type { FighterStats } from "@/types/fighter";
-import type { PredictionData } from "@/types/prediction";
 
 import { differenceInYears } from "date-fns";
 
@@ -82,39 +81,6 @@ export async function generateMetadata({
       images: [`${origin}/og.png`],
     },
   };
-}
-
-async function getPredictions(): Promise<PredictionData> {
-  if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    try {
-      const { createServerClient } = await import("@/lib/supabase/server");
-      const supabase = createServerClient();
-      const { data } = await supabase
-        .from("opponent_predictions")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data?.data) {
-        const predictions = data.data as PredictionData;
-        // 데이터 품질 체크: 모든 opponent의 imageUrl이 placeholder면 크롤이 실패한 상태이므로
-        // cached로 폴백 (다른 페이지의 0-0-0 검증과 동일한 사상)
-        const hasRealImage = predictions.opponents?.some(
-          (o) => o.imageUrl && !o.imageUrl.includes("placeholder")
-        );
-        if (predictions.opponents?.length > 0 && hasRealImage)
-          return predictions;
-      }
-    } catch {
-      // Fall through to cached data
-    }
-  }
-
-  return cachedPredictions as PredictionData;
 }
 
 async function getFighterStats(): Promise<FighterStats> {
