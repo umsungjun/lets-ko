@@ -12,12 +12,12 @@ import StatsCard from "@/components/fighter/StatsCard";
 import VideoSection from "@/components/fighter/VideoSection";
 import ChampionsPreview from "@/components/rankings/ChampionsPreview";
 import SchedulePreview from "@/components/schedule/SchedulePreview";
-import cachedPredictions from "@/data/cached-predictions.json";
 import cachedRankings from "@/data/cached-rankings.json";
 import cachedSchedule from "@/data/cached-schedule.json";
 import cachedStats from "@/data/cached-stats.json";
 import careerHighlights from "@/data/career-highlights.json";
 import fighterBio from "@/data/fighter-bio.json";
+import { getPredictions } from "@/lib/data/predictions";
 import { fetchNews } from "@/lib/news";
 import { searchYouTubeVideos } from "@/lib/youtube";
 import type {
@@ -25,7 +25,6 @@ import type {
   FighterBio,
   FighterStats,
 } from "@/types/fighter";
-import type { PredictionData } from "@/types/prediction";
 import type { UfcRankings } from "@/types/rankings";
 import type { UfcSchedule } from "@/types/schedule";
 
@@ -120,33 +119,6 @@ async function getRankings(): Promise<UfcRankings> {
   }
 
   return cachedRankings as UfcRankings;
-}
-
-async function getPredictions(): Promise<PredictionData> {
-  if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    try {
-      const { createServerClient } = await import("@/lib/supabase/server");
-      const supabase = createServerClient();
-      const { data } = await supabase
-        .from("opponent_predictions")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data?.data) {
-        const predictions = data.data as PredictionData;
-        if (predictions.opponents?.length > 0) return predictions;
-      }
-    } catch {
-      // Fall through to cached data
-    }
-  }
-
-  return cachedPredictions as PredictionData;
 }
 
 async function getSchedule(): Promise<UfcSchedule> {

@@ -6,7 +6,9 @@ import type {
 
 import * as cheerio from "cheerio";
 
-const UFC_ATHLETE_URL = "https://kr.ufc.com/athlete/seokhyeon-ko";
+// Vercel 함수 리전이 US라 www.ufc.com 사용 (kr.ufc.com은 한국 사이트라 US IP에 403).
+// 영문 페이지가 반환되지만 아래 파서가 영/한 라벨을 모두 처리하므로 무관.
+const UFC_ATHLETE_URL = "https://www.ufc.com/athlete/seokhyeon-ko";
 const FIGHTMATRIX_URL =
   "https://www.fightmatrix.com/fighter-profile/Seok%20Hyeon%20Ko/185137/";
 const CRAWLER_HEADERS = {
@@ -48,7 +50,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
     },
   });
 
@@ -181,7 +183,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
       });
 
       const ajaxRes = await fetch(
-        `https://kr.ufc.com/views/ajax?${ajaxParams.toString()}`,
+        `https://www.ufc.com/views/ajax?${ajaxParams.toString()}`,
         {
           headers: {
             ...CRAWLER_HEADERS,

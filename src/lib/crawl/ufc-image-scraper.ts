@@ -23,7 +23,7 @@ function nameToSlug(name: string): string {
 
 /**
  * @description UFC 선수 페이지에서 프로필 헤드샷 URL을 스크레이핑.
- * kr.ufc.com → www.ufc.com 순서로 시도하며, 여러 CSS 셀렉터를 폴백.
+ * www.ufc.com → kr.ufc.com 순서로 시도하며, 여러 CSS 셀렉터를 폴백.
  * @param fighterName - 영문 파이터 이름 (예: "Khamzat Chimaev")
  * @returns 헤드샷 이미지 절대 URL. 실패 시 `/images/fighter-placeholder.png` 반환
  */
@@ -32,10 +32,10 @@ export async function scrapeUfcFighterImage(
 ): Promise<string> {
   const slug = nameToSlug(fighterName);
 
-  // UFC는 지역에 따라 리다이렉트 — kr.ufc.com 직접 사용
+  // Vercel 함수 리전이 US라 www.ufc.com 우선 (kr.ufc.com은 한국 사이트라 US IP에 403)
   const urls = [
-    `https://kr.ufc.com/athlete/${slug}`,
     `https://www.ufc.com/athlete/${slug}`,
+    `https://kr.ufc.com/athlete/${slug}`,
   ];
 
   for (const url of urls) {
