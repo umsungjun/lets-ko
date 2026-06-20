@@ -14,20 +14,21 @@ export default function Header() {
 
   const otherLocale = locale === "ko" ? "en" : "ko";
 
+  // next-intl Link는 로케일 없는 경로를 받아 현재 로케일 prefix를 자동으로 붙인다. 여기에 /${locale}를 직접 넣으면 prefix가 중복된다(예: /en/en/cheer).
   const navItems = [
-    { href: `/${locale}`, label: t("home") },
-    { href: `/${locale}/predictions`, label: t("predictions") },
-    { href: `/${locale}/schedule`, label: t("schedule") },
-    { href: `/${locale}/rankings`, label: t("rankings") },
-    { href: `/${locale}/youtube`, label: t("youtube") },
-    { href: `/${locale}/cheer`, label: t("cheer") },
+    { href: "/", label: t("home") },
+    { href: "/predictions", label: t("predictions") },
+    { href: "/schedule", label: t("schedule") },
+    { href: "/rankings", label: t("rankings") },
+    { href: "/youtube", label: t("youtube") },
+    { href: "/cheer", label: t("cheer") },
   ];
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-border/60">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link
-          href={`/${locale}`}
+          href="/"
           className="text-lg font-black tracking-tight text-primary"
         >
           LET&apos;S KO
