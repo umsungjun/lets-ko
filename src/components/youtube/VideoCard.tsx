@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/date-utils";
 import type { YouTubeVideo } from "@/lib/youtube";
 
 interface VideoCardProps {
@@ -36,8 +37,6 @@ export default function VideoCard({
   index = 0,
   isInView = true,
 }: VideoCardProps) {
-  const dateLocale = locale === "ko" ? "ko-KR" : "en-US";
-
   return (
     <button
       onClick={() => onOpen(video)}
@@ -81,7 +80,7 @@ export default function VideoCard({
           {video.title}
         </h3>
         <p className="text-xs text-muted">
-          {new Date(video.publishedAt).toLocaleDateString(dateLocale)}
+          {formatKstDate(video.publishedAt, locale)}
         </p>
       </div>
     </button>

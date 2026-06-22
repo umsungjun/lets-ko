@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useInView } from "@/hooks/useInView";
+import { formatEventDate, getKstTodayStr } from "@/lib/date-utils";
 import {
   estimateMainEventStart,
   formatKstCardTime,
@@ -63,8 +64,8 @@ export default function SchedulePreview({
   const { ref, isInView } = useInView(0.1);
   const lang = locale === "ko" ? "ko" : "en";
 
-  // 오늘 이후 이벤트 중 1개만 표시
-  const today = new Date().toISOString().split("T")[0];
+  // 오늘 이후 이벤트 중 1개만 표시 (KST 기준 "오늘")
+  const today = getKstTodayStr();
   const nextEvent = schedule.events.find((e) => e.date >= today);
   if (!nextEvent) return null;
 
@@ -74,13 +75,7 @@ export default function SchedulePreview({
   const { fighter1, fighter2 } = nextEvent.mainEvent;
   const isTba = isTbaMatchup(fighter1.name, fighter2.name);
 
-  const formattedDate = new Date(
-    nextEvent.date + "T12:00:00Z"
-  ).toLocaleDateString(locale === "ko" ? "ko-KR" : "en-US", {
-    month: "short",
-    day: "numeric",
-    weekday: "short",
-  });
+  const formattedDate = formatEventDate(nextEvent.date, locale);
   // 메인 이벤트(헤드라이너) 예상 시작 시각 KST — 타이틀 매치 여부와 무관하게 항상 표시
   // 메인 카드는 하위→상위로 진행되므로 헤드라이너는 마지막 → 경기당 30분 가정
   const mainEventEtaKst = formatKstCardTime(

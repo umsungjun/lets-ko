@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
+import { formatKstLongDate, getKstTodayStr } from "@/lib/date-utils";
 import type { UfcSchedule } from "@/types/schedule";
 
 import EventCard from "./EventCard";
@@ -22,10 +23,7 @@ export default async function ScheduleView({
 }: ScheduleViewProps) {
   const t = await getTranslations("schedule");
 
-  const updatedDate = new Date(schedule.updatedAt).toLocaleDateString(
-    locale === "ko" ? "ko-KR" : "en-US",
-    { year: "numeric", month: "long", day: "numeric" }
-  );
+  const updatedDate = formatKstLongDate(schedule.updatedAt, locale);
 
   // eventId로 예측 빠른 조회를 위한 맵
   const predictionMap = new Map(
@@ -60,7 +58,7 @@ export default async function ScheduleView({
 
         {/* 이벤트 카드 그리드 */}
         {(() => {
-          const today = new Date().toISOString().split("T")[0];
+          const today = getKstTodayStr();
           const upcomingEvents = schedule.events.filter((e) => e.date >= today);
           return upcomingEvents.length === 0 ? (
             <div className="text-center py-16">

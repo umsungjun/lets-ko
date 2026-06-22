@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
+import { formatEventDate } from "@/lib/date-utils";
 import {
   estimateMainEventStart,
   formatKstCardTime,
@@ -67,10 +68,7 @@ export default function EventCard({
   const [analysisExpanded, setAnalysisExpanded] = useState(false);
   const lang = locale === "ko" ? "ko" : "en";
 
-  const formattedDate = new Date(event.date + "T12:00:00Z").toLocaleDateString(
-    locale === "ko" ? "ko-KR" : "en-US",
-    { month: "short", day: "numeric", weekday: "short" }
-  );
+  const formattedDate = formatEventDate(event.date, locale);
   // 메인 이벤트(헤드라이너) 예상 시작 시각 KST — 타이틀 매치 여부와 무관하게 항상 표시
   // 메인 카드는 하위→상위로 진행되므로 헤드라이너는 마지막 → 경기당 30분 가정
   const mainEventEtaKst = formatKstCardTime(
