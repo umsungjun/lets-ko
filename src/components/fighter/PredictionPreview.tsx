@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import ConfirmedFightCard from "@/components/predictions/ConfirmedFightCard";
 import { useInView } from "@/hooks/useInView";
 import { formatKstLongDate } from "@/lib/date-utils";
 import type { PredictionData } from "@/types/prediction";
@@ -34,67 +35,15 @@ export default function PredictionPreview({
   const { ref, isInView } = useInView(0.1);
   const lang = locale === "ko" ? "ko" : "en";
 
-  // 확정된 경기가 있으면 확정 정보를 표시
+  // 확정된 경기가 있으면 확정 정보를 표시 (예측 상세 페이지와 공통 컴포넌트 사용)
   if (predictions.confirmedFight) {
-    const fight = predictions.confirmedFight;
     return (
-      <section className="py-20 px-4 bg-surface" ref={ref}>
+      <section className="py-20 px-4 bg-surface">
         <div className="max-w-5xl mx-auto">
-          <div
-            className="text-center mb-10"
-            style={{
-              opacity: isInView ? 1 : 0,
-              transform: isInView ? "translateY(0)" : "translateY(16px)",
-              transition: "opacity 0.5s ease, transform 0.5s ease",
-            }}
-          >
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-xs font-bold mb-3">
-              {t("confirmed")}
-            </span>
-            <h2 className="section-heading section-heading-center text-center">
-              {t("koName")} {t("vs")} {fight.opponent.name[lang]}
-            </h2>
-          </div>
-          <div
-            className="max-w-md mx-auto p-6 rounded-2xl bg-white border border-border shadow-card text-center"
-            style={{
-              opacity: isInView ? 1 : 0,
-              transform: isInView ? "translateY(0)" : "translateY(16px)",
-              transition: "opacity 0.5s ease 150ms, transform 0.5s ease 150ms",
-            }}
-          >
-            <div className="flex items-center justify-center gap-6 mb-4">
-              <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/30">
-                <img
-                  src="/images/ko-seokhyeon.png"
-                  alt={t("koName")}
-                  className="w-full h-full object-cover object-top"
-                />
-              </div>
-              <span className="text-xl font-black text-primary">{t("vs")}</span>
-              <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-blue-400/30 bg-gray-100">
-                {fight.opponent.imageUrl &&
-                !fight.opponent.imageUrl.includes("placeholder") ? (
-                  <img
-                    src={fight.opponent.imageUrl}
-                    alt={fight.opponent.name[lang]}
-                    className="w-full h-full object-cover object-top"
-                  />
-                ) : (
-                  <FighterPlaceholder />
-                )}
-              </div>
-            </div>
-            <p className="text-sm text-muted">
-              <strong>{t("confirmedEvent")}:</strong> {fight.event}
-            </p>
-            <p className="text-sm text-muted mt-1">
-              <strong>{t("confirmedDate")}:</strong> {fight.date}
-            </p>
-            <p className="text-sm text-muted mt-1">
-              <strong>{t("confirmedLocation")}:</strong> {fight.location[lang]}
-            </p>
-          </div>
+          <ConfirmedFightCard
+            fight={predictions.confirmedFight}
+            locale={locale}
+          />
         </div>
       </section>
     );

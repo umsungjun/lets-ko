@@ -8,6 +8,7 @@ import { useInView } from "@/hooks/useInView";
 import { formatKstLongDate } from "@/lib/date-utils";
 import type { PredictionData } from "@/types/prediction";
 
+import ConfirmedFightCard from "./ConfirmedFightCard";
 import FighterComparison from "./FighterComparison";
 import WinProbabilityBar from "./WinProbabilityBar";
 
@@ -72,6 +73,20 @@ export default function PredictionDetail({
       document.body.style.overflow = "";
     };
   }, [activeVideo]);
+
+  // 확정된 경기가 있으면 메인 프리뷰와 동일하게 확정 정보를 우선 표시
+  if (predictions.confirmedFight) {
+    return (
+      <div className="py-12 sm:py-16 px-4">
+        <div className="max-w-2xl mx-auto">
+          <ConfirmedFightCard
+            fight={predictions.confirmedFight}
+            locale={locale}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (predictions.opponents.length === 0) {
     return (

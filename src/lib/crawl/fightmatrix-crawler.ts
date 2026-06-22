@@ -11,16 +11,18 @@ const CRAWLER_HEADERS = {
 };
 
 /**
- * FightMatrix 웰터급 랭킹 페이지에서 고석현보다 상위 랭킹 선수 목록을 크롤링.
+ * FightMatrix 웰터급 랭킹에서 고석현 기준 상·하위 ±range 구간의 선수 목록을 크롤링.
+ * 유망주는 비슷한 레벨(양방향)과 매칭되므로 위쪽만이 아닌 대칭 구간으로 후보를 모음.
  * @param targetRank 고석현의 현재 FightMatrix 랭킹
- * @param rangeAbove 위로 탐색할 범위 (기본 20등 위까지)
+ * @param range 위·아래로 탐색할 범위 (기본 ±15)
+ * @returns 랭킹 오름차순 후보 목록 (고석현 본인 제외)
  */
 export async function crawlFightMatrixCandidates(
   targetRank: number,
-  rangeAbove = 20
+  range = 15
 ): Promise<FightMatrixCandidate[]> {
-  const minRank = Math.max(1, targetRank - rangeAbove);
-  const maxRank = targetRank - 1; // 고석현보다 위(낮은 숫자)만
+  const minRank = Math.max(1, targetRank - range);
+  const maxRank = targetRank + range;
   const candidates: FightMatrixCandidate[] = [];
 
   // FightMatrix 페이지당 약 25명, 필요한 페이지 계산
@@ -47,6 +49,7 @@ export async function crawlFightMatrixCandidates(
         const rankText = $(cells[0]).text().trim();
         const rank = parseInt(rankText);
         if (isNaN(rank) || rank < minRank || rank > maxRank) return;
+        if (rank === targetRank) return; // 고석현 본인 행 제외 (이름 표기 변형 대비)
 
         // 선수 이름과 프로필 링크
         const nameLink = $(cells[1]).find("a");
