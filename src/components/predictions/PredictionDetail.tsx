@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
+import { formatKstLongDate } from "@/lib/date-utils";
 import type { PredictionData } from "@/types/prediction";
 
 import FighterComparison from "./FighterComparison";
@@ -81,10 +82,7 @@ export default function PredictionDetail({
   }
 
   const selectedOpponent = predictions.opponents[selectedIndex];
-  const generatedDate = new Date(predictions.generatedAt).toLocaleDateString(
-    locale === "ko" ? "ko-KR" : "en-US",
-    { year: "numeric", month: "long", day: "numeric" }
-  );
+  const generatedDate = formatKstLongDate(predictions.generatedAt, locale);
 
   return (
     <div className="py-12 sm:py-16 px-4" ref={ref}>

@@ -107,6 +107,7 @@ Vercel Cron 매일 UTC 05:00 (KST 14:00) 실행. `maxDuration = 60`. 4단계 순
 - **애널리틱스**: Microsoft Clarity (ID: `vkw0n969lk`, `[locale]/layout.tsx` head 인라인)
 - **SEO**: 메인 페이지 Schema.org JSON-LD, `robots.ts`, `sitemap.ts`, `hreflang`
 - **DOM 사이드 이펙트**: 컴포넌트 외부 DOM 변경은 반드시 `useEffect` 안에서
+- **날짜 포맷**: 사용자에게 보이는 모든 날짜·예정 이벤트 "오늘" 비교는 `src/lib/date-utils.ts` 경유 (`formatKstLongDate`/`formatEventDate`/`formatKstDate`/`getKstTodayStr`). `toLocaleDateString`/`toISOString().split` 직접 호출 금지 — timeZone 미지정 시 Vercel 서버리스(UTC) 기준이라 KST와 하루 어긋남. 저장용 타임스탬프(`crawledAt`/`updatedAt`/`generatedAt`)는 UTC `toISOString()` 유지
 - **JSDoc**: 새로 작성하는 컴포넌트·유틸 함수에 반드시 JSDoc 작성. 설명은 한국어로. 컴포넌트는 `@description`, `@param`(props 각각), 유틸 함수는 `@description`, `@param`, `@returns`, 필요 시 `@throws`. 인터페이스 필드는 인라인 `/** */` 주석.
 
   ```ts

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
+import { formatKstDate } from "@/lib/date-utils";
 import type { YouTubeVideo } from "@/lib/youtube";
 import { SEARCH_QUERY } from "@/lib/youtube";
 
@@ -168,7 +169,7 @@ export default function VideoSection({
                     {video.title}
                   </h3>
                   <p className="text-xs text-muted">
-                    {new Date(video.publishedAt).toLocaleDateString("ko-KR")}
+                    {formatKstDate(video.publishedAt, "ko")}
                   </p>
                 </div>
               </button>

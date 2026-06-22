@@ -1,3 +1,4 @@
+import { getKstTodayStr } from "@/lib/date-utils";
 import { isTbaFighter } from "@/lib/schedule-utils";
 import type {
   UfcCardTimes,
@@ -262,7 +263,7 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
 
       if (!rawEvents.length) continue;
 
-      const today = new Date().toISOString().split("T")[0];
+      const today = getKstTodayStr();
       const events: UfcEvent[] = [];
 
       for (const raw of rawEvents) {
@@ -367,7 +368,7 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
 
     const html = await res.text();
     const $ = cheerio.load(html);
-    const today = new Date().toISOString().split("T")[0];
+    const today = getKstTodayStr();
     const events: UfcEvent[] = [];
     const seenIds = new Set<string>();
 

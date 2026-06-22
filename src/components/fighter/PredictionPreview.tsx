@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useInView } from "@/hooks/useInView";
+import { formatKstLongDate } from "@/lib/date-utils";
 import type { PredictionData } from "@/types/prediction";
 
 interface PredictionPreviewProps {
@@ -171,10 +172,7 @@ export default function PredictionPreview({
           <p className="text-xs text-muted mt-4">{t("poweredBy")}</p>
           <p className="text-[11px] text-muted/50 mt-0.5">
             {t("updatedAt", {
-              date: new Date(predictions.generatedAt).toLocaleDateString(
-                locale === "ko" ? "ko-KR" : "en-US",
-                { year: "numeric", month: "long", day: "numeric" }
-              ),
+              date: formatKstLongDate(predictions.generatedAt, locale),
             })}
           </p>
         </div>
