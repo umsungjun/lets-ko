@@ -59,3 +59,19 @@ export const formatEventDate = (dateStr: string, locale: string): string =>
  */
 export const getKstTodayStr = (): string =>
   new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" });
+
+/**
+ * @description "YYYY-MM-DD" 이벤트 날짜까지 KST 기준 잔여 일수(D-day) 계산.
+ * 양쪽을 KST 정오로 앵커링해 타임존 드리프트로 인한 하루 어긋남을 방지.
+ * @param dateStr - "YYYY-MM-DD" 형식의 이벤트 날짜
+ * @returns 오늘=0, 미래=양수, 과거=음수. 파싱 실패 시 null
+ */
+export const getKstDaysUntil = (dateStr: string): number | null => {
+  if (!dateStr) return null;
+  const target = new Date(`${dateStr}T12:00:00+09:00`);
+  if (Number.isNaN(target.getTime())) return null;
+  const today = new Date(`${getKstTodayStr()}T12:00:00+09:00`);
+  return Math.round(
+    (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+};

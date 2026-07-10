@@ -246,6 +246,65 @@ IMPORTANT: Provide fightAnalysis in both Korean and English. Be specific about t
 }
 
 /**
+ * @description 고석현의 확정된 다음 상대에 대한 부가정보(한국어명·국적·스타일) 보강.
+ * 확정 경기 카드는 상대의 ko/en 이름·국적·파이팅 스타일을 요구하는데 UFC 일정 크롤에는 없어 Gemini로 보완.
+ * @param nameEn - 상대 영문 이름 (UFC 일정 표기 그대로)
+ * @param record - 상대 전적 문자열 (예: "22-7-0", 선택)
+ * @returns 한국어명·국적(영문)·파이팅 스타일(한/영)
+ * @throws Gemini 응답이 유효하지 않을 때
+ */
+export async function analyzeConfirmedOpponent(
+  nameEn: string,
+  record?: string
+): Promise<{
+  nameKo: string;
+  country: string;
+  fightingStyle: { ko: string; en: string };
+}> {
+  const prompt = `The UFC fighter "${nameEn}"${record ? ` (record ${record})` : ""} is Ko Seokhyeon's confirmed next opponent. Based on your knowledge of this fighter, provide:
+1. nameKo: Korean phonetic transliteration of the fighter's name (한국어)
+2. country: the fighter's country in English (e.g. "USA", "Brazil", "Russia")
+3. fightingStyle: a short 2-4 word description of their fighting style, in both Korean and English
+
+If you are unsure about the fighter, give a reasonable best-effort answer (do not leave fields empty).`;
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          nameKo: { type: SchemaType.STRING },
+          country: { type: SchemaType.STRING },
+          fightingStyle: {
+            type: SchemaType.OBJECT,
+            properties: {
+              ko: { type: SchemaType.STRING },
+              en: { type: SchemaType.STRING },
+            },
+            required: ["ko", "en"],
+          },
+        },
+        required: ["nameKo", "country", "fightingStyle"],
+      },
+    },
+  });
+
+  const parsed = JSON.parse(result.response.text()) as {
+    nameKo: string;
+    country: string;
+    fightingStyle: { ko: string; en: string };
+  };
+
+  if (!parsed.nameKo || !parsed.fightingStyle) {
+    throw new Error("Invalid confirmed opponent response from Gemini");
+  }
+
+  return parsed;
+}
+
+/**
  * UFC 이벤트 메인 매치 승부 예측 생성
  */
 export async function analyzeMainEvent(

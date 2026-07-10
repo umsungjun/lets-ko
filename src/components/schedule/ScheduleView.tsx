@@ -25,9 +25,9 @@ export default async function ScheduleView({
 
   const updatedDate = formatKstLongDate(schedule.updatedAt, locale);
 
-  // eventId로 예측 빠른 조회를 위한 맵
+  // eventId로 예측 빠른 조회를 위한 맵 (predictions 누락 데이터 대비 방어)
   const predictionMap = new Map(
-    schedule.predictions.map((p) => [p.eventId, p])
+    (schedule.predictions ?? []).map((p) => [p.eventId, p])
   );
 
   return (

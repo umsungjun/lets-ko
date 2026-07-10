@@ -69,7 +69,7 @@ export default function SchedulePreview({
   const nextEvent = schedule.events.find((e) => e.date >= today);
   if (!nextEvent) return null;
 
-  const prediction = schedule.predictions.find(
+  const prediction = (schedule.predictions ?? []).find(
     (p) => p.eventId === nextEvent.id
   );
   const { fighter1, fighter2 } = nextEvent.mainEvent;

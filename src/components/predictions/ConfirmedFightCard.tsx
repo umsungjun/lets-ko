@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
+import { formatEventDate, getKstDaysUntil } from "@/lib/date-utils";
 import type { ConfirmedFight } from "@/types/prediction";
 
 interface ConfirmedFightCardProps {
@@ -25,8 +26,16 @@ function FighterPlaceholder() {
   );
 }
 
+// D-day 라벨 계산: 미래="D-N", 당일="D-DAY", 과거=null(미표시)
+const getDdayLabel = (dateStr: string): string | null => {
+  const days = getKstDaysUntil(dateStr);
+  if (days === null || days < 0) return null;
+  return days === 0 ? "D-DAY" : `D-${days}`;
+};
+
 /**
- * @description 확정된 다음 경기(고석현 vs 상대)를 카드로 표시. 메인 프리뷰·예측 상세 페이지 공용
+ * @description 확정된 다음 경기(고석현 vs 상대)를 카드로 표시. 메인 프리뷰·예측 상세 페이지 공용.
+ * D-day 카운트다운, 로케일별 날짜, 상대 전적/스타일/국적을 함께 노출.
  * @param props.fight - 확정 경기 정보 (상대/이벤트/날짜/장소)
  * @param props.locale - "ko" | "en"
  */
@@ -37,6 +46,11 @@ export default function ConfirmedFightCard({
   const t = useTranslations("predictions");
   const { ref, isInView } = useInView(0.1);
   const lang = locale === "ko" ? "ko" : "en";
+
+  const dday = getDdayLabel(fight.date);
+  const { record, fightingStyle, country } = fight.opponent;
+  const hasRealImage =
+    fight.opponent.imageUrl && !fight.opponent.imageUrl.includes("placeholder");
 
   return (
     <div ref={ref}>
@@ -49,9 +63,16 @@ export default function ConfirmedFightCard({
           transition: "opacity 0.5s ease, transform 0.5s ease",
         }}
       >
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-xs font-bold mb-3">
-          {t("confirmed")}
-        </span>
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-xs font-bold">
+            {t("confirmed")}
+          </span>
+          {dday && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-foreground text-white text-xs font-black tabular-nums">
+              {dday}
+            </span>
+          )}
+        </div>
         <h2 className="section-heading section-heading-center text-center">
           {t("koName")} {t("vs")} {fight.opponent.name[lang]}
         </h2>
@@ -76,8 +97,7 @@ export default function ConfirmedFightCard({
           </div>
           <span className="text-xl font-black text-primary">{t("vs")}</span>
           <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-blue-400/30 bg-gray-100">
-            {fight.opponent.imageUrl &&
-            !fight.opponent.imageUrl.includes("placeholder") ? (
+            {hasRealImage ? (
               <img
                 src={fight.opponent.imageUrl}
                 alt={fight.opponent.name[lang]}
@@ -88,11 +108,32 @@ export default function ConfirmedFightCard({
             )}
           </div>
         </div>
+
+        {/* 상대 부가정보 (전적/스타일/국적) */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
+          {(record.wins > 0 || record.losses > 0 || record.draws > 0) && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-surface text-xs font-semibold text-foreground/70 tabular-nums">
+              {record.wins}-{record.losses}-{record.draws}
+            </span>
+          )}
+          {fightingStyle[lang] && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-violet-50 text-xs font-medium text-violet-600/80">
+              {fightingStyle[lang]}
+            </span>
+          )}
+          {country && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-surface text-xs font-medium text-muted">
+              {country}
+            </span>
+          )}
+        </div>
+
         <p className="text-sm text-muted">
           <strong>{t("confirmedEvent")}:</strong> {fight.event}
         </p>
         <p className="text-sm text-muted mt-1">
-          <strong>{t("confirmedDate")}:</strong> {fight.date}
+          <strong>{t("confirmedDate")}:</strong>{" "}
+          {formatEventDate(fight.date, locale) || fight.date}
         </p>
         <p className="text-sm text-muted mt-1">
           <strong>{t("confirmedLocation")}:</strong> {fight.location[lang]}

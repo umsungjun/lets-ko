@@ -1,0 +1,35 @@
+name: UFC Daily Crawl
+
+# Vercel Hobby 플랜은 vercel.json의 예약 cron을 자동 실행하지 않으므로
+# GitHub Actions에서 매일 크롤 엔드포인트를 호출해 일정·랭킹·AI 예측 데이터를 갱신한다.
+# 필요 Secrets: SITE_URL(예: https://lets-ko.vercel.app), CRON_SECRET
+on:
+  schedule:
+    - cron: "0 5 * * *" # 매일 UTC 05:00 = KST 14:00
+  workflow_dispatch: {} # 수동 실행 (배포 직후 즉시 반영용)
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger crawl endpoint
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -uo pipefail
+          echo "Triggering crawl at ${SITE_URL}/api/cron/crawl"
+          http_code=$(curl -sS -o response.json -w "%{http_code}" --max-time 120 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${SITE_URL}/api/cron/crawl" || echo "000")
+          echo "HTTP ${http_code}"
+          cat response.json || true
+          echo ""
+          if [ "${http_code}" -ge 400 ] || [ "${http_code}" = "000" ]; then
+            echo "::error::Crawl request failed (HTTP ${http_code})"
+            exit 1
+          fi
+          # 207(부분 실패)은 데이터 일부만 갱신된 상태 → 경고만 남기고 성공 처리
+          if ! grep -q '"success":true' response.json; then
+            echo "::warning::Crawl completed with partial failures (HTTP ${http_code})"
+          fi

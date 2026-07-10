@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
 import { formatEventDate } from "@/lib/date-utils";
+import { eventHasKoSeokhyeon } from "@/lib/ko-fighter";
 import {
   estimateMainEventStart,
   formatKstCardTime,
@@ -81,6 +82,10 @@ export default function EventCard({
 
   const { fighter1, fighter2 } = event.mainEvent;
   const isTba = isTbaMatchup(fighter1.name, fighter2.name);
+  // 고석현 출전 이벤트는 카드를 강조 (메인/코메인/전체 카드 전부 검사)
+  const hasKo = eventHasKoSeokhyeon(event);
+  // 데이터 드리프트(로케일 누락)로 analysis[lang]가 undefined여도 크래시하지 않도록 방어
+  const analysisText = prediction?.analysis?.[lang] ?? "";
 
   const isWinner1 =
     prediction !== undefined &&
@@ -90,7 +95,9 @@ export default function EventCard({
   return (
     <div
       ref={ref}
-      className="rounded-2xl overflow-hidden shadow-lg border border-white/5"
+      className={`rounded-2xl overflow-hidden shadow-lg border ${
+        hasKo ? "border-primary/60 ring-2 ring-primary/30" : "border-white/5"
+      }`}
       style={{
         opacity: isInView ? 1 : 0,
         transform: isInView ? "translateY(0)" : "translateY(16px)",
@@ -103,6 +110,11 @@ export default function EventCard({
         <div className="flex items-start justify-between gap-3 mb-5">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1.5">
+              {hasKo && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold">
+                  {t("koFighting")}
+                </span>
+              )}
               {event.mainEvent.titleFight && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-400 text-[10px] font-bold border border-yellow-400/30">
                   {t("titleFight")}
@@ -253,10 +265,10 @@ export default function EventCard({
           {/* 분석 텍스트 */}
           <p className="text-xs text-foreground/70 leading-relaxed">
             {analysisExpanded
-              ? prediction.analysis[lang]
-              : `${prediction.analysis[lang].slice(0, 120)}${prediction.analysis[lang].length > 120 ? "..." : ""}`}
+              ? analysisText
+              : `${analysisText.slice(0, 120)}${analysisText.length > 120 ? "..." : ""}`}
           </p>
-          {prediction.analysis[lang].length > 120 && (
+          {analysisText.length > 120 && (
             <button
               onClick={() => setAnalysisExpanded(!analysisExpanded)}
               className="mt-1.5 text-[11px] text-primary font-semibold hover:underline cursor-pointer"

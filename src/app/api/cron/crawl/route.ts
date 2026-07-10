@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
+import { detectKoConfirmedFight } from "@/lib/crawl/confirmed-fight";
 import { generatePredictions } from "@/lib/crawl/prediction-generator";
 import { crawlUfcSchedule } from "@/lib/crawl/schedule-crawler";
 import {
@@ -9,6 +10,7 @@ import {
 } from "@/lib/crawl/schedule-prediction-generator";
 import { crawlUfcStats } from "@/lib/crawl/ufc-crawler";
 import { createServerClient } from "@/lib/supabase/server";
+import type { PredictionData } from "@/types/prediction";
 import type { UfcSchedule } from "@/types/schedule";
 
 export const maxDuration = 60;
@@ -91,6 +93,38 @@ export async function GET(request: NextRequest) {
   }
   if (schedulePredResult.status === "rejected") {
     console.error("Schedule prediction failed:", schedulePredResult.reason);
+  }
+
+  // Phase 2.5: 고석현 확정 경기 자동 감지 → 예측 데이터(confirmedFight)에 부착
+  // 일정 크롤 + 예측 생성 모두 성공 시에만 시도. 기존 확정과 동일하면 Gemini 재호출 생략.
+  // 감지 실패는 non-blocking (전체 크롤 성공 판정에 영향 주지 않음).
+  let confirmedFightInfo: unknown = null;
+  if (scheduleData && predictionsResult.status === "fulfilled") {
+    try {
+      const { data: prevPred } = await supabase
+        .from("opponent_predictions")
+        .select("data")
+        .order("crawled_at", { ascending: false })
+        .limit(1)
+        .single();
+      const existingConfirmed =
+        (prevPred?.data as PredictionData | null)?.confirmedFight ?? null;
+      const confirmed = await detectKoConfirmedFight(
+        scheduleData.events,
+        existingConfirmed
+      );
+      if (confirmed) {
+        predictionsResult.value.confirmedFight = confirmed;
+        confirmedFightInfo = {
+          opponent: confirmed.opponent.name.en,
+          event: confirmed.event,
+          date: confirmed.date,
+        };
+      }
+    } catch (err) {
+      console.error("Confirmed fight detection failed:", err);
+      confirmedFightInfo = { error: serializeError(err) };
+    }
   }
 
   // Phase 3: AI 결과 DB 저장
@@ -189,6 +223,7 @@ export async function GET(request: NextRequest) {
       success: allSucceeded,
       crawledAt: new Date().toISOString(),
       results,
+      confirmedFight: confirmedFightInfo,
     },
     { status: allSucceeded ? 200 : 207 }
   );

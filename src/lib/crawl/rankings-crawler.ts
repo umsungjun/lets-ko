@@ -1,3 +1,4 @@
+import { dedupeDivisions } from "@/lib/data/rankings";
 import type {
   DivisionRanking,
   P4PRanking,
@@ -154,10 +155,13 @@ export async function crawlUfcRankings(): Promise<UfcRankings> {
     });
   });
 
+  // UFC 페이지의 반응형 중복 마크업으로 같은 체급이 2번 파싱되므로 slug 기준 중복 제거
+  const uniqueDivisions = dedupeDivisions(divisions);
+
   // Validate: at least 6 divisions parsed
-  if (divisions.length < 6) {
+  if (uniqueDivisions.length < 6) {
     throw new Error(
-      `Only ${divisions.length} divisions parsed. Site structure may have changed.`
+      `Only ${uniqueDivisions.length} divisions parsed. Site structure may have changed.`
     );
   }
 
@@ -165,6 +169,6 @@ export async function crawlUfcRankings(): Promise<UfcRankings> {
     updatedAt: new Date().toISOString(),
     poundForPoundMen,
     poundForPoundWomen,
-    divisions,
+    divisions: uniqueDivisions,
   };
 }

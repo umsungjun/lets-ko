@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
 import RankingsView from "@/components/rankings/RankingsView";
-import cachedRankings from "@/data/cached-rankings.json";
-import type { UfcRankings } from "@/types/rankings";
+import { getRankings } from "@/lib/data/rankings";
 
 export const revalidate = 86400;
 
@@ -29,35 +28,6 @@ export async function generateMetadata({
       },
     },
   };
-}
-
-async function getRankings(): Promise<UfcRankings> {
-  if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    try {
-      const { createServerClient } = await import("@/lib/supabase/server");
-      const supabase = createServerClient();
-      const { data } = await supabase
-        .from("ufc_rankings")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data?.data) {
-        const rankings = data.data as UfcRankings;
-        if (rankings.divisions && rankings.divisions.length >= 6) {
-          return rankings;
-        }
-      }
-    } catch {
-      // Fall through to cached data
-    }
-  }
-
-  return cachedRankings as UfcRankings;
 }
 
 export default async function RankingsPage({

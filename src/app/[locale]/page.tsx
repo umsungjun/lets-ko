@@ -7,17 +7,18 @@ import CareerTimeline from "@/components/fighter/CareerTimeline";
 import FightRecord from "@/components/fighter/FightRecord";
 import FighterProfile from "@/components/fighter/FighterProfile";
 import NewsSection from "@/components/fighter/NewsSection";
+import NextFightBanner from "@/components/fighter/NextFightBanner";
 import PredictionPreview from "@/components/fighter/PredictionPreview";
 import StatsCard from "@/components/fighter/StatsCard";
 import VideoSection from "@/components/fighter/VideoSection";
 import ChampionsPreview from "@/components/rankings/ChampionsPreview";
 import SchedulePreview from "@/components/schedule/SchedulePreview";
-import cachedRankings from "@/data/cached-rankings.json";
 import cachedSchedule from "@/data/cached-schedule.json";
 import cachedStats from "@/data/cached-stats.json";
 import careerHighlights from "@/data/career-highlights.json";
 import fighterBio from "@/data/fighter-bio.json";
 import { getPredictions } from "@/lib/data/predictions";
+import { getRankings } from "@/lib/data/rankings";
 import { fetchNews } from "@/lib/news";
 import { searchYouTubeVideos } from "@/lib/youtube";
 import type {
@@ -25,7 +26,6 @@ import type {
   FighterBio,
   FighterStats,
 } from "@/types/fighter";
-import type { UfcRankings } from "@/types/rankings";
 import type { UfcSchedule } from "@/types/schedule";
 
 // 메인 페이지 ISR 30분. VideoSection 최신 영상 노출 속도와 quota 안전성의 절충점.
@@ -90,35 +90,6 @@ async function getFighterStats(): Promise<FighterStats> {
   }
 
   return cachedStats as FighterStats;
-}
-
-async function getRankings(): Promise<UfcRankings> {
-  if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    try {
-      const { createServerClient } = await import("@/lib/supabase/server");
-      const supabase = createServerClient();
-      const { data } = await supabase
-        .from("ufc_rankings")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data?.data) {
-        const rankings = data.data as UfcRankings;
-        if (rankings.divisions && rankings.divisions.length >= 6) {
-          return rankings;
-        }
-      }
-    } catch {
-      // Fall through to cached data
-    }
-  }
-
-  return cachedRankings as UfcRankings;
 }
 
 async function getSchedule(): Promise<UfcSchedule> {
@@ -218,6 +189,9 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {predictions.confirmedFight && (
+        <NextFightBanner fight={predictions.confirmedFight} locale={locale} />
+      )}
       <FighterProfile
         bio={fighterBio as FighterBio}
         stats={stats}
