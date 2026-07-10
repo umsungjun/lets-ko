@@ -1,0 +1,31 @@
+name: UFC Weekly Rankings
+
+# Vercel Hobby 예약 cron 자동 미동작 대응 — 랭킹 크롤도 GitHub Actions에서 주간 실행.
+# 랭킹 엔드포인트는 자체적으로 페이지 워밍(revalidate + fetch)까지 처리하므로 별도 워밍 스텝 불필요.
+# 필요 Secrets: SITE_URL, CRON_SECRET
+on:
+  schedule:
+    - cron: "0 6 * * 0" # 매주 일요일 UTC 06:00
+  workflow_dispatch: {}
+
+jobs:
+  rankings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger rankings endpoint
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -uo pipefail
+          echo "Triggering rankings at ${SITE_URL}/api/cron/rankings"
+          http_code=$(curl -sS -o response.json -w "%{http_code}" --max-time 60 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${SITE_URL}/api/cron/rankings" || echo "000")
+          echo "HTTP ${http_code}"
+          cat response.json || true
+          echo ""
+          if [ "${http_code}" -ge 400 ] || [ "${http_code}" = "000" ]; then
+            echo "::error::Rankings request failed (HTTP ${http_code})"
+            exit 1
+          fi

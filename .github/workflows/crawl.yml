@@ -1,11 +1,13 @@
 name: UFC Daily Crawl
 
 # Vercel Hobby 플랜은 vercel.json의 예약 cron을 자동 실행하지 않으므로
-# GitHub Actions에서 매일 크롤 엔드포인트를 호출해 일정·랭킹·AI 예측 데이터를 갱신한다.
+# GitHub Actions에서 크롤 엔드포인트를 호출해 일정·스탯·AI 예측 데이터를 갱신한다.
+# Vercel(하루 1회 제한)과 달리 GitHub Actions는 무료 범위에서 하루 2회 실행 가능.
 # 필요 Secrets: SITE_URL(예: https://lets-ko.vercel.app), CRON_SECRET
 on:
   schedule:
-    - cron: "0 5 * * *" # 매일 UTC 05:00 = KST 14:00
+    - cron: "0 5 * * *" # UTC 05:00 = KST 14:00
+    - cron: "0 17 * * *" # UTC 17:00 = KST 02:00
   workflow_dispatch: {} # 수동 실행 (배포 직후 즉시 반영용)
 
 jobs:

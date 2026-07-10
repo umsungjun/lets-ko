@@ -28,7 +28,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - `/api/guestbook` — REST API (GET/POST/PATCH/DELETE)
 - `/api/guestbook/reactions` — 이모지 리액션 토글 (POST), 허용 이모지: 👊🔥💪❤️👏
 - `/api/og` — OG 이미지 동적 생성 (Node.js 런타임, `ImageResponse`)
-- `/api/cron/crawl` — Vercel Cron 엔드포인트 (매일 UTC 05:00 = KST 14:00, `CRON_SECRET` 필요)
+- `/api/cron/crawl` — 크롤 트리거 엔드포인트 (GitHub Actions가 하루 2회 UTC 05:00·17:00 호출, `CRON_SECRET` 필요)
 
 ### 다국어 (i18n)
 
@@ -54,7 +54,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 ### UFC 크롤러 체인 (`/api/cron/crawl`)
 
-Vercel Cron 매일 UTC 05:00 (KST 14:00) 실행. `maxDuration = 60`. 4단계 순차 실행, 부분 실패 시 HTTP 207:
+GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부분 실패 시 HTTP 207:
 
 1. `crawlUfcStats()` — 선수 전적/스탯. 파싱 실패 시 `throw` (잘못된 데이터 저장 방지)
 2. `crawlUfcRankings()` — UFC 전 체급 랭킹
@@ -67,7 +67,12 @@ Vercel Cron 매일 UTC 05:00 (KST 14:00) 실행. `maxDuration = 60`. 4단계 순
 
 크롤 완료 후 `revalidatePath()` + `fetch` 워밍으로 `/`, `/schedule`, `/predictions`, `/rankings` 한/영 캐시 갱신.
 
-> **⚠️ 예약 cron은 외부 스케줄러로 실행** — Vercel Hobby 플랜은 `vercel.json`의 예약 cron을 자동 실행하지 않음(수동 Run만 동작). 따라서 `.github/workflows/crawl.yml`(GitHub Actions)이 매일 UTC 05:00 `/api/cron/crawl`을 호출. 필요 Secrets: `SITE_URL`, `CRON_SECRET`. 배포 직후 `workflow_dispatch`로 1회 수동 실행하면 즉시 반영
+> **⚠️ 예약 cron은 GitHub Actions로 단일화** — Vercel Hobby 플랜은 `vercel.json` 예약 cron을 자동 실행하지 않아(수동 Run만 동작) `vercel.json`의 crons는 제거함. 대신 GitHub Actions가 스케줄러:
+>
+> - `.github/workflows/crawl.yml` — 크롤(스탯·일정·예측·확정경기) 하루 2회 UTC 05:00·17:00 + 크롤 함수 60초 예산 밖에서 페이지 워밍(별도 "Warm ISR pages" 스텝으로 6개 경로 호출)
+> - `.github/workflows/rankings.yml` — 랭킹 주간 UTC 일요일 06:00 (rankings 엔드포인트는 자체 워밍)
+>
+> 두 워크플로 모두 `workflow_dispatch`(수동) 지원. 필요 Secrets: `SITE_URL`(path 없는 origin), `CRON_SECRET`. 배포 직후 수동 실행 시 즉시 반영. 크롤 엔드포인트는 60초(Hobby) 초과 방지를 위해 일정 예측 실행당 상한(`MAX_NEW_PREDICTIONS_PER_RUN`)·상대 예측 병렬화·워밍 분리 적용 — 하루 2회라 상한이 있어도 예측이 빠르게 수렴
 
 > **⚠️ Vercel 함수 리전은 반드시 US여야 함** (예: `sfo1`). UFC는 `kr.ufc.com`을 봇/지오 차단하므로 서울(`icn1`) 리전이면 모든 UFC 크롤러가 403으로 실패. 따라서 크롤러는 전부 `www.ufc.com`을 사용하며 영문 페이지가 반환됨 — 스탯 파서는 영/한 라벨을 모두 처리하고, 랭킹은 영문 체급명을 `DIVISION_NAME_KO`로 한글화함. Hobby 플랜은 리전 1개 제한이라 cron만 분리 불가 → 프로젝트 전체가 US 리전 (대시보드 Settings → Functions → Region). 트레이드오프: 동적 라우트(방명록 등)의 한국 사용자 지연 약간 증가, ISR/정적 페이지는 엣지 서빙이라 영향 없음.
 
