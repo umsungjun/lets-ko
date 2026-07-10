@@ -75,14 +75,10 @@ export async function generatePredictions(
     selectedOpponents.map((op) => scrapeUfcFighterImage(op.name))
   );
 
-  // 6. Gemini 호출 2~4: 후보별 상세 분석 (순차 — 레이트 리밋 방지)
-  const opponents: OpponentPrediction[] = [];
-
-  for (let i = 0; i < selectedOpponents.length; i++) {
-    const op = selectedOpponents[i];
-    try {
-      const analysis = await analyzeOpponent(koStats, koRank, op);
-      opponents.push({
+  // 6. Gemini 호출 2~4: 후보별 상세 분석 (병렬 — 후보 3명이라 레이트 리밋 여유, 크롤 60초 예산 절약)
+  const opponents: OpponentPrediction[] = await Promise.all(
+    selectedOpponents.map(async (op, i) => {
+      const base = {
         name: { ko: op.nameKo, en: op.name },
         imageUrl: imageUrls[i],
         country: op.country,
@@ -94,34 +90,29 @@ export async function generatePredictions(
         weight: op.weight,
         reach: op.reach,
         lastFightDate: op.lastFightDate,
-        winProbability: analysis.winProbability,
         matchReasoning: op.matchReasoning,
-        fightAnalysis: analysis.fightAnalysis,
-      });
-    } catch (error) {
-      console.error(`Analysis failed for ${op.name}:`, error);
-      // 분석 실패 시 기본값으로 포함
-      opponents.push({
-        name: { ko: op.nameKo, en: op.name },
-        imageUrl: imageUrls[i],
-        country: op.country,
-        fightMatrixRank: op.rank,
-        fightingStyle: op.fightingStyle,
-        record: op.record,
-        age: op.age,
-        height: op.height,
-        weight: op.weight,
-        reach: op.reach,
-        lastFightDate: op.lastFightDate,
-        winProbability: 50,
-        matchReasoning: op.matchReasoning,
-        fightAnalysis: {
-          ko: "분석 데이터를 불러올 수 없습니다.",
-          en: "Analysis data unavailable.",
-        },
-      });
-    }
-  }
+      };
+      try {
+        const analysis = await analyzeOpponent(koStats, koRank, op);
+        return {
+          ...base,
+          winProbability: analysis.winProbability,
+          fightAnalysis: analysis.fightAnalysis,
+        };
+      } catch (error) {
+        console.error(`Analysis failed for ${op.name}:`, error);
+        // 분석 실패 시 기본값으로 포함
+        return {
+          ...base,
+          winProbability: 50,
+          fightAnalysis: {
+            ko: "분석 데이터를 불러올 수 없습니다.",
+            en: "Analysis data unavailable.",
+          },
+        };
+      }
+    })
+  );
 
   if (opponents.length === 0) {
     throw new Error("All opponent analyses failed");

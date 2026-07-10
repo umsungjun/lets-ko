@@ -4,6 +4,10 @@ import type { EventPrediction, UfcEvent, UfcSchedule } from "@/types/schedule";
 
 import { scrapeUfcFighterImage } from "./ufc-image-scraper";
 
+// 실행당 신규 예측 생성 상한. Gemini 순차 호출이 크롤 함수의 60초(Hobby) 예산을 초과하지
+// 않도록 제한 — 나머지는 다음 날 실행에서 채워짐(기존 예측은 재사용되므로 며칠 내 수렴).
+const MAX_NEW_PREDICTIONS_PER_RUN = 4;
+
 /**
  * @description 예정 UFC 이벤트 목록에 대해 Gemini AI 메인 이벤트 승부 예측 생성.
  * 같은 eventId의 기존 예측이 있고 파이터까지 동일하면 재사용해 Gemini 호출 비용 절감,
@@ -31,10 +35,21 @@ export async function generateSchedulePredictions(
     );
   });
 
+  // 실행당 상한 적용 (events는 날짜 오름차순이라 임박한 이벤트부터 우선 생성)
+  const toGenerate = eventsNeedingPrediction.slice(
+    0,
+    MAX_NEW_PREDICTIONS_PER_RUN
+  );
+  if (eventsNeedingPrediction.length > toGenerate.length) {
+    console.log(
+      `Schedule predictions capped: ${toGenerate.length}/${eventsNeedingPrediction.length} generated this run (rest next run)`
+    );
+  }
+
   const newPredictions: EventPrediction[] = [];
 
   // 순차 처리 (Gemini 레이트 리밋 방지)
-  for (const event of eventsNeedingPrediction) {
+  for (const event of toGenerate) {
     try {
       const { fighter1, fighter2 } = event.mainEvent;
       const analysis = await analyzeMainEvent(

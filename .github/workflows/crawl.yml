@@ -33,3 +33,16 @@ jobs:
           if ! grep -q '"success":true' response.json; then
             echo "::warning::Crawl completed with partial failures (HTTP ${http_code})"
           fi
+
+      # 크롤 함수의 60초 예산을 잡아먹지 않도록 페이지 워밍(ISR 재생성)은 별도 스텝에서 수행.
+      # 크롤이 revalidatePath로 stale 표시한 페이지를 호출하면 최신 데이터로 재생성됨.
+      - name: Warm ISR pages
+        if: success()
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: |
+          set -u
+          for path in "/" "/en" "/predictions" "/en/predictions" "/schedule" "/en/schedule"; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 90 "${SITE_URL}${path}" || echo "000")
+            echo "warm ${path} -> ${code}"
+          done

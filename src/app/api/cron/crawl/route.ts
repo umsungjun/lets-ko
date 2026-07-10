@@ -62,6 +62,27 @@ export async function GET(request: NextRequest) {
     console.error("Schedule crawl failed:", scheduleRawResult.reason);
   }
 
+  // 고석현 확정 경기 감지를 Phase 2(AI 예측)와 병렬 실행해 크리티컬 패스 시간 추가 방지.
+  // 기존 confirmedFight를 읽어 상대 미변경 시 Gemini 재호출 생략. 감지 실패는 non-blocking.
+  const confirmedFightPromise: Promise<
+    PredictionData["confirmedFight"] | null
+  > = scheduleData
+    ? (async () => {
+        const { data: prevPred } = await supabase
+          .from("opponent_predictions")
+          .select("data")
+          .order("crawled_at", { ascending: false })
+          .limit(1)
+          .single();
+        const existingConfirmed =
+          (prevPred?.data as PredictionData | null)?.confirmedFight ?? null;
+        return detectKoConfirmedFight(scheduleData.events, existingConfirmed);
+      })().catch((err) => {
+        console.error("Confirmed fight detection failed:", err);
+        return null;
+      })
+    : Promise.resolve(null);
+
   // Phase 2: DB 저장(stats) + AI 예측 병렬 실행
   // DB 저장은 I/O 위주라 Gemini 호출과 병렬로 실행 가능
   // 두 Gemini 태스크는 각 내부가 순차이므로 동시 최대 호출 수 = 2
@@ -95,36 +116,16 @@ export async function GET(request: NextRequest) {
     console.error("Schedule prediction failed:", schedulePredResult.reason);
   }
 
-  // Phase 2.5: 고석현 확정 경기 자동 감지 → 예측 데이터(confirmedFight)에 부착
-  // 일정 크롤 + 예측 생성 모두 성공 시에만 시도. 기존 확정과 동일하면 Gemini 재호출 생략.
-  // 감지 실패는 non-blocking (전체 크롤 성공 판정에 영향 주지 않음).
+  // 병렬로 돌던 확정 경기 감지 결과를 예측 데이터에 부착 (저장 전)
   let confirmedFightInfo: unknown = null;
-  if (scheduleData && predictionsResult.status === "fulfilled") {
-    try {
-      const { data: prevPred } = await supabase
-        .from("opponent_predictions")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-      const existingConfirmed =
-        (prevPred?.data as PredictionData | null)?.confirmedFight ?? null;
-      const confirmed = await detectKoConfirmedFight(
-        scheduleData.events,
-        existingConfirmed
-      );
-      if (confirmed) {
-        predictionsResult.value.confirmedFight = confirmed;
-        confirmedFightInfo = {
-          opponent: confirmed.opponent.name.en,
-          event: confirmed.event,
-          date: confirmed.date,
-        };
-      }
-    } catch (err) {
-      console.error("Confirmed fight detection failed:", err);
-      confirmedFightInfo = { error: serializeError(err) };
-    }
+  const confirmed = await confirmedFightPromise;
+  if (confirmed && predictionsResult.status === "fulfilled") {
+    predictionsResult.value.confirmedFight = confirmed;
+    confirmedFightInfo = {
+      opponent: confirmed.opponent.name.en,
+      event: confirmed.event,
+      date: confirmed.date,
+    };
   }
 
   // Phase 3: AI 결과 DB 저장
@@ -188,31 +189,15 @@ export async function GET(request: NextRequest) {
         }
       : { success: false, error: serializeError(scheduleSave.reason) };
 
-  // revalidatePath는 stale 표시만 하고 즉시 재생성하지 않음
-  // 직접 fetch로 워밍업해서 두 페이지가 동시에 최신 데이터를 갖도록 함
+  // stale 표시만 하고 즉시 재생성하지 않음 → 페이지 워밍(재생성)은 크롤 함수의 60초 예산을
+  // 잡아먹지 않도록 함수 밖(GitHub Actions "Warm pages" 스텝)에서 각 페이지를 별도 호출해 처리.
+  // localePrefix "as-needed"라 ko는 prefix 없는 경로가 정확한 대상.
   revalidatePath("/");
   revalidatePath("/en");
   revalidatePath("/predictions");
   revalidatePath("/en/predictions");
   revalidatePath("/schedule");
   revalidatePath("/en/schedule");
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (siteUrl) {
-    const pagesToWarm = [
-      "/",
-      "/en",
-      "/predictions",
-      "/en/predictions",
-      "/schedule",
-      "/en/schedule",
-    ];
-    await Promise.allSettled(
-      pagesToWarm.map((path) =>
-        fetch(`${siteUrl}${path}`, { cache: "no-store" })
-      )
-    );
-  }
 
   const allSucceeded = Object.values(results).every(
     (r) => (r as { success: boolean }).success
