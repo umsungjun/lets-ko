@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
 import { formatKstLongDate } from "@/lib/date-utils";
+import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { PredictionData } from "@/types/prediction";
 
 import ConfirmedFightCard from "./ConfirmedFightCard";
@@ -21,16 +22,7 @@ interface OpponentVideo {
 
 interface PredictionDetailProps {
   predictions: PredictionData;
-  koStats: {
-    record: string;
-    age: number;
-    height: string;
-    weight: string;
-    reach: string;
-    style: { ko: string; en: string };
-    fightMatrixRank: number;
-    lastFightDate?: string;
-  };
+  koStats: KoComparisonStats;
   locale: string;
 }
 
@@ -81,6 +73,7 @@ export default function PredictionDetail({
         <div className="max-w-2xl mx-auto">
           <ConfirmedFightCard
             fight={predictions.confirmedFight}
+            koStats={koStats}
             locale={locale}
           />
         </div>

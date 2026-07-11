@@ -19,6 +19,7 @@ import careerHighlights from "@/data/career-highlights.json";
 import fighterBio from "@/data/fighter-bio.json";
 import { getPredictions } from "@/lib/data/predictions";
 import { getRankings } from "@/lib/data/rankings";
+import { buildKoComparisonStats } from "@/lib/ko-stats";
 import { fetchNews } from "@/lib/news";
 import { searchYouTubeVideos } from "@/lib/youtube";
 import type {
@@ -155,6 +156,13 @@ export default async function HomePage({
     getSchedule(),
   ]);
 
+  // 확정 경기 카드·예측 프리뷰의 Tale of the Tape 비교용 고석현 데이터
+  const koStats = buildKoComparisonStats(
+    stats,
+    predictions.koFightMatrixRank,
+    predictions.lastFightDate
+  );
+
   const siteOrigin = (() => {
     const raw =
       process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
@@ -197,7 +205,11 @@ export default async function HomePage({
         stats={stats}
         locale={locale}
       />
-      <PredictionPreview predictions={predictions} locale={locale} />
+      <PredictionPreview
+        predictions={predictions}
+        koStats={koStats}
+        locale={locale}
+      />
       <SchedulePreview schedule={schedule} locale={locale} />
       <StatsCard stats={stats} />
       <CareerTimeline
