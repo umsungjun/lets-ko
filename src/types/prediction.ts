@@ -23,6 +23,14 @@ export interface ConfirmedFight {
     country: string;
     record: { wins: number; losses: number; draws: number };
     fightingStyle: { ko: string; en: string };
+    /** 나이 (Gemini 보강값, 구버전 데이터엔 없을 수 있음) */
+    age?: number;
+    /** 신장, 메트릭 표기 (예: "183cm") */
+    height?: string;
+    /** 체중, 메트릭 표기 (예: "77.1kg") */
+    weight?: string;
+    /** 리치, 메트릭 표기 (예: "183cm") */
+    reach?: string;
   };
   date: string; // ISO date (e.g. "2026-06-21")
   location: { ko: string; en: string };

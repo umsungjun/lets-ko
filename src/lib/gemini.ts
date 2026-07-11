@@ -246,11 +246,11 @@ IMPORTANT: Provide fightAnalysis in both Korean and English. Be specific about t
 }
 
 /**
- * @description 고석현의 확정된 다음 상대에 대한 부가정보(한국어명·국적·스타일) 보강.
- * 확정 경기 카드는 상대의 ko/en 이름·국적·파이팅 스타일을 요구하는데 UFC 일정 크롤에는 없어 Gemini로 보완.
+ * @description 고석현의 확정된 다음 상대에 대한 부가정보(한국어명·국적·스타일·신체 스펙) 보강.
+ * 확정 경기 카드의 Tale of the Tape 비교는 상대의 나이·신장·체중·리치까지 요구하는데 UFC 일정 크롤에는 없어 Gemini로 보완.
  * @param nameEn - 상대 영문 이름 (UFC 일정 표기 그대로)
- * @param record - 상대 전적 문자열 (예: "22-7-0", 선택)
- * @returns 한국어명·국적(영문)·파이팅 스타일(한/영)
+ * @param record - 상대 전적 문자열 (예: "22-7-0", 선택). 크롤에 없으면 Gemini 응답의 record가 폴백으로 쓰임
+ * @returns 한국어명·국적(영문)·파이팅 스타일(한/영)·나이·신장/체중/리치(메트릭)·전적
  * @throws Gemini 응답이 유효하지 않을 때
  */
 export async function analyzeConfirmedOpponent(
@@ -260,11 +260,19 @@ export async function analyzeConfirmedOpponent(
   nameKo: string;
   country: string;
   fightingStyle: { ko: string; en: string };
+  age: number;
+  height: string;
+  weight: string;
+  reach: string;
+  record: string;
 }> {
   const prompt = `The UFC fighter "${nameEn}"${record ? ` (record ${record})` : ""} is Ko Seokhyeon's confirmed next opponent. Based on your knowledge of this fighter, provide:
 1. nameKo: Korean phonetic transliteration of the fighter's name (한국어)
 2. country: the fighter's country in English (e.g. "USA", "Brazil", "Russia")
 3. fightingStyle: a short 2-4 word description of their fighting style, in both Korean and English
+4. age: the fighter's current age (number)
+5. height / weight / reach: in METRIC units — height in cm (e.g. "182.9cm"), weight in kg (e.g. "77.1kg"), reach in cm (e.g. "188cm")
+6. record: professional MMA record as "W-L-D" (e.g. "22-7-0")${record ? ` — the given record above is authoritative, repeat it` : ""}
 
 If you are unsure about the fighter, give a reasonable best-effort answer (do not leave fields empty).`;
 
@@ -285,8 +293,34 @@ If you are unsure about the fighter, give a reasonable best-effort answer (do no
             },
             required: ["ko", "en"],
           },
+          age: { type: SchemaType.NUMBER },
+          height: {
+            type: SchemaType.STRING,
+            description: 'Height in cm, e.g. "182.9cm"',
+          },
+          weight: {
+            type: SchemaType.STRING,
+            description: 'Weight in kg, e.g. "77.1kg"',
+          },
+          reach: {
+            type: SchemaType.STRING,
+            description: 'Reach in cm, e.g. "188cm"',
+          },
+          record: {
+            type: SchemaType.STRING,
+            description: 'MMA record "W-L-D", e.g. "22-7-0"',
+          },
         },
-        required: ["nameKo", "country", "fightingStyle"],
+        required: [
+          "nameKo",
+          "country",
+          "fightingStyle",
+          "age",
+          "height",
+          "weight",
+          "reach",
+          "record",
+        ],
       },
     },
   });
@@ -295,6 +329,11 @@ If you are unsure about the fighter, give a reasonable best-effort answer (do no
     nameKo: string;
     country: string;
     fightingStyle: { ko: string; en: string };
+    age: number;
+    height: string;
+    weight: string;
+    reach: string;
+    record: string;
   };
 
   if (!parsed.nameKo || !parsed.fightingStyle) {

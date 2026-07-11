@@ -2,21 +2,13 @@
 
 import { useTranslations } from "next-intl";
 
+import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { OpponentPrediction } from "@/types/prediction";
 
 interface FighterComparisonProps {
   opponent: OpponentPrediction;
   locale: string;
-  koStats: {
-    record: string;
-    age: number;
-    height: string;
-    weight: string;
-    reach: string;
-    style: { ko: string; en: string };
-    fightMatrixRank: number;
-    lastFightDate?: string;
-  };
+  koStats: KoComparisonStats;
 }
 
 /** 다양한 날짜 형식을 "약 N개월 전" / "~N months ago" 형식으로 표시 */
@@ -179,12 +171,12 @@ export default function FighterComparison({
 
       {/* 비교 테이블 */}
       <div className="px-3 sm:px-5 pb-5">
-        <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] overflow-hidden backdrop-blur-sm">
+        <div className="rounded-2xl bg-white/4 border border-white/6 overflow-hidden backdrop-blur-sm">
           {rows.map((row, i) => (
             <div
               key={i}
               className={`flex items-center py-3 px-3 sm:px-4 ${
-                i !== 0 ? "border-t border-white/[0.06]" : ""
+                i !== 0 ? "border-t border-white/6" : ""
               }`}
             >
               <span className="flex-1 text-right text-white/90 text-[13px] font-semibold pr-3 tabular-nums">

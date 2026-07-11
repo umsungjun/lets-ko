@@ -4,9 +4,8 @@ import { setRequestLocale } from "next-intl/server";
 import PredictionDetail from "@/components/predictions/PredictionDetail";
 import cachedStats from "@/data/cached-stats.json";
 import { getPredictions } from "@/lib/data/predictions";
+import { buildKoComparisonStats } from "@/lib/ko-stats";
 import type { FighterStats } from "@/types/fighter";
-
-import { differenceInYears } from "date-fns";
 
 export const revalidate = 86400;
 
@@ -125,22 +124,12 @@ export default async function PredictionsPage({
     getFighterStats(),
   ]);
 
-  // 고석현 비교용 데이터 (cm/kg 단위)
-  const koFightMatrixRank =
-    stats.externalRankings?.find((r) => r.site === "FightMatrix")?.rank ??
-    predictions.koFightMatrixRank;
-
-  const koComparisonStats = {
-    record: `${stats.record.wins}-${stats.record.losses}-${stats.record.draws}`,
-    age: differenceInYears(new Date(), new Date("1993-09-24")),
-    height: "177.8cm",
-    weight: "77.1kg",
-    reach: "180.3cm",
-    style: { ko: "유도 / 삼보", en: "Judo / Sambo" },
-    fightMatrixRank: koFightMatrixRank,
-    // stats.fightHistory가 더 신뢰할 수 있는 ISO 형식이므로 우선 사용
-    lastFightDate: stats.fightHistory?.[0]?.date || predictions.lastFightDate,
-  };
+  // 고석현 비교용 데이터 (cm/kg 단위, 메인 페이지와 공통 빌더 사용)
+  const koComparisonStats = buildKoComparisonStats(
+    stats,
+    predictions.koFightMatrixRank,
+    predictions.lastFightDate
+  );
 
   return (
     <PredictionDetail

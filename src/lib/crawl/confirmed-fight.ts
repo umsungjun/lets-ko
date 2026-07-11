@@ -41,8 +41,9 @@ const findKoMatch = (
 
 /**
  * @description 크롤된 UFC 일정에서 고석현의 확정 경기를 자동 감지해 ConfirmedFight 생성.
- * 상대·이벤트가 기존 확정과 동일하면 Gemini 재호출 없이 부가정보를 재사용(비용 절감),
- * 신규/변경 시에만 Gemini로 한국어명·국적·스타일 보강. 고석현 매치가 없으면 null.
+ * 상대·이벤트가 기존 확정과 동일하고 신체 스펙까지 보강돼 있으면 Gemini 재호출 없이 재사용(비용 절감),
+ * 신규/변경 또는 스펙 미보강(구버전 데이터)이면 Gemini로 한국어명·국적·스타일·나이·신장/체중/리치·전적을 보강.
+ * 고석현 매치가 없으면 null.
  * @param events - 크롤된 UFC 이벤트 배열
  * @param existing - DB에 저장된 기존 confirmedFight (재사용 판단용, 선택)
  * @returns 확정 경기 정보 또는 null
@@ -55,35 +56,52 @@ export async function detectKoConfirmedFight(
   if (!match) return null;
   const { event, opponent } = match;
 
-  // 기존 확정과 상대·대회가 같으면 Gemini 재호출 없이 재사용 (이미지/날짜/장소만 최신화)
+  // 기존 확정과 상대·대회가 같은지 (Gemini 재호출 여부 판단)
   const sameAsExisting =
     existing &&
     existing.opponent.name.en.toLowerCase() === opponent.name.toLowerCase() &&
     existing.event === event.name;
 
-  if (sameAsExisting) {
+  // 기존 보강 정보를 유지한 채 이미지/전적/날짜/장소만 최신화.
+  // 크롤에 전적이 없으면(0-0-0) 기존 전적을 유지해 다운그레이드 방지.
+  const reuseExisting = (): ConfirmedFight => {
+    const crawled = parseRecord(opponent.record);
+    const hasCrawledRecord = crawled.wins + crawled.losses + crawled.draws > 0;
     return {
-      ...existing,
+      ...existing!,
       opponent: {
-        ...existing.opponent,
-        imageUrl: opponent.imageUrl || existing.opponent.imageUrl,
-        record: parseRecord(opponent.record),
+        ...existing!.opponent,
+        imageUrl: opponent.imageUrl || existing!.opponent.imageUrl,
+        record: hasCrawledRecord ? crawled : existing!.opponent.record,
       },
       date: event.date,
       location: event.location,
       event: event.name,
     };
+  };
+
+  // 신체 스펙(height)까지 이미 보강된 기존 데이터면 Gemini 재호출 없이 재사용.
+  // height가 없으면 Tale of the Tape 도입 이전 데이터이므로 아래 enrich 경로로 백필.
+  if (sameAsExisting && existing.opponent.height) {
+    return reuseExisting();
   }
 
-  // 신규/변경된 상대 → Gemini로 한국어명·국적·스타일 보강 (실패 시 최소 정보 폴백)
+  // 신규/변경된 상대 → Gemini로 한국어명·국적·스타일·신체 스펙·전적 보강
   let enrich: {
     nameKo: string;
     country: string;
     fightingStyle: { ko: string; en: string };
+    age?: number;
+    height?: string;
+    weight?: string;
+    reach?: string;
+    record?: string;
   };
   try {
     enrich = await analyzeConfirmedOpponent(opponent.name, opponent.record);
   } catch {
+    // 보강 실패: 기존 데이터가 있으면 그대로 유지, 없으면 최소 정보 폴백
+    if (sameAsExisting) return reuseExisting();
     enrich = {
       nameKo: opponent.name,
       country: "",
@@ -91,13 +109,25 @@ export async function detectKoConfirmedFight(
     };
   }
 
+  // 전적은 크롤값 우선, 크롤에 없으면(0-0-0) Gemini 보강값 폴백
+  const crawledRecord = parseRecord(opponent.record);
+  const hasCrawledRecord =
+    crawledRecord.wins + crawledRecord.losses + crawledRecord.draws > 0;
+
   return {
     opponent: {
       name: { ko: enrich.nameKo, en: opponent.name },
-      imageUrl: opponent.imageUrl ?? "",
+      // 백필 경로(sameAsExisting)에서 크롤 이미지가 비어도 기존 이미지를 유지
+      imageUrl:
+        opponent.imageUrl ||
+        (sameAsExisting ? existing!.opponent.imageUrl : ""),
       country: enrich.country,
-      record: parseRecord(opponent.record),
+      record: hasCrawledRecord ? crawledRecord : parseRecord(enrich.record),
       fightingStyle: enrich.fightingStyle,
+      age: enrich.age,
+      height: enrich.height,
+      weight: enrich.weight,
+      reach: enrich.reach,
     },
     date: event.date,
     location: event.location,
