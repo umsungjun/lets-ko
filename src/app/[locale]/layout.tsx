@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import AppToaster from "@/components/common/AppToaster";
 import DevTools from "@/components/dev/DevTools";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
@@ -75,6 +76,7 @@ export default async function LocaleLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <AppToaster />
           {process.env.NODE_ENV === "development" && <DevTools />}
         </NextIntlClientProvider>
       </body>

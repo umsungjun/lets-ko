@@ -113,7 +113,8 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 - **컴포넌트**: 서버 컴포넌트 기본, `"use client"`는 애니메이션·인터랙티브에만
 - **TypeScript 타입**: `interface` — Props, API 계약 등 외부 계약. `type` — 유니온, 유틸리티 조합
 - **방명록 레이트 리미팅**: IP당 30초 쿨다운 (SHA256 해시). 수정/삭제는 localStorage ID + 서버 IP 검증
-- **방명록 UI**: 이모지 리액션 `max-w-0 → max-w-72` 슬라이딩 애니메이션
+- **방명록 UI**: 이모지 리액션 `max-w-0 → max-w-72` 슬라이딩 애니메이션. 리액션 토글은 optimistic update — 클릭 즉시 카운트·활성 상태 반영 후 서버 확정값으로 보정, 실패(429 쿨다운·네트워크 오류) 시 롤백+토스트 안내, 같은 이모지 in-flight 중 재클릭 무시(토글 경합 방지)
+- **토스트**: sonner 전역 사용 — `AppToaster`(`src/components/common/AppToaster.tsx`)를 `[locale]/layout.tsx`에 1회 마운트(bottom-center, richColors). 클라이언트 컴포넌트에서 `import { toast } from "sonner"` 후 `toast.error(t("..."))` 호출, 메시지는 next-intl 번역 키 사용
 - **애널리틱스**: Microsoft Clarity (ID: `vkw0n969lk`, `[locale]/layout.tsx` head 인라인)
 - **SEO**: 메인 페이지 Schema.org JSON-LD, `robots.ts`, `sitemap.ts`, `hreflang`
 - **DOM 사이드 이펙트**: 컴포넌트 외부 DOM 변경은 반드시 `useEffect` 안에서

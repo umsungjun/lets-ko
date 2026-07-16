@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useLocale, useTranslations } from "next-intl";
 
@@ -8,6 +8,7 @@ import type { GuestbookMessage } from "@/types/guestbook";
 
 import { formatDistanceToNow } from "date-fns";
 import { enUS, ko } from "date-fns/locale";
+import { toast } from "sonner";
 
 import GuestbookForm from "./GuestbookForm";
 
@@ -118,17 +119,66 @@ export default function GuestbookList() {
     }
   };
 
+  // 토글 API 특성상 같은 리액션의 요청 경합(on→off 상쇄) 방지를 위한 in-flight 가드
+  const pendingReactionsRef = useRef<Set<string>>(new Set());
+
+  const applyReactionCount = (
+    messageId: string,
+    emoji: string,
+    delta: number
+  ) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId
+          ? {
+              ...m,
+              reactions: {
+                ...m.reactions,
+                [emoji]: Math.max(0, (m.reactions?.[emoji] || 0) + delta),
+              },
+            }
+          : m
+      )
+    );
+  };
+
+  const setMyReaction = (messageId: string, emoji: string, active: boolean) => {
+    const updated = getMyReactions();
+    const prev = updated[messageId] || [];
+    updated[messageId] = active
+      ? prev.includes(emoji)
+        ? prev
+        : [...prev, emoji]
+      : prev.filter((e) => e !== emoji);
+    try {
+      localStorage.setItem("guestbook_my_reactions", JSON.stringify(updated));
+    } catch {}
+    setMyReactions({ ...updated });
+  };
+
   const handleReaction = async (messageId: string, emoji: string) => {
+    const key = `${messageId}:${emoji}`;
+    if (pendingReactionsRef.current.has(key)) return;
+    pendingReactionsRef.current.add(key);
+
+    const nextActive = !(myReactions[messageId] || []).includes(emoji);
+
+    // 낙관적 업데이트: 서버 응답 전 카운트·내 리액션 상태 즉시 반영
+    applyReactionCount(messageId, emoji, nextActive ? 1 : -1);
+    setMyReaction(messageId, emoji, nextActive);
+
+    let status = 0;
     try {
       const res = await fetch("/api/guestbook/reactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messageId, emoji }),
       });
-      if (!res.ok) return;
+      status = res.status;
+      if (!res.ok) throw new Error("reaction failed");
       const { count, active } = await res.json();
 
-      // 메시지 reactions 카운트 업데이트
+      // 서버 확정값으로 보정 (다른 사용자 리액션이 반영된 정확한 카운트)
       setMessages((prev) =>
         prev.map((m) =>
           m.id === messageId
@@ -136,16 +186,16 @@ export default function GuestbookList() {
             : m
         )
       );
-
-      // localStorage 업데이트
-      const updated = getMyReactions();
-      const prev = updated[messageId] || [];
-      updated[messageId] = active
-        ? [...prev, emoji]
-        : prev.filter((e) => e !== emoji);
-      localStorage.setItem("guestbook_my_reactions", JSON.stringify(updated));
-      setMyReactions({ ...updated });
-    } catch {}
+      if (active !== nextActive) setMyReaction(messageId, emoji, active);
+    } catch {
+      // 실패(429 레이트 리밋·네트워크 오류) 시 낙관적 반영 롤백
+      applyReactionCount(messageId, emoji, nextActive ? -1 : 1);
+      setMyReaction(messageId, emoji, !nextActive);
+      // 조용한 롤백은 "눌렀는데 풀림"으로 보이므로 토스트로 실패 사유 안내
+      toast.error(t(status === 429 ? "reactionRateLimit" : "errorServer"));
+    } finally {
+      pendingReactionsRef.current.delete(key);
+    }
   };
 
   const handleDeleteClick = (id: string) => {
