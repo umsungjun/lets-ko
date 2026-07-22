@@ -1,8 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
+import { formatFullDate } from "@/lib/date-utils";
 import type { FightHistoryEntry } from "@/types/fighter";
 
 interface FightRecordProps {
@@ -11,6 +12,7 @@ interface FightRecordProps {
 
 export default function FightRecord({ fights }: FightRecordProps) {
   const t = useTranslations("fightRecord");
+  const locale = useLocale();
   const { ref, isInView } = useInView(0.1);
 
   if (fights.length === 0) return null;
@@ -41,22 +43,19 @@ export default function FightRecord({ fights }: FightRecordProps) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-surface border-b border-border">
-                  <th className="py-3.5 px-4 font-semibold text-muted text-left text-xs uppercase tracking-wider">
+                  <th className="py-3.5 px-4 font-semibold text-muted text-center text-xs uppercase tracking-wider">
                     {t("result")}
                   </th>
-                  <th className="py-3.5 px-4 font-semibold text-muted text-left text-xs uppercase tracking-wider">
+                  <th className="py-3.5 px-4 font-semibold text-muted text-center text-xs uppercase tracking-wider">
                     {t("opponent")}
                   </th>
-                  <th className="py-3.5 px-4 font-semibold text-muted text-left text-xs uppercase tracking-wider hidden sm:table-cell">
-                    {t("event")}
-                  </th>
-                  <th className="py-3.5 px-4 font-semibold text-muted text-left text-xs uppercase tracking-wider">
+                  <th className="py-3.5 px-4 font-semibold text-muted text-center text-xs uppercase tracking-wider">
                     {t("method")}
                   </th>
-                  <th className="py-3.5 px-4 font-semibold text-muted text-left text-xs uppercase tracking-wider hidden sm:table-cell">
+                  <th className="py-3.5 px-4 font-semibold text-muted text-center text-xs uppercase tracking-wider hidden sm:table-cell">
                     {t("round")}
                   </th>
-                  <th className="py-3.5 px-4 font-semibold text-muted text-left text-xs uppercase tracking-wider hidden md:table-cell">
+                  <th className="py-3.5 px-4 font-semibold text-muted text-center text-xs uppercase tracking-wider hidden md:table-cell">
                     {t("date")}
                   </th>
                 </tr>
@@ -71,7 +70,7 @@ export default function FightRecord({ fights }: FightRecordProps) {
                       transition: `opacity 0.4s ease ${300 + index * 80}ms`,
                     }}
                   >
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 text-center">
                       <span
                         className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold text-white ${
                           fight.result === "win" ? "bg-win" : "bg-loss"
@@ -80,18 +79,17 @@ export default function FightRecord({ fights }: FightRecordProps) {
                         {fight.result === "win" ? t("win") : t("loss")}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-foreground">
+                    <td className="py-3.5 px-4 font-semibold text-foreground text-center">
                       {fight.opponent}
                     </td>
-                    <td className="py-3.5 px-4 text-muted hidden sm:table-cell">
-                      {fight.event}
+                    <td className="py-3.5 px-4 text-muted text-center">
+                      {fight.method}
                     </td>
-                    <td className="py-3.5 px-4 text-muted">{fight.method}</td>
-                    <td className="py-3.5 px-4 text-muted hidden sm:table-cell font-mono text-xs">
+                    <td className="py-3.5 px-4 text-muted hidden sm:table-cell font-mono text-xs text-center">
                       R{fight.round} {fight.time}
                     </td>
-                    <td className="py-3.5 px-4 text-muted hidden md:table-cell">
-                      {fight.date}
+                    <td className="py-3.5 px-4 text-muted hidden md:table-cell text-center">
+                      {formatFullDate(fight.date, locale)}
                     </td>
                   </tr>
                 ))}
