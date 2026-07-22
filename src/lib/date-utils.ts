@@ -52,6 +52,28 @@ export const formatEventDate = (dateStr: string, locale: string): string =>
   });
 
 /**
+ * @description "YYYY-MM-DD" 캘린더 날짜를 연도 포함 전체 날짜로 포맷 (예: "2025년 11월 1일" / "Nov 1, 2025").
+ * 전적 테이블 등 과거 날짜 표기에 사용. 캘린더 날짜는 KST 정오로 앵커링해 타임존 드리프트를 방지.
+ * 크롤 원본이 "YYYY-MM-DD"가 아닌 텍스트일 수 있어 파싱 실패 시 원본 문자열을 그대로 반환.
+ * @param dateStr - "YYYY-MM-DD" 형식의 날짜 (그 외 형식은 Date 파싱 시도)
+ * @param locale - "ko" | "en"
+ * @returns 연도 포함 날짜 문자열, 파싱 실패 시 원본 dateStr
+ */
+export const formatFullDate = (dateStr: string, locale: string): string => {
+  if (!dateStr) return "";
+  const iso = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+    ? `${dateStr}T12:00:00+09:00`
+    : dateStr;
+  return (
+    formatKstDate(iso, locale, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }) || dateStr
+  );
+};
+
+/**
  * @description 현재 시각을 KST 기준 "YYYY-MM-DD" 문자열로 반환 (예정 이벤트 필터의 "오늘" 비교용).
  * 기존 `new Date().toISOString().split("T")[0]`는 UTC 날짜라 KST 자정~오전 9시 구간에 하루 어긋남.
  * en-CA 로케일은 "YYYY-MM-DD" 출력을 보장하므로 event.date 문자열 비교에 그대로 사용 가능.

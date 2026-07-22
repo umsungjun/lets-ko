@@ -35,7 +35,6 @@
   "fightRecord": {
     "title": "UFC 경기 기록",
     "date": "날짜",
-    "event": "이벤트",
     "opponent": "상대",
     "result": "결과",
     "method": "방법",
