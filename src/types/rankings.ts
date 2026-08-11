@@ -1,6 +1,7 @@
-export interface RankedFighter {
+import type { LocalizableFighterName } from "@/lib/fighter-name-utils";
+
+export interface RankedFighter extends LocalizableFighterName {
   rank: number;
-  name: string;
   rankChange: number;
   isNR: boolean;
 }
@@ -9,18 +10,12 @@ export interface DivisionRanking {
   divisionName: string;
   divisionNameEn: string;
   divisionSlug: string;
-  champion: {
-    name: string;
-    imageUrl: string;
-  } | null;
+  champion: (LocalizableFighterName & { imageUrl: string }) | null;
   rankedFighters: RankedFighter[];
 }
 
 export interface P4PRanking {
-  topFighter: {
-    name: string;
-    imageUrl: string;
-  } | null;
+  topFighter: (LocalizableFighterName & { imageUrl: string }) | null;
   fighters: RankedFighter[];
 }
 

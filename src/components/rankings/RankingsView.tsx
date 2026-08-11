@@ -86,6 +86,7 @@ export default function RankingsView({ rankings, locale }: RankingsViewProps) {
           <P4PList
             men={rankings.poundForPoundMen}
             women={rankings.poundForPoundWomen}
+            locale={locale}
           />
         )}
 

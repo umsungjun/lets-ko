@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useInView } from "@/hooks/useInView";
+import { displayFighterName } from "@/lib/fighter-name-utils";
 import type { DivisionRanking } from "@/types/rankings";
 
 const WEIGHT_LIMITS: Record<string, string> = {
@@ -119,8 +120,12 @@ function ChampionCard({
 }) {
   const t = useTranslations("rankings");
 
+  const lang = locale === "ko" ? "ko" : "en";
   const displayName =
     locale === "en" ? division.divisionNameEn : division.divisionName;
+  const championName = division.champion
+    ? displayFighterName(division.champion, lang)
+    : "";
   const weight = WEIGHT_LIMITS[division.divisionSlug];
 
   const glowClass =
@@ -147,7 +152,7 @@ function ChampionCard({
           {division.champion?.imageUrl ? (
             <img
               src={division.champion.imageUrl}
-              alt={division.champion.name}
+              alt={championName}
               className="h-20 w-auto object-cover drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
@@ -170,7 +175,7 @@ function ChampionCard({
           </p>
           {division.champion && (
             <p className="mt-0.5 truncate text-sm font-bold text-white transition-colors duration-300 group-hover:text-primary">
-              {division.champion.name}
+              {championName}
             </p>
           )}
         </div>

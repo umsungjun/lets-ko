@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { displayFighterName } from "@/lib/fighter-name-utils";
 import type { DivisionRanking } from "@/types/rankings";
 
 import RankChangeIndicator from "./RankChangeIndicator";
@@ -28,8 +29,12 @@ interface DivisionCardProps {
 export default function DivisionCard({ division, locale }: DivisionCardProps) {
   const t = useTranslations("rankings");
 
+  const lang = locale === "ko" ? "ko" : "en";
   const displayName =
     locale === "en" ? division.divisionNameEn : division.divisionName;
+  const championName = division.champion
+    ? displayFighterName(division.champion, lang)
+    : "";
   const weight = WEIGHT_LIMITS[division.divisionSlug];
 
   return (
@@ -52,7 +57,7 @@ export default function DivisionCard({ division, locale }: DivisionCardProps) {
                 <div className="relative shrink-0">
                   <img
                     src={division.champion.imageUrl}
-                    alt={division.champion.name}
+                    alt={championName}
                     className="h-24 w-auto rounded-xl object-cover"
                     loading="lazy"
                   />
@@ -63,7 +68,7 @@ export default function DivisionCard({ division, locale }: DivisionCardProps) {
                   {t("champion")}
                 </span>
                 <p className="mt-1 truncate text-lg font-bold leading-tight text-white">
-                  {division.champion.name}
+                  {championName}
                 </p>
               </div>
             </div>
@@ -96,7 +101,7 @@ export default function DivisionCard({ division, locale }: DivisionCardProps) {
                   : "font-medium text-foreground/80"
               }`}
             >
-              {fighter.name}
+              {displayFighterName(fighter, lang)}
             </span>
             <RankChangeIndicator
               change={fighter.rankChange}

@@ -5,9 +5,12 @@ import Link from "next/link";
 
 import { useInView } from "@/hooks/useInView";
 import { formatEventDate, getKstTodayStr } from "@/lib/date-utils";
+import { displayFighterName } from "@/lib/fighter-name-utils";
 import {
+  displayWinnerName,
   estimateMainEventStart,
   formatKstCardTime,
+  isPredictedWinner1,
   isTbaMatchup,
 } from "@/lib/schedule-utils";
 import type { UfcSchedule } from "@/types/schedule";
@@ -74,6 +77,8 @@ export default function SchedulePreview({
   );
   const { fighter1, fighter2 } = nextEvent.mainEvent;
   const isTba = isTbaMatchup(fighter1.name, fighter2.name);
+  const fighter1Display = displayFighterName(fighter1, lang);
+  const fighter2Display = displayFighterName(fighter2, lang);
 
   const formattedDate = formatEventDate(nextEvent.date, locale);
   // 메인 이벤트(헤드라이너) 예상 시작 시각 KST — 타이틀 매치 여부와 무관하게 항상 표시
@@ -86,7 +91,7 @@ export default function SchedulePreview({
     lang
   );
 
-  const isWinner1 = prediction && prediction.winner.en === fighter1.name;
+  const isWinner1 = isPredictedWinner1(prediction, nextEvent.mainEvent);
 
   return (
     <section className="py-20 px-4" ref={ref}>
@@ -159,11 +164,11 @@ export default function SchedulePreview({
                   >
                     <FighterAvatar
                       imageUrl={fighter1.imageUrl}
-                      name={fighter1.name}
+                      name={fighter1Display}
                     />
                   </div>
                   <p className="text-sm font-black text-white leading-tight line-clamp-2">
-                    {fighter1.name}
+                    {fighter1Display}
                   </p>
                   {fighter1.record && (
                     <p className="text-[11px] text-white/40 tabular-nums mt-0.5">
@@ -191,11 +196,11 @@ export default function SchedulePreview({
                   >
                     <FighterAvatar
                       imageUrl={fighter2.imageUrl}
-                      name={fighter2.name}
+                      name={fighter2Display}
                     />
                   </div>
                   <p className="text-sm font-black text-white leading-tight line-clamp-2">
-                    {fighter2.name}
+                    {fighter2Display}
                   </p>
                   {fighter2.record && (
                     <p className="text-[11px] text-white/40 tabular-nums mt-0.5">
@@ -231,7 +236,7 @@ export default function SchedulePreview({
                   AI
                 </span>
                 <span className="text-sm font-bold text-foreground">
-                  {prediction.winner[lang]}
+                  {displayWinnerName(prediction, nextEvent.mainEvent, lang)}
                 </span>
                 <span className="text-muted/40 text-xs">·</span>
                 <span className="text-[11px] font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">

@@ -2,6 +2,11 @@ import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 import { detectKoConfirmedFight } from "@/lib/crawl/confirmed-fight";
+import {
+  collectRankingsFighterNames,
+  collectScheduleFighterNames,
+  translateMissingFighterNames,
+} from "@/lib/crawl/fighter-name-translator";
 import { generatePredictions } from "@/lib/crawl/prediction-generator";
 import { crawlUfcSchedule } from "@/lib/crawl/schedule-crawler";
 import {
@@ -9,8 +14,13 @@ import {
   generateSchedulePredictions,
 } from "@/lib/crawl/schedule-prediction-generator";
 import { crawlUfcStats } from "@/lib/crawl/ufc-crawler";
+import {
+  loadFighterNamesKo,
+  saveFighterNamesKo,
+} from "@/lib/data/fighter-names";
 import { createServerClient } from "@/lib/supabase/server";
 import type { PredictionData } from "@/types/prediction";
+import type { UfcRankings } from "@/types/rankings";
 import type { UfcSchedule } from "@/types/schedule";
 
 export const maxDuration = 60;
@@ -42,11 +52,29 @@ export async function GET(request: NextRequest) {
         .order("crawled_at", { ascending: false })
         .limit(1)
         .single();
-      const existingPredictions = extractExistingPredictions(
-        existingRow?.data as UfcSchedule | null
-      );
+      const existingSchedule =
+        (existingRow?.data as UfcSchedule | null) ?? null;
+      const existingPredictions = extractExistingPredictions(existingSchedule);
       const events = await crawlUfcSchedule();
       return { events, existingPredictions };
+    })(),
+  ]);
+
+  // 랭킹 크론은 주 1회·30초 예산이라 랭킹 선수명 번역도 하루 2회 도는 이 크롤에서 일괄 처리
+  const [namesKoDict, latestRankings] = await Promise.all([
+    loadFighterNamesKo().catch(() => ({}) as Record<string, string>),
+    (async (): Promise<UfcRankings | null> => {
+      try {
+        const { data } = await supabase
+          .from("ufc_rankings")
+          .select("data")
+          .order("crawled_at", { ascending: false })
+          .limit(1)
+          .single();
+        return (data?.data as UfcRankings | null) ?? null;
+      } catch {
+        return null;
+      }
     })(),
   ]);
 
@@ -83,10 +111,10 @@ export async function GET(request: NextRequest) {
       })
     : Promise.resolve(null);
 
-  // Phase 2: DB 저장(stats) + AI 예측 병렬 실행
+  // Phase 2: DB 저장(stats) + AI 예측 + 파이터명 한국어 번역 병렬 실행
   // DB 저장은 I/O 위주라 Gemini 호출과 병렬로 실행 가능
-  // 두 Gemini 태스크는 각 내부가 순차이므로 동시 최대 호출 수 = 2
-  const [statsSave, predictionsResult, schedulePredResult] =
+  // 세 Gemini 태스크는 각 내부가 순차이므로 동시 최대 호출 수 = 3
+  const [statsSave, predictionsResult, schedulePredResult, namesKoResult] =
     await Promise.allSettled([
       statsResult.status === "fulfilled"
         ? supabase
@@ -107,6 +135,13 @@ export async function GET(request: NextRequest) {
               ? scheduleRawResult.reason
               : new Error("schedule data unavailable")
           ),
+      translateMissingFighterNames(
+        [
+          ...collectScheduleFighterNames(scheduleData?.events ?? []),
+          ...collectRankingsFighterNames(latestRankings),
+        ],
+        namesKoDict
+      ),
     ]);
 
   if (predictionsResult.status === "rejected") {
@@ -115,6 +150,12 @@ export async function GET(request: NextRequest) {
   if (schedulePredResult.status === "rejected") {
     console.error("Schedule prediction failed:", schedulePredResult.reason);
   }
+  if (namesKoResult.status === "rejected") {
+    console.error("Fighter name translation failed:", namesKoResult.reason);
+  }
+
+  const newFighterNamesKo =
+    namesKoResult.status === "fulfilled" ? namesKoResult.value : {};
 
   // 병렬로 돌던 확정 경기 감지 결과를 예측 데이터에 부착 (저장 전)
   let confirmedFightInfo: unknown = null;
@@ -129,7 +170,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Phase 3: AI 결과 DB 저장
-  const [predSave, scheduleSave] = await Promise.allSettled([
+  const [predSave, scheduleSave, namesKoSave] = await Promise.allSettled([
     predictionsResult.status === "fulfilled"
       ? supabase
           .from("opponent_predictions")
@@ -158,6 +199,7 @@ export async function GET(request: NextRequest) {
               ? schedulePredResult.reason
               : new Error("schedule save skipped: unknown state")
         ),
+    saveFighterNamesKo(newFighterNamesKo),
   ]);
 
   // Collect results
@@ -188,6 +230,11 @@ export async function GET(request: NextRequest) {
               : 0,
         }
       : { success: false, error: serializeError(scheduleSave.reason) };
+
+  results.fighterNamesKo =
+    namesKoSave.status === "fulfilled"
+      ? { success: true, added: Object.keys(newFighterNamesKo).length }
+      : { success: false, error: serializeError(namesKoSave.reason) };
 
   // stale 표시만 하고 즉시 재생성하지 않음 → 페이지 워밍(재생성)은 크롤 함수의 60초 예산을
   // 잡아먹지 않도록 함수 밖(GitHub Actions "Warm pages" 스텝)에서 각 페이지를 별도 호출해 처리.

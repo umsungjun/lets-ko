@@ -1,4 +1,13 @@
-import type { UfcEvent } from "@/types/schedule";
+import {
+  buildFighterNameIndex,
+  fighterNameKey,
+} from "@/lib/fighter-name-utils";
+import type {
+  EventPrediction,
+  UfcEvent,
+  UfcEventFight,
+  UfcEventFighter,
+} from "@/types/schedule";
 
 /**
  * @description 파이터 이름이 미확정 상태(TBA/TBD 등)인지 판별.
@@ -191,6 +200,94 @@ export const deriveEventName = (slug: string, fightLabel?: string): string => {
   }
 
   return fightLabel ? `${name}: ${fightLabel}` : name;
+};
+
+/**
+ * @description 영문명 → 한국어명 사전을 이벤트 배열의 모든 파이터에 `nameKo`로 주입.
+ * `name`(영문)은 그대로 둔다 — 고석현 매칭(`isKoSeokhyeon`)과 AI 예측 승자 판정이
+ * 영문명 비교에 의존하므로 덮어쓰면 카드 강조가 깨진다.
+ * @param events - UFC 이벤트 배열
+ * @param dict - 영문명 → 한국어명 사전. 없으면 events를 그대로 반환
+ * @returns 파이터에 nameKo가 주입된 새 이벤트 배열
+ */
+export const attachFighterNamesKo = (
+  events: UfcEvent[],
+  dict: Record<string, string> | undefined
+): UfcEvent[] => {
+  if (!dict || Object.keys(dict).length === 0) return events;
+
+  const index = buildFighterNameIndex(dict);
+
+  const withKo = (fighter: UfcEventFighter): UfcEventFighter => {
+    const ko = index.get(fighterNameKey(fighter.name));
+    return ko ? { ...fighter, nameKo: ko } : fighter;
+  };
+  const fightWithKo = (fight: UfcEventFight): UfcEventFight => ({
+    ...fight,
+    fighter1: withKo(fight.fighter1),
+    fighter2: withKo(fight.fighter2),
+  });
+
+  return events.map((event) => ({
+    ...event,
+    mainEvent: fightWithKo(event.mainEvent),
+    ...(event.coMainEvent
+      ? { coMainEvent: fightWithKo(event.coMainEvent) }
+      : {}),
+    ...(event.fightCard
+      ? {
+          fightCard: {
+            mainCard: event.fightCard.mainCard.map(fightWithKo),
+            prelimCard: event.fightCard.prelimCard.map(fightWithKo),
+            ...(event.fightCard.earlyPrelimCard
+              ? {
+                  earlyPrelimCard:
+                    event.fightCard.earlyPrelimCard.map(fightWithKo),
+                }
+              : {}),
+          },
+        }
+      : {}),
+  }));
+};
+
+/**
+ * @description AI 예측 승자가 메인 이벤트의 fighter1인지 판별.
+ * Gemini가 반환한 승자명이 크롤 이름과 완전히 일치하지 않는 경우(성만 반환, 미들네임 누락 등)가
+ * 있어 양방향 부분 일치로 비교한다.
+ * @param prediction - AI 예측 (없으면 false)
+ * @param mainEvent - 메인 이벤트 매치업
+ * @returns 승자가 fighter1이면 true
+ */
+export const isPredictedWinner1 = (
+  prediction: EventPrediction | undefined,
+  mainEvent: UfcEventFight
+): boolean => {
+  if (!prediction) return false;
+  const winner = prediction.winner.en.toLowerCase();
+  const f1 = mainEvent.fighter1.name.toLowerCase();
+  return winner.includes(f1) || f1.includes(winner);
+};
+
+/**
+ * @description AI 예측 승자의 표시명 반환. 매치업 파이터의 `nameKo`로 해석해
+ * 한 카드 안에서 표기를 통일한다 — `prediction.winner.ko`는 사전과 별개로 생성된
+ * 음역이라 파이터 목록의 한국어명과 어긋날 수 있다.
+ * @param prediction - AI 예측
+ * @param mainEvent - 메인 이벤트 매치업
+ * @param lang - "ko" | "en"
+ * @returns 표시용 승자명
+ */
+export const displayWinnerName = (
+  prediction: EventPrediction,
+  mainEvent: UfcEventFight,
+  lang: "ko" | "en"
+): string => {
+  if (lang === "en") return prediction.winner.en;
+  const winnerFighter = isPredictedWinner1(prediction, mainEvent)
+    ? mainEvent.fighter1
+    : mainEvent.fighter2;
+  return winnerFighter.nameKo ?? prediction.winner.ko;
 };
 
 // 짧은 이름의 모든 토큰이 긴 이름에 포함될 때만 교체 — 레드/블루 코너가 뒤바뀐 경우

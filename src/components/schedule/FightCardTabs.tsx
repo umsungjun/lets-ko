@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useTranslations } from "next-intl";
 
+import { displayFighterName } from "@/lib/fighter-name-utils";
 import {
   formatKstCardTime,
   formatWeightClass,
@@ -69,8 +70,12 @@ function FightRow({
   const isTba = isTbaMatchup(fighter1.name, fighter2.name);
   const weightLabel = formatWeightClass(fight.weightClass, lang);
   // 파이터별 미정 여부 — 매치업 한쪽만 TBA인 경우도 일관되게 처리
-  const f1Display = isTbaFighter(fighter1.name) ? tbaLabel : fighter1.name;
-  const f2Display = isTbaFighter(fighter2.name) ? tbaLabel : fighter2.name;
+  const f1Display = isTbaFighter(fighter1.name)
+    ? tbaLabel
+    : displayFighterName(fighter1, lang);
+  const f2Display = isTbaFighter(fighter2.name)
+    ? tbaLabel
+    : displayFighterName(fighter2, lang);
 
   return (
     <div className="px-4 sm:px-5 py-4 hover:bg-white/2 transition-colors">
@@ -88,7 +93,7 @@ function FightRow({
         {/* 파이터 1 */}
         <div className="flex-1 flex items-center gap-2.5 min-w-0">
           <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden ring-1 ring-white/10">
-            <FighterAvatar imageUrl={fighter1.imageUrl} name={fighter1.name} />
+            <FighterAvatar imageUrl={fighter1.imageUrl} name={f1Display} />
           </div>
           <p className="text-[13px] sm:text-sm font-bold text-white leading-tight truncate">
             {f1Display}
@@ -103,7 +108,7 @@ function FightRow({
         {/* 파이터 2 */}
         <div className="flex-1 flex items-center gap-2.5 flex-row-reverse min-w-0">
           <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden ring-1 ring-white/10">
-            <FighterAvatar imageUrl={fighter2.imageUrl} name={fighter2.name} />
+            <FighterAvatar imageUrl={fighter2.imageUrl} name={f2Display} />
           </div>
           <p className="text-[13px] sm:text-sm font-bold text-white leading-tight truncate text-right">
             {f2Display}

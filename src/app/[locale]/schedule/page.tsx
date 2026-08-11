@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
 import ScheduleView from "@/components/schedule/ScheduleView";
-import cachedSchedule from "@/data/cached-schedule.json";
-import type { UfcSchedule } from "@/types/schedule";
+import { getSchedule } from "@/lib/data/schedule";
 
 export const revalidate = 86400;
 
@@ -51,35 +50,6 @@ export async function generateMetadata({
       images: [`${origin}/og.png`],
     },
   };
-}
-
-async function getSchedule(): Promise<UfcSchedule> {
-  if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    try {
-      const { createServerClient } = await import("@/lib/supabase/server");
-      const supabase = createServerClient();
-      const { data } = await supabase
-        .from("ufc_schedule")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data?.data) {
-        const schedule = data.data as UfcSchedule;
-        if (schedule.events?.length > 0) {
-          return schedule;
-        }
-      }
-    } catch {
-      // Fall through to cached data
-    }
-  }
-
-  return cachedSchedule as UfcSchedule;
 }
 
 export default async function SchedulePage({

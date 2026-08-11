@@ -6,11 +6,14 @@ import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/useInView";
 import { formatEventDate } from "@/lib/date-utils";
+import { displayFighterName } from "@/lib/fighter-name-utils";
 import { eventHasKoSeokhyeon } from "@/lib/ko-fighter";
 import {
+  displayWinnerName,
   estimateMainEventStart,
   formatKstCardTime,
   formatWeightClass,
+  isPredictedWinner1,
   isTbaMatchup,
 } from "@/lib/schedule-utils";
 import type { EventPrediction, UfcEvent } from "@/types/schedule";
@@ -82,15 +85,14 @@ export default function EventCard({
 
   const { fighter1, fighter2 } = event.mainEvent;
   const isTba = isTbaMatchup(fighter1.name, fighter2.name);
+  const fighter1Display = displayFighterName(fighter1, lang);
+  const fighter2Display = displayFighterName(fighter2, lang);
   // 고석현 출전 이벤트는 카드를 강조 (메인/코메인/전체 카드 전부 검사)
   const hasKo = eventHasKoSeokhyeon(event);
   // 데이터 드리프트(로케일 누락)로 analysis[lang]가 undefined여도 크래시하지 않도록 방어
   const analysisText = prediction?.analysis?.[lang] ?? "";
 
-  const isWinner1 =
-    prediction !== undefined &&
-    (prediction.winner.en.toLowerCase().includes(fighter1.name.toLowerCase()) ||
-      fighter1.name.toLowerCase().includes(prediction.winner.en.toLowerCase()));
+  const isWinner1 = isPredictedWinner1(prediction, event.mainEvent);
 
   return (
     <div
@@ -159,12 +161,12 @@ export default function EventCard({
               >
                 <FighterImage
                   imageUrl={fighter1.imageUrl}
-                  name={fighter1.name}
+                  name={fighter1Display}
                 />
               </div>
               <div className="min-w-0 text-center md:text-left">
                 <p className="text-sm sm:text-base font-black text-white leading-tight line-clamp-2">
-                  {fighter1.name}
+                  {fighter1Display}
                 </p>
                 {fighter1.record && (
                   <p className="text-[11px] text-white/40 tabular-nums mt-0.5">
@@ -191,12 +193,12 @@ export default function EventCard({
               >
                 <FighterImage
                   imageUrl={fighter2.imageUrl}
-                  name={fighter2.name}
+                  name={fighter2Display}
                 />
               </div>
               <div className="min-w-0 text-center md:text-right">
                 <p className="text-sm sm:text-base font-black text-white leading-tight line-clamp-2">
-                  {fighter2.name}
+                  {fighter2Display}
                 </p>
                 {fighter2.record && (
                   <p className="text-[11px] text-white/40 tabular-nums mt-0.5">
@@ -232,7 +234,7 @@ export default function EventCard({
               AI
             </span>
             <span className="text-sm font-bold text-foreground">
-              {prediction.winner[lang]}
+              {displayWinnerName(prediction, event.mainEvent, lang)}
             </span>
             <span className="text-muted/40 text-xs">·</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 text-[11px] font-semibold">

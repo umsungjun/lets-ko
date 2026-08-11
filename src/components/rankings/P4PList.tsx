@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { displayFighterName } from "@/lib/fighter-name-utils";
 import type { P4PRanking } from "@/types/rankings";
 
 import RankChangeIndicator from "./RankChangeIndicator";
@@ -9,9 +10,21 @@ import RankChangeIndicator from "./RankChangeIndicator";
 interface P4PListProps {
   men: P4PRanking;
   women: P4PRanking;
+  locale: string;
 }
 
-function P4PCard({ title, data }: { title: string; data: P4PRanking }) {
+function P4PCard({
+  title,
+  data,
+  lang,
+}: {
+  title: string;
+  data: P4PRanking;
+  lang: "ko" | "en";
+}) {
+  const topFighterName = data.topFighter
+    ? displayFighterName(data.topFighter, lang)
+    : "";
   return (
     <div className="overflow-hidden rounded-2xl border border-border/80 bg-white shadow-card transition-all duration-500 hover:shadow-card-hover">
       <div className="relative overflow-hidden bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 p-5">
@@ -25,7 +38,7 @@ function P4PCard({ title, data }: { title: string; data: P4PRanking }) {
               {data.topFighter.imageUrl && (
                 <img
                   src={data.topFighter.imageUrl}
-                  alt={data.topFighter.name}
+                  alt={topFighterName}
                   className="h-24 w-auto shrink-0 rounded-xl object-cover"
                   loading="lazy"
                 />
@@ -35,7 +48,7 @@ function P4PCard({ title, data }: { title: string; data: P4PRanking }) {
                   #1
                 </span>
                 <p className="mt-1 truncate text-lg font-bold leading-tight text-white">
-                  {data.topFighter.name}
+                  {topFighterName}
                 </p>
               </div>
             </div>
@@ -65,7 +78,7 @@ function P4PCard({ title, data }: { title: string; data: P4PRanking }) {
                   : "font-medium text-foreground/80"
               }`}
             >
-              {fighter.name}
+              {displayFighterName(fighter, lang)}
             </span>
             <RankChangeIndicator
               change={fighter.rankChange}
@@ -78,13 +91,14 @@ function P4PCard({ title, data }: { title: string; data: P4PRanking }) {
   );
 }
 
-export default function P4PList({ men, women }: P4PListProps) {
+export default function P4PList({ men, women, locale }: P4PListProps) {
   const t = useTranslations("rankings");
+  const lang = locale === "ko" ? "ko" : "en";
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      <P4PCard title={t("p4pMen")} data={men} />
-      <P4PCard title={t("p4pWomen")} data={women} />
+      <P4PCard title={t("p4pMen")} data={men} lang={lang} />
+      <P4PCard title={t("p4pWomen")} data={women} lang={lang} />
     </div>
   );
 }

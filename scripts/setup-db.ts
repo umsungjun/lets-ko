@@ -100,6 +100,17 @@ async function setup() {
     ON opponent_predictions(crawled_at DESC)
   `;
 
+  // 파이터 영문명 → 한국어명 사전 (일정·랭킹 공용).
+  // 한 번 정해진 표기를 고정하려고 name_en을 PK로 두고 크롤은 신규 행만 추가한다.
+  await sql`
+    CREATE TABLE IF NOT EXISTS fighter_names_ko (
+      name_en TEXT PRIMARY KEY,
+      name_ko TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  console.log("  fighter_names_ko 테이블 생성 완료");
+
   // 방명록 리액션 테이블
   await sql`
     CREATE TABLE IF NOT EXISTS guestbook_reactions (

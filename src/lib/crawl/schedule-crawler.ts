@@ -8,7 +8,6 @@ import type {
   UfcCardTimes,
   UfcEvent,
   UfcEventFight,
-  UfcEventFighter,
   UfcFightCard,
 } from "@/types/schedule";
 

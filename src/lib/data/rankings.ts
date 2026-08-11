@@ -1,5 +1,15 @@
 import cachedRankings from "@/data/cached-rankings.json";
-import type { DivisionRanking, UfcRankings } from "@/types/rankings";
+import {
+  buildFighterNameIndex,
+  fighterNameKey,
+} from "@/lib/fighter-name-utils";
+import type {
+  DivisionRanking,
+  P4PRanking,
+  UfcRankings,
+} from "@/types/rankings";
+
+import { loadFighterNamesKo } from "./fighter-names";
 
 /**
  * @description 체급 목록을 divisionSlug 기준으로 중복 제거한다.
@@ -20,6 +30,42 @@ export const dedupeDivisions = (
     }
   }
   return [...bySlug.values()];
+};
+
+/**
+ * @description 영문명 → 한국어명 사전을 랭킹의 챔피언·랭커·P4P 전원에 `nameKo`로 주입.
+ * `name`(영문)은 그대로 둔다 — 크롤 매칭·정렬이 영문 기준이기 때문.
+ * @param rankings - UFC 랭킹 데이터
+ * @param dict - 영문명 → 한국어명 사전. 비어 있으면 rankings를 그대로 반환
+ * @returns nameKo가 주입된 새 랭킹 데이터
+ */
+const attachRankingNamesKo = (
+  rankings: UfcRankings,
+  dict: Record<string, string>
+): UfcRankings => {
+  if (Object.keys(dict).length === 0) return rankings;
+  const index = buildFighterNameIndex(dict);
+
+  const withKo = <T extends { name: string }>(fighter: T): T => {
+    const ko = index.get(fighterNameKey(fighter.name));
+    return ko ? { ...fighter, nameKo: ko } : fighter;
+  };
+  const p4pWithKo = (p4p: P4PRanking): P4PRanking => ({
+    ...p4p,
+    topFighter: p4p?.topFighter ? withKo(p4p.topFighter) : null,
+    fighters: (p4p?.fighters ?? []).map(withKo),
+  });
+
+  return {
+    ...rankings,
+    poundForPoundMen: p4pWithKo(rankings.poundForPoundMen),
+    poundForPoundWomen: p4pWithKo(rankings.poundForPoundWomen),
+    divisions: (rankings.divisions ?? []).map((d) => ({
+      ...d,
+      champion: d.champion ? withKo(d.champion) : null,
+      rankedFighters: (d.rankedFighters ?? []).map(withKo),
+    })),
+  };
 };
 
 /**
@@ -46,10 +92,10 @@ export const getRankings = async (): Promise<UfcRankings> => {
       if (data?.data) {
         const rankings = data.data as UfcRankings;
         if (rankings.divisions && rankings.divisions.length >= 6) {
-          return {
-            ...rankings,
-            divisions: dedupeDivisions(rankings.divisions),
-          };
+          return attachRankingNamesKo(
+            { ...rankings, divisions: dedupeDivisions(rankings.divisions) },
+            await loadFighterNamesKo()
+          );
         }
       }
     } catch {
@@ -58,5 +104,8 @@ export const getRankings = async (): Promise<UfcRankings> => {
   }
 
   const cached = cachedRankings as UfcRankings;
-  return { ...cached, divisions: dedupeDivisions(cached.divisions) };
+  return attachRankingNamesKo(
+    { ...cached, divisions: dedupeDivisions(cached.divisions) },
+    await loadFighterNamesKo()
+  );
 };
