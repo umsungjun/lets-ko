@@ -47,6 +47,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - **AI 상대 예측**: `opponent_predictions` 테이블 → `cached-predictions.json`. 로더 `src/lib/data/getPredictions()`. `confirmedFight`(고석현 확정 경기)가 있으면 opponents 이미지 조건과 무관하게 채택. 수동 오버라이드 `confirmed-fight.json`이 있으면 자동 감지보다 우선
 - **고석현 확정 경기**: 크롤 시 `detectKoConfirmedFight()`가 일정에서 고석현 매치를 자동 감지해 `opponent_predictions.data.confirmedFight`에 부착 → `ConfirmedFightCard`/`NextFightBanner`로 표시. 자동 감지 실패 대비 `confirmed-fight.json` 수동 안전망
 - **UFC 경기 일정 + AI 승부 예측**: `ufc_schedule` 테이블 → `cached-schedule.json`. 두 데이터(이벤트 + 예측)를 하나의 JSONB blob(`UfcSchedule`)으로 저장
+- **이벤트명**: 크롤러가 ufc.com 슬러그에서 `deriveEventName()`(`schedule-utils.ts`)으로 derive. UFC가 스폰서 접두어를 붙인 슬러그(`cryptocom-ufc-331`)를 쓰므로 `^ufc-` 시작 고정이 아니라 **슬러그 어디서든** `ufc-<숫자>`를 찾아야 함 — 시작 고정이면 넘버링 대회가 "UFC Fight Night"으로 잘못 표기됨(issue #33)
 - **YouTube 영상**: YouTube Data API v3 (`src/lib/youtube.ts`), ISR 24시간
 - **뉴스**: Google News RSS 파싱 (`src/lib/news.ts`), ISR 24시간
 - **방명록**: `guestbook_messages` 테이블, `/api/guestbook` API
@@ -61,7 +62,7 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 3. `generatePredictions()` — AI 상대 예측 (Gemini)
 4. **UFC 일정 + 예측**: `crawlUfcSchedule()` → `generateSchedulePredictions()` → `ufc_schedule` 저장
    - 일정 크롤: CloudFront CDN API(`d29dxerjsp82wz.cloudfront.net`)는 폐기됨(404) → 실질적으로 `www.ufc.com/events` HTML 파싱이 주 소스
-   - 예측 생성: `eventId`로 중복 체크 — 기존 예측 재사용, 새 이벤트만 Gemini 호출
+   - 예측 생성: `eventId`로 중복 체크 — 기존 예측 재사용, 새 이벤트만 Gemini 호출. 재사용 시 `eventName`은 현재 이벤트명으로 동기화(이벤트명 표기 수정이 stale 예측에 갇히지 않도록)
    - 파이터 이미지: `enrichFighterImages()` — UFC 선수 페이지 병렬 스크레이핑 (최대 20명)
 5. **고석현 확정 경기 감지** (Phase 2.5): `detectKoConfirmedFight(events, existingConfirmed)`가 일정에서 고석현 매치(`isKoSeokhyeon` 매처)를 찾아 `confirmedFight` 생성 후 `opponent_predictions.data`에 부착. 상대·대회가 기존과 같고 신체 스펙(`height`)까지 있으면 Gemini 재호출 생략, 신규/변경 또는 스펙 미보강(구버전 데이터)이면 `analyzeConfirmedOpponent()`로 한국어명·국적·스타일·나이·신장/체중/리치·전적 보강(Tale of the Tape 비교용). 전적은 크롤값 우선, 크롤에 없을 때만 Gemini 폴백. 감지 실패는 non-blocking
 

@@ -1,5 +1,5 @@
 import { getKstTodayStr } from "@/lib/date-utils";
-import { isTbaFighter } from "@/lib/schedule-utils";
+import { deriveEventName, isTbaFighter } from "@/lib/schedule-utils";
 import type {
   UfcCardTimes,
   UfcEvent,
@@ -416,28 +416,13 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
       if (!id || seenIds.has(id)) return;
       seenIds.add(id);
 
-      // 이벤트명: UFC 번호 이벤트 vs Fight Night 구분
-      const ufcNumbered = id.match(/^ufc-(\d+)$/);
-      const ufcBranded = id.match(/^ufc-([a-z-]+?)-(\d+)$/);
-      let eventName: string;
-      if (ufcNumbered) {
-        eventName = `UFC ${ufcNumbered[1]}`;
-      } else if (ufcBranded) {
-        const subtitle = ufcBranded[1]
-          .split("-")
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ");
-        eventName = `UFC ${subtitle} ${ufcBranded[2]}`;
-      } else {
-        eventName = "UFC Fight Night";
-      }
-
-      // 메인 이벤트 라벨 (예: "Allen vs Costa") 추가
+      // 메인 이벤트 라벨 (예: "Allen vs Costa")
       const fightLabel = card
         .find("[data-fight-label]")
         .first()
         .attr("data-fight-label");
-      if (fightLabel) eventName += `: ${fightLabel}`;
+
+      const eventName = deriveEventName(id, fightLabel);
 
       // 파이터 이미지 + 풀네임 (이미지 URL 파일명에서 추출)
       const imgEls = card.find(".c-card--red-blue img");

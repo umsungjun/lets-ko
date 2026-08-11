@@ -141,3 +141,52 @@ export const estimateMainEventStart = (
   const offsetMs = (mainCardFightCount - 1) * MINUTES_PER_FIGHT * 60 * 1000;
   return new Date(start.getTime() + offsetMs).toISOString();
 };
+
+// 슬러그 토큰 → 표시 표기 예외. 타이틀케이싱만 하면 "Espn"/"Tuf"처럼 어색해지는 약어·전치사 보정
+const EVENT_NAME_TOKEN_OVERRIDES: Record<string, string> = {
+  espn: "ESPN",
+  espn2: "ESPN2",
+  abc: "ABC",
+  tuf: "TUF",
+  fx: "FX",
+  ppv: "PPV",
+  on: "on",
+  vs: "vs",
+};
+
+const titleCaseSlugToken = (token: string): string =>
+  EVENT_NAME_TOKEN_OVERRIDES[token] ??
+  token.charAt(0).toUpperCase() + token.slice(1);
+
+/**
+ * @description ufc.com 이벤트 슬러그에서 표시용 이벤트명 derive.
+ * 슬러그 어디에 있든 `ufc-<숫자>`를 찾아 넘버링을 살린다 — UFC가 스폰서 접두어를 붙인
+ * 슬러그(`cryptocom-ufc-331`)를 쓰기 때문에 시작 고정(`^ufc-`)이면 넘버링 대회를
+ * Fight Night으로 잘못 표기하게 된다(issue #33).
+ * @param slug - 이벤트 URL 슬러그 (예: "cryptocom-ufc-331")
+ * @param fightLabel - 메인 이벤트 라벨 (예: "Van vs Pantoja"). 있으면 ": " 뒤에 덧붙임
+ * @returns 표시용 이벤트명 (예: "UFC 331: Van vs Pantoja")
+ */
+export const deriveEventName = (slug: string, fightLabel?: string): string => {
+  const normalized = (slug ?? "").toLowerCase();
+
+  // 접두어(스폰서/브랜드) 위치와 무관하게 번호만 추출
+  const numbered = normalized.match(/(?:^|-)ufc-(\d+)(?:-|$)/);
+  // 브랜드 넘버링(예: ufc-freedom-250) 판정 전에 Fight Night을 먼저 걸러야
+  // 날짜 접미 슬러그(ufc-fight-night-june-14)가 "UFC Fight Night June 14"로 오검출되지 않음
+  const branded = normalized.includes("fight-night")
+    ? null
+    : normalized.match(/(?:^|-)ufc-([a-z-]+?)-(\d+)$/);
+
+  let name: string;
+  if (numbered) {
+    name = `UFC ${numbered[1]}`;
+  } else if (branded) {
+    const subtitle = branded[1].split("-").map(titleCaseSlugToken).join(" ");
+    name = `UFC ${subtitle} ${branded[2]}`;
+  } else {
+    name = "UFC Fight Night";
+  }
+
+  return fightLabel ? `${name}: ${fightLabel}` : name;
+};
