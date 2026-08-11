@@ -64,6 +64,7 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
    - 일정 크롤: CloudFront CDN API(`d29dxerjsp82wz.cloudfront.net`)는 폐기됨(404) → 실질적으로 `www.ufc.com/events` HTML 파싱이 주 소스
    - 예측 생성: `eventId`로 중복 체크 — 기존 예측 재사용, 새 이벤트만 Gemini 호출. 재사용 시 `eventName`은 현재 이벤트명으로 동기화(이벤트명 표기 수정이 stale 예측에 갇히지 않도록)
    - 파이터 이미지: `enrichFighterImages()` — UFC 선수 페이지 병렬 스크레이핑 (최대 20명)
+   - 메인 이벤트 이름: 목록 페이지 헤드샷 파일명 파싱이 실패하면 `fightCard.mainCard[0]` 값으로 백필(`backfillMainEventNames`) — 챔피언 헤드샷(`VAN_JOSHUA_BELT_...png`)에서 성만 뽑히는 문제 방어
 5. **고석현 확정 경기 감지** (Phase 2.5): `detectKoConfirmedFight(events, existingConfirmed)`가 일정에서 고석현 매치(`isKoSeokhyeon` 매처)를 찾아 `confirmedFight` 생성 후 `opponent_predictions.data`에 부착. 상대·대회가 기존과 같고 신체 스펙(`height`)까지 있으면 Gemini 재호출 생략, 신규/변경 또는 스펙 미보강(구버전 데이터)이면 `analyzeConfirmedOpponent()`로 한국어명·국적·스타일·나이·신장/체중/리치·전적 보강(Tale of the Tape 비교용). 전적은 크롤값 우선, 크롤에 없을 때만 Gemini 폴백. 감지 실패는 non-blocking
 
 크롤 완료 후 `revalidatePath()` + `fetch` 워밍으로 `/`, `/schedule`, `/predictions`, `/rankings` 한/영 캐시 갱신.

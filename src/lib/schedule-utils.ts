@@ -1,3 +1,5 @@
+import type { UfcEvent } from "@/types/schedule";
+
 /**
  * @description 파이터 이름이 미확정 상태(TBA/TBD 등)인지 판별.
  * UFC 데이터 소스마다 미확정 파이터를 "TBA", "TBD", 빈 문자열 등으로 다르게 표기하므로
@@ -190,3 +192,53 @@ export const deriveEventName = (slug: string, fightLabel?: string): string => {
 
   return fightLabel ? `${name}: ${fightLabel}` : name;
 };
+
+// 짧은 이름의 모든 토큰이 긴 이름에 포함될 때만 교체 — 레드/블루 코너가 뒤바뀐 경우
+// 엉뚱한 선수 이름으로 덮어쓰는 것을 방지한다
+const preferFullName = (name: string, fullName?: string): string => {
+  if (!fullName || isTbaFighter(fullName)) return name;
+  if (isTbaFighter(name)) return fullName;
+
+  const fullTokens = fullName.toLowerCase().split(/\s+/);
+  const tokens = name.toLowerCase().split(/\s+/);
+  if (fullTokens.length <= tokens.length) return name;
+  return tokens.every((token) => fullTokens.includes(token)) ? fullName : name;
+};
+
+/**
+ * @description 메인 이벤트 파이터 이름을 같은 이벤트 파이트카드 헤드라이너의 풀네임으로 보정.
+ * 목록 페이지 헤드샷 파일명 파싱이 실패하면 메인 이벤트만 성으로 남는데(예: "Makhachev"),
+ * 상세 페이지에서 온 `fightCard.mainCard[0]`에는 풀네임이 들어 있다.
+ * 크롤 시점과 렌더 시점 양쪽에서 호출해 구버전 저장 데이터도 즉시 보정되도록 한다.
+ * @param events - UFC 이벤트 배열
+ * @returns 메인 이벤트 이름이 보정된 새 이벤트 배열
+ */
+export const backfillMainEventNames = (events: UfcEvent[]): UfcEvent[] =>
+  events.map((event) => {
+    const headliner = event.fightCard?.mainCard[0];
+    if (!headliner) return event;
+
+    const name1 = preferFullName(
+      event.mainEvent.fighter1.name,
+      headliner.fighter1.name
+    );
+    const name2 = preferFullName(
+      event.mainEvent.fighter2.name,
+      headliner.fighter2.name
+    );
+    if (
+      name1 === event.mainEvent.fighter1.name &&
+      name2 === event.mainEvent.fighter2.name
+    ) {
+      return event;
+    }
+
+    return {
+      ...event,
+      mainEvent: {
+        ...event.mainEvent,
+        fighter1: { ...event.mainEvent.fighter1, name: name1 },
+        fighter2: { ...event.mainEvent.fighter2, name: name2 },
+      },
+    };
+  });

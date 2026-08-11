@@ -1,5 +1,9 @@
 import { getKstTodayStr } from "@/lib/date-utils";
-import { deriveEventName, isTbaFighter } from "@/lib/schedule-utils";
+import {
+  backfillMainEventNames,
+  deriveEventName,
+  isTbaFighter,
+} from "@/lib/schedule-utils";
 import type {
   UfcCardTimes,
   UfcEvent,
@@ -340,17 +344,26 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
 
 /**
  * 파이터 헤드샷 이미지 URL에서 풀네임 추출.
- * UFC 이미지 파일명 규칙: {LAST}_{FIRST}_{MM-YY}.png 또는 {LAST}_{FIRST}.png
+ * UFC 이미지 파일명 규칙: {LAST}_{FIRST}[_{수식어}...][_{MM-YY}].png
  * 예: ALLEN_ARNOLD_01-24.png → "Arnold Allen"
+ *     VAN_JOSHUA_BELT_05-09.png → "Joshua Van" (챔피언은 _BELT_, 코너별 컷은 _L_/_R_ 토큰이 붙음)
+ *     ABDUL-MALIK_MANSUR_01-01.png → "Mansur Abdul-Malik" (하이픈 성)
  */
 function extractNameFromImageUrl(
   url: string | undefined,
   fallback: string
 ): string {
   if (!url) return fallback;
-  const match = url.match(/\/([A-Z]+)_([A-Z]+)(?:_[\d-]+)?\.png/);
+  const match = url.match(
+    /\/([A-Z][A-Z-]*)_([A-Z]+)(?:_[A-Z]+)*(?:_[\d-]+)?\.png/
+  );
   if (!match) return fallback;
-  const toTitle = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
+  // 하이픈 성은 세그먼트별로 대문자화 ("ABDUL-MALIK" → "Abdul-Malik")
+  const toTitle = (s: string) =>
+    s
+      .split("-")
+      .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+      .join("-");
   return `${toTitle(match[2])} ${toTitle(match[1])}`;
 }
 
@@ -783,5 +796,5 @@ export async function crawlUfcSchedule(): Promise<UfcEvent[]> {
   events = await enrichFighterImages(events);
   events = await enrichEventDetails(events);
 
-  return events;
+  return backfillMainEventNames(events);
 }
