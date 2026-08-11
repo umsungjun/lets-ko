@@ -1,10 +1,13 @@
 import { getKstTodayStr } from "@/lib/date-utils";
-import { isTbaFighter } from "@/lib/schedule-utils";
+import {
+  backfillMainEventNames,
+  deriveEventName,
+  isTbaFighter,
+} from "@/lib/schedule-utils";
 import type {
   UfcCardTimes,
   UfcEvent,
   UfcEventFight,
-  UfcEventFighter,
   UfcFightCard,
 } from "@/types/schedule";
 
@@ -340,17 +343,26 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
 
 /**
  * 파이터 헤드샷 이미지 URL에서 풀네임 추출.
- * UFC 이미지 파일명 규칙: {LAST}_{FIRST}_{MM-YY}.png 또는 {LAST}_{FIRST}.png
+ * UFC 이미지 파일명 규칙: {LAST}_{FIRST}[_{수식어}...][_{MM-YY}].png
  * 예: ALLEN_ARNOLD_01-24.png → "Arnold Allen"
+ *     VAN_JOSHUA_BELT_05-09.png → "Joshua Van" (챔피언은 _BELT_, 코너별 컷은 _L_/_R_ 토큰이 붙음)
+ *     ABDUL-MALIK_MANSUR_01-01.png → "Mansur Abdul-Malik" (하이픈 성)
  */
 function extractNameFromImageUrl(
   url: string | undefined,
   fallback: string
 ): string {
   if (!url) return fallback;
-  const match = url.match(/\/([A-Z]+)_([A-Z]+)(?:_[\d-]+)?\.png/);
+  const match = url.match(
+    /\/([A-Z][A-Z-]*)_([A-Z]+)(?:_[A-Z]+)*(?:_[\d-]+)?\.png/
+  );
   if (!match) return fallback;
-  const toTitle = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
+  // 하이픈 성은 세그먼트별로 대문자화 ("ABDUL-MALIK" → "Abdul-Malik")
+  const toTitle = (s: string) =>
+    s
+      .split("-")
+      .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+      .join("-");
   return `${toTitle(match[2])} ${toTitle(match[1])}`;
 }
 
@@ -416,28 +428,13 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
       if (!id || seenIds.has(id)) return;
       seenIds.add(id);
 
-      // 이벤트명: UFC 번호 이벤트 vs Fight Night 구분
-      const ufcNumbered = id.match(/^ufc-(\d+)$/);
-      const ufcBranded = id.match(/^ufc-([a-z-]+?)-(\d+)$/);
-      let eventName: string;
-      if (ufcNumbered) {
-        eventName = `UFC ${ufcNumbered[1]}`;
-      } else if (ufcBranded) {
-        const subtitle = ufcBranded[1]
-          .split("-")
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ");
-        eventName = `UFC ${subtitle} ${ufcBranded[2]}`;
-      } else {
-        eventName = "UFC Fight Night";
-      }
-
-      // 메인 이벤트 라벨 (예: "Allen vs Costa") 추가
+      // 메인 이벤트 라벨 (예: "Allen vs Costa")
       const fightLabel = card
         .find("[data-fight-label]")
         .first()
         .attr("data-fight-label");
-      if (fightLabel) eventName += `: ${fightLabel}`;
+
+      const eventName = deriveEventName(id, fightLabel);
 
       // 파이터 이미지 + 풀네임 (이미지 URL 파일명에서 추출)
       const imgEls = card.find(".c-card--red-blue img");
@@ -798,5 +795,5 @@ export async function crawlUfcSchedule(): Promise<UfcEvent[]> {
   events = await enrichFighterImages(events);
   events = await enrichEventDetails(events);
 
-  return events;
+  return backfillMainEventNames(events);
 }

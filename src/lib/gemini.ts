@@ -430,3 +430,70 @@ IMPORTANT:
 
   return parsed;
 }
+
+/**
+ * @description UFC 파이터 영문명 목록을 한국어 표기로 일괄 변환.
+ * 동적 키 OBJECT는 responseSchema로 표현할 수 없어 `{ en, ko }` 배열로 받아 호출부에서 맵으로 변환한다.
+ * @param names - 변환할 영문 이름 배열 (중복·TBA는 호출부에서 제거된 상태)
+ * @returns 영문명 → 한국어명 맵. 요청하지 않은 이름·빈 값은 제외
+ * @throws Gemini 호출 실패 또는 JSON 파싱 실패 시
+ */
+export async function translateFighterNames(
+  names: string[]
+): Promise<Record<string, string>> {
+  if (names.length === 0) return {};
+
+  const prompt = `Convert these UFC fighter names to their Korean notation.
+
+${names.map((n) => `- ${n}`).join("\n")}
+
+RULES:
+- Korean/Japanese/Chinese fighters: use their actual native-language name, NOT a phonetic transliteration of the English romanization.
+  e.g. "Seok Hyeon Ko" → "고석현" (not "석현 코"), "Doo Ho Choi" → "최두호", "Tatsuro Taira" → "타이라 타츠로", "Yan Xiaonan" → "옌 샤오난"
+- Everyone else: standard Korean phonetic transliteration in the order the English name is given.
+  e.g. "Alexandre Pantoja" → "알렉산드리 판토자", "Joshua Van" → "조슈아 반"
+- Use the spelling Korean MMA media commonly uses.
+- "en" must repeat the input name EXACTLY as given.
+- Return one entry for every name in the list.`;
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          names: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                en: { type: SchemaType.STRING },
+                ko: { type: SchemaType.STRING },
+              },
+              required: ["en", "ko"],
+            },
+          },
+        },
+        required: ["names"],
+      },
+    },
+  });
+
+  const parsed = JSON.parse(result.response.text()) as {
+    names?: { en: string; ko: string }[];
+  };
+  if (!Array.isArray(parsed.names)) {
+    throw new Error("Invalid fighter name translation response from Gemini");
+  }
+
+  // 요청하지 않은 이름(환각)·빈 한국어명은 폐기해 사전 오염 방지
+  const requested = new Set(names);
+  const dict: Record<string, string> = {};
+  for (const entry of parsed.names) {
+    if (!entry?.en || !entry?.ko?.trim()) continue;
+    if (!requested.has(entry.en)) continue;
+    dict[entry.en] = entry.ko.trim();
+  }
+  return dict;
+}

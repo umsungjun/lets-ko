@@ -1,7 +1,11 @@
-/** UFC 파이터 기본 정보 */
-export interface UfcEventFighter {
-  /** 파이터 이름 (영문) */
-  name: string;
+import type { LocalizableFighterName } from "@/lib/fighter-name-utils";
+
+/**
+ * UFC 파이터 기본 정보.
+ * `name`(영문)이 source of truth — 고석현 매칭·AI 승자 판정이 이 값으로 비교하므로 한국어로 덮어쓰지 않고,
+ * `nameKo`는 크롤러가 아니라 로더가 `fighter_names_ko` 사전에서 주입한다.
+ */
+export interface UfcEventFighter extends LocalizableFighterName {
   /** 전적 (예: "22-7-0") */
   record?: string;
   /** UFC 프로필 페이지에서 스크레이핑한 헤드샷 URL */

@@ -92,11 +92,17 @@ export async function generateSchedulePredictions(
     }
   }
 
-  // 재생성된 eventId의 기존(stale) 예측은 제외하고 신규로 대체
+  // 재생성된 eventId의 기존(stale) 예측은 제외하고 신규로 대체.
+  // 유지되는 예측은 eventName만 현재 이벤트명으로 동기화 — 재사용 조건이 eventId+파이터라
+  // 이벤트명 표기가 고쳐져도(issue #33 넘버링 수정) stale 이름이 영구 잔존하기 때문.
   const regeneratedIds = new Set(newPredictions.map((p) => p.eventId));
-  const keptExisting = existingPredictions.filter(
-    (p) => !regeneratedIds.has(p.eventId)
-  );
+  const eventNameById = new Map(events.map((e) => [e.id, e.name]));
+  const keptExisting = existingPredictions
+    .filter((p) => !regeneratedIds.has(p.eventId))
+    .map((p) => ({
+      ...p,
+      eventName: eventNameById.get(p.eventId) ?? p.eventName,
+    }));
   return [...keptExisting, ...newPredictions];
 }
 

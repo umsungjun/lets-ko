@@ -13,12 +13,12 @@ import StatsCard from "@/components/fighter/StatsCard";
 import VideoSection from "@/components/fighter/VideoSection";
 import ChampionsPreview from "@/components/rankings/ChampionsPreview";
 import SchedulePreview from "@/components/schedule/SchedulePreview";
-import cachedSchedule from "@/data/cached-schedule.json";
 import cachedStats from "@/data/cached-stats.json";
 import careerHighlights from "@/data/career-highlights.json";
 import fighterBio from "@/data/fighter-bio.json";
 import { getPredictions } from "@/lib/data/predictions";
 import { getRankings } from "@/lib/data/rankings";
+import { getSchedule } from "@/lib/data/schedule";
 import { buildKoComparisonStats } from "@/lib/ko-stats";
 import { fetchNews } from "@/lib/news";
 import { searchYouTubeVideos } from "@/lib/youtube";
@@ -27,7 +27,6 @@ import type {
   FighterBio,
   FighterStats,
 } from "@/types/fighter";
-import type { UfcSchedule } from "@/types/schedule";
 
 // 메인 페이지 ISR 30분. VideoSection 최신 영상 노출 속도와 quota 안전성의 절충점.
 //  - search.list(date) fetch는 자체 30분 캐시 → 일 ~4,800 unit (한도 10k의 48%)
@@ -93,42 +92,6 @@ async function getFighterStats(): Promise<FighterStats> {
   return cachedStats as FighterStats;
 }
 
-async function getSchedule(): Promise<UfcSchedule> {
-  if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    try {
-      const { createServerClient } = await import("@/lib/supabase/server");
-      const supabase = createServerClient();
-      const { data } = await supabase
-        .from("ufc_schedule")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data?.data) {
-        const schedule = data.data as UfcSchedule;
-        if (schedule.events?.length > 0) {
-          // 이미지 없는 파이터 보완 (크론 실패 또는 구형 데이터 대비)
-          const { enrichFighterImages } =
-            await import("@/lib/crawl/schedule-crawler");
-          const enriched = await enrichFighterImages(schedule.events);
-          return { ...schedule, events: enriched };
-        }
-      }
-    } catch {
-      // Fall through to cached data
-    }
-  }
-
-  const { enrichFighterImages } = await import("@/lib/crawl/schedule-crawler");
-  const base = cachedSchedule as UfcSchedule;
-  const enriched = await enrichFighterImages(base.events);
-  return { ...base, events: enriched };
-}
-
 export default async function HomePage({
   params,
 }: {
@@ -153,7 +116,7 @@ export default async function HomePage({
     fetchNews(),
     getRankings(),
     getPredictions(),
-    getSchedule(),
+    getSchedule({ enrichImages: true }),
   ]);
 
   // 확정 경기 카드·예측 프리뷰의 Tale of the Tape 비교용 고석현 데이터
