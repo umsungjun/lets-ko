@@ -88,6 +88,12 @@
     "moreNews": "더보러가기"
   },
   "footer": {
+    "linksLabel": "사이트 메뉴",
+    "linkPredictions": "고석현 다음 상대 예측",
+    "linkSchedule": "UFC 경기 일정",
+    "linkRankings": "UFC 공식 랭킹",
+    "linkYoutube": "고석현 관련 영상",
+    "linkCheer": "고석현 응원하기",
     "disclaimer": "이 사이트는 비공식 팬사이트입니다.",
     "instagram": "인스타그램"
   },
