@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import JsonLd from "@/components/common/JsonLd";
 import type { ChannelGroup } from "@/components/youtube/YouTubeChannelsView";
 import YouTubeChannelsView from "@/components/youtube/YouTubeChannelsView";
 import { YOUTUBE_CHANNELS } from "@/config/youtube-channels";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { fetchChannelInfos, fetchChannelUploads } from "@/lib/youtube";
 
@@ -87,6 +89,7 @@ export default async function YouTubePage({
 
   return (
     <section className="py-12 px-4">
+      <JsonLd data={buildBreadcrumbJsonLd(locale, t("title"), "/youtube")} />
       <div className="mx-auto max-w-6xl">
         <header className="mb-10 text-center">
           <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">

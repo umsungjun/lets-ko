@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
+import JsonLd from "@/components/common/JsonLd";
 import RankingsView from "@/components/rankings/RankingsView";
 import { getRankings } from "@/lib/data/rankings";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export const revalidate = 86400;
@@ -37,6 +39,13 @@ export default async function RankingsPage({
 
   return (
     <section className="py-12 px-4">
+      <JsonLd
+        data={buildBreadcrumbJsonLd(
+          locale,
+          locale === "ko" ? "UFC 공식 랭킹" : "Official UFC Rankings",
+          "/rankings"
+        )}
+      />
       <div className="mx-auto max-w-5xl">
         <RankingsView rankings={rankings} locale={locale} />
       </div>

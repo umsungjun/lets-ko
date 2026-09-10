@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
+import JsonLd from "@/components/common/JsonLd";
 import PredictionDetail from "@/components/predictions/PredictionDetail";
 import cachedStats from "@/data/cached-stats.json";
 import { getPredictions } from "@/lib/data/predictions";
 import { buildKoComparisonStats } from "@/lib/ko-stats";
+import {
+  buildBreadcrumbJsonLd,
+  buildConfirmedFightJsonLd,
+} from "@/lib/seo/json-ld";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import type { FighterStats } from "@/types/fighter";
 
@@ -104,11 +109,30 @@ export default async function PredictionsPage({
     predictions.lastFightDate
   );
 
+  const confirmedFightNode = predictions.confirmedFight
+    ? buildConfirmedFightJsonLd(predictions.confirmedFight, locale)
+    : null;
+  const breadcrumbName = predictions.confirmedFight
+    ? locale === "ko"
+      ? "고석현 다음 경기"
+      : "Ko Seokhyeon's Next Fight"
+    : locale === "ko"
+      ? "고석현 다음 상대 예측"
+      : "Ko Seokhyeon Next Opponent Prediction";
+
   return (
-    <PredictionDetail
-      predictions={predictions}
-      koStats={koComparisonStats}
-      locale={locale}
-    />
+    <>
+      <JsonLd
+        data={[
+          buildBreadcrumbJsonLd(locale, breadcrumbName, "/predictions"),
+          ...(confirmedFightNode ? [confirmedFightNode] : []),
+        ]}
+      />
+      <PredictionDetail
+        predictions={predictions}
+        koStats={koComparisonStats}
+        locale={locale}
+      />
+    </>
   );
 }

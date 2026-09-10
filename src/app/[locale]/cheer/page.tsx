@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 
+import JsonLd from "@/components/common/JsonLd";
 import GuestbookList from "@/components/guestbook/GuestbookList";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +39,13 @@ export default async function CheerPage({
 
   return (
     <section className="py-12 px-4">
+      <JsonLd
+        data={buildBreadcrumbJsonLd(
+          locale,
+          locale === "ko" ? "고석현 응원하기" : "Cheer for Ko Seokhyeon",
+          "/cheer"
+        )}
+      />
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <p className="text-2xl font-black text-primary mb-3 tracking-tight">

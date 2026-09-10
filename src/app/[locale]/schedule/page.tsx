@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
+import JsonLd from "@/components/common/JsonLd";
 import ScheduleView from "@/components/schedule/ScheduleView";
 import { getSchedule } from "@/lib/data/schedule";
+import { buildBreadcrumbJsonLd, buildScheduleJsonLd } from "@/lib/seo/json-ld";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export const revalidate = 86400;
@@ -38,5 +40,19 @@ export default async function SchedulePage({
 
   const schedule = await getSchedule();
 
-  return <ScheduleView schedule={schedule} locale={locale} />;
+  const scheduleNode = buildScheduleJsonLd(schedule.events ?? [], locale);
+  const breadcrumbName =
+    locale === "ko" ? "UFC 경기 일정" : "UFC Fight Schedule";
+
+  return (
+    <>
+      <JsonLd
+        data={[
+          buildBreadcrumbJsonLd(locale, breadcrumbName, "/schedule"),
+          ...(scheduleNode ? [scheduleNode] : []),
+        ]}
+      />
+      <ScheduleView schedule={schedule} locale={locale} />
+    </>
+  );
 }

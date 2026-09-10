@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 
+import JsonLd from "@/components/common/JsonLd";
 import CareerTimeline from "@/components/fighter/CareerTimeline";
 import FightRecord from "@/components/fighter/FightRecord";
 import FighterProfile from "@/components/fighter/FighterProfile";
@@ -20,6 +21,11 @@ import { getRankings } from "@/lib/data/rankings";
 import { getSchedule } from "@/lib/data/schedule";
 import { buildKoComparisonStats } from "@/lib/ko-stats";
 import { fetchNews } from "@/lib/news";
+import {
+  buildConfirmedFightJsonLd,
+  buildPersonJsonLd,
+  buildWebSiteJsonLd,
+} from "@/lib/seo/json-ld";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { searchYouTubeVideos } from "@/lib/youtube";
 import type {
@@ -145,39 +151,19 @@ export default async function HomePage({
     predictions.lastFightDate
   );
 
-  const siteOrigin = (() => {
-    const raw =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
-    try {
-      return new URL(raw).origin;
-    } catch {
-      return "https://lets-ko.vercel.app";
-    }
-  })();
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: "고석현",
-    alternateName: ["Ko Seokhyeon", "The Korean Tyson", "코리안 타이슨"],
-    description:
-      locale === "ko"
-        ? "UFC 웰터급 파이터. 유도/삼보 기반의 강력한 그래플링과 타격으로 활약 중."
-        : "UFC welterweight fighter known for powerful grappling and striking rooted in judo and sambo.",
-    birthDate: "1993-09-24",
-    nationality: { "@type": "Country", name: "South Korea" },
-    jobTitle: "UFC Fighter",
-    affiliation: { "@type": "SportsTeam", name: "HAVAS MMA" },
-    sport: "Mixed Martial Arts",
-    image: `${siteOrigin}/og.png`,
-    url: `${siteOrigin}/${locale}`,
-  };
+  // 확정 경기는 지난 날짜면 null이 되므로 존재하는 노드만 @graph에 넣는다
+  const confirmedFightNode = predictions.confirmedFight
+    ? buildConfirmedFightJsonLd(predictions.confirmedFight, locale)
+    : null;
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      <JsonLd
+        data={[
+          buildWebSiteJsonLd(locale),
+          buildPersonJsonLd(locale),
+          ...(confirmedFightNode ? [confirmedFightNode] : []),
+        ]}
       />
       {predictions.confirmedFight && (
         <NextFightBanner fight={predictions.confirmedFight} locale={locale} />
