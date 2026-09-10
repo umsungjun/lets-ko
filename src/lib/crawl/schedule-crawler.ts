@@ -15,6 +15,9 @@ import * as cheerio from "cheerio";
 
 import { scrapeUfcFighterImage } from "./ufc-image-scraper";
 
+// 저장할 예정 이벤트 최대 개수.
+const MAX_UPCOMING_EVENTS = 10;
+
 const CRAWLER_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -332,7 +335,7 @@ async function fetchFromCloudFront(): Promise<UfcEvent[] | null> {
         });
       }
 
-      if (events.length >= 1) return events.slice(0, 8);
+      if (events.length >= 1) return events.slice(0, MAX_UPCOMING_EVENTS);
     } catch {
       // 다음 URL 시도
     }
@@ -487,7 +490,7 @@ async function fetchFromHtml(): Promise<UfcEvent[] | null> {
       });
     });
 
-    return events.length >= 1 ? events.slice(0, 8) : null;
+    return events.length >= 1 ? events.slice(0, MAX_UPCOMING_EVENTS) : null;
   } catch {
     return null;
   }
@@ -771,7 +774,7 @@ async function enrichEventDetails(events: UfcEvent[]): Promise<UfcEvent[]> {
 /**
  * @description UFC 예정 경기 일정 크롤링.
  * 1차: CloudFront CDN API (구조화 JSON) → 실패 시 2차: ufc.com HTML 파싱.
- * 오늘 이후 이벤트만 포함하며 날짜 오름차순 정렬 후 최대 8개 반환.
+ * 오늘 이후 이벤트만 포함하며 날짜 오름차순 정렬 후 최대 MAX_UPCOMING_EVENTS개 반환.
  * @returns 이미지·체급이 보완된 UfcEvent 배열
  * @throws 두 소스 모두 실패해 이벤트를 가져오지 못한 경우
  */

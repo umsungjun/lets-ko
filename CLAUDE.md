@@ -63,6 +63,7 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 3. `generatePredictions()` — AI 상대 예측 (Gemini)
 4. **UFC 일정 + 예측**: `crawlUfcSchedule()` → `generateSchedulePredictions()` → `ufc_schedule` 저장
    - 일정 크롤: CloudFront CDN API(`d29dxerjsp82wz.cloudfront.net`)는 폐기됨(404) → 실질적으로 `www.ufc.com/events` HTML 파싱이 주 소스
+   - 저장 이벤트 상한: `MAX_UPCOMING_EVENTS`(`schedule-crawler.ts`) = 10. 두 소스 경로 모두 이 값으로 `slice`하므로 상한 밖 이벤트는 DB에 아예 없고, `detectKoConfirmedFight()`가 훑을 카드에도 없다. 8이던 시절 고석현 확정 경기가 9번째 이벤트라 감지 자체가 불가능했음(2026-09). UFC가 두세 달 앞까지 발표하므로 상한은 그 범위를 덮어야 함
    - 예측 생성: `eventId`로 중복 체크 — 기존 예측 재사용, 새 이벤트만 Gemini 호출. 재사용 시 `eventName`은 현재 이벤트명으로 동기화(이벤트명 표기 수정이 stale 예측에 갇히지 않도록)
    - 파이터 이미지: `enrichFighterImages()` — UFC 선수 페이지 병렬 스크레이핑 (최대 20명)
    - 메인 이벤트 이름: 목록 페이지 헤드샷 파일명 파싱이 실패하면 `fightCard.mainCard[0]` 값으로 백필(`backfillMainEventNames`) — 챔피언 헤드샷(`VAN_JOSHUA_BELT_...png`)에서 성만 뽑히는 문제 방어
