@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
+import JsonLd from "@/components/common/JsonLd";
 import PredictionDetail from "@/components/predictions/PredictionDetail";
 import cachedStats from "@/data/cached-stats.json";
 import { getPredictions } from "@/lib/data/predictions";
 import { buildKoComparisonStats } from "@/lib/ko-stats";
+import {
+  buildBreadcrumbJsonLd,
+  buildConfirmedFightJsonLd,
+} from "@/lib/seo/json-ld";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 import type { FighterStats } from "@/types/fighter";
 
 export const revalidate = 86400;
@@ -16,9 +22,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const isKo = locale === "ko";
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
-  const origin = new URL(siteUrl).origin;
 
   const title = isKo
     ? "고석현 다음 상대 예측"
@@ -27,59 +30,34 @@ export async function generateMetadata({
     ? "AI 고석현 다음 상대 예측. Gemini AI가 분석한 고석현 선수의 다음 UFC 경기 상대 후보 3명의 상세 비교 분석과 승률 예측을 확인하세요."
     : "AI Ko Seokhyeon next opponent prediction. Gemini AI-powered analysis of Ko Seokhyeon's next UFC fight with detailed matchup comparison and win probability for 3 candidates.";
 
-  return {
+  return buildPageMetadata({
+    locale,
+    path: "/predictions",
     title,
     description,
     keywords: isKo
       ? [
+          "고석현 다음 경기",
+          "고석현 다음 상대",
           "고석현 다음상대",
-          "AI 고석현 다음 상대 예측",
           "고석현",
           "UFC",
           "AI 예측",
-          "다음 상대",
           "승률 분석",
           "웰터급",
           "MMA",
         ]
       : [
+          "Ko Seokhyeon next fight",
           "Ko Seokhyeon next opponent",
-          "AI Ko Seokhyeon prediction",
           "Ko Seokhyeon",
           "UFC",
           "AI prediction",
-          "next opponent",
           "win probability",
           "welterweight",
           "MMA",
         ],
-    alternates: {
-      canonical: locale === "ko" ? "/predictions" : `/${locale}/predictions`,
-      languages: {
-        ko: "/predictions",
-        en: "/en/predictions",
-        "x-default": "/predictions",
-      },
-    },
-    openGraph: {
-      title,
-      description,
-      url:
-        locale === "ko"
-          ? `${origin}/predictions`
-          : `${origin}/${locale}/predictions`,
-      siteName: "LET'S KO",
-      locale: isKo ? "ko_KR" : "en_US",
-      type: "website",
-      images: [{ url: `${origin}/og.png`, width: 1200, height: 630 }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [`${origin}/og.png`],
-    },
-  };
+  });
 }
 
 async function getFighterStats(): Promise<FighterStats> {
@@ -131,11 +109,30 @@ export default async function PredictionsPage({
     predictions.lastFightDate
   );
 
+  const confirmedFightNode = predictions.confirmedFight
+    ? buildConfirmedFightJsonLd(predictions.confirmedFight, locale)
+    : null;
+  const breadcrumbName = predictions.confirmedFight
+    ? locale === "ko"
+      ? "고석현 다음 경기"
+      : "Ko Seokhyeon's Next Fight"
+    : locale === "ko"
+      ? "고석현 다음 상대 예측"
+      : "Ko Seokhyeon Next Opponent Prediction";
+
   return (
-    <PredictionDetail
-      predictions={predictions}
-      koStats={koComparisonStats}
-      locale={locale}
-    />
+    <>
+      <JsonLd
+        data={[
+          buildBreadcrumbJsonLd(locale, breadcrumbName, "/predictions"),
+          ...(confirmedFightNode ? [confirmedFightNode] : []),
+        ]}
+      />
+      <PredictionDetail
+        predictions={predictions}
+        koStats={koComparisonStats}
+        locale={locale}
+      />
+    </>
   );
 }

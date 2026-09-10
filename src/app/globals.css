@@ -131,3 +131,13 @@ html {
 .animation-delay-500 {
   animation-delay: 500ms;
 }
+
+/* 모션 최소화 설정에서는 리빌 애니메이션을 끈다. animation을 없애면 요소가 처음부터 보이는 상태가 되므로 콘텐츠가 가려지지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-left {
+    animation: none;
+  }
+}

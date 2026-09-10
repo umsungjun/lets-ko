@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 
+import JsonLd from "@/components/common/JsonLd";
 import GuestbookList from "@/components/guestbook/GuestbookList";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/json-ld";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +17,14 @@ export async function generateMetadata({
   const { locale } = await params;
   const isKo = locale === "ko";
 
-  return {
+  return buildPageMetadata({
+    locale,
+    path: "/cheer",
     title: isKo ? "고석현 선수 응원하기" : "Cheer for Ko Seokhyeon",
     description: isKo
       ? "UFC 웰터급 파이터 고석현 선수에게 응원 메시지를 남겨주세요. 익명으로 자유롭게 응원할 수 있습니다."
       : "Leave a cheer message for UFC welterweight fighter Ko Seokhyeon. Anonymous messages welcome!",
-    alternates: {
-      canonical: locale === "ko" ? "/cheer" : `/${locale}/cheer`,
-      languages: { ko: "/cheer", en: "/en/cheer", "x-default": "/cheer" },
-    },
-  };
+  });
 }
 
 export default async function CheerPage({
@@ -38,6 +39,13 @@ export default async function CheerPage({
 
   return (
     <section className="py-12 px-4">
+      <JsonLd
+        data={buildBreadcrumbJsonLd(
+          locale,
+          locale === "ko" ? "고석현 응원하기" : "Cheer for Ko Seokhyeon",
+          "/cheer"
+        )}
+      />
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <p className="text-2xl font-black text-primary mb-3 tracking-tight">

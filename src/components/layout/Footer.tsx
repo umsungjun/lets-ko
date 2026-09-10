@@ -1,10 +1,39 @@
 import { useTranslations } from "next-intl";
 
+import { Link } from "../../../i18n/navigation";
+
+const FOOTER_LINKS = [
+  { href: "/predictions", key: "linkPredictions" },
+  { href: "/schedule", key: "linkSchedule" },
+  { href: "/rankings", key: "linkRankings" },
+  { href: "/youtube", key: "linkYoutube" },
+  { href: "/cheer", key: "linkCheer" },
+] as const;
+
+/**
+ * @description 전역 푸터. 사이트 메뉴 링크로 하위 페이지 간 크롤 경로를 만든다.
+ */
 export default function Footer() {
   const t = useTranslations("footer");
 
   return (
     <footer className="border-t border-border/60 bg-surface py-8 mt-0">
+      {/* 하위 페이지끼리 상호 링크가 없어 크롤 경로가 메인에서 아래로만 흐른다. 앵커 텍스트는 헤더 nav보다 길게 잡아 키워드를 준다 */}
+      <nav
+        aria-label={t("linksLabel")}
+        className="max-w-6xl mx-auto px-6 mb-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted"
+      >
+        {FOOTER_LINKS.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="hover:text-primary transition-colors"
+          >
+            {t(item.key)}
+          </Link>
+        ))}
+      </nav>
+
       <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
         <p>{t("disclaimer")}</p>
         <div className="flex items-center gap-4">

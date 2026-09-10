@@ -3,6 +3,9 @@
 import { useState } from "react";
 
 import { useLocale, useTranslations } from "next-intl";
+import NextLink from "next/link";
+
+import { localePath } from "@/lib/seo/site-url";
 
 import { Link, usePathname } from "../../../i18n/navigation";
 
@@ -13,6 +16,9 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const otherLocale = locale === "ko" ? "en" : "ko";
+  // next-intl Link에 locale prop을 주면 as-needed여도 /ko prefix를 강제로 붙여 307 리다이렉트 URL을 링크하게 된다.
+  // 전환 대상 경로를 직접 만들어 canonical URL을 그대로 가리킨다.
+  const switchHref = localePath(otherLocale, pathname === "/" ? "" : pathname);
 
   // next-intl Link는 로케일 없는 경로를 받아 현재 로케일 prefix를 자동으로 붙인다. 여기에 /${locale}를 직접 넣으면 prefix가 중복된다(예: /en/en/cheer).
   const navItems = [
@@ -50,24 +56,24 @@ export default function Header() {
             </Link>
           ))}
           <div className="w-px h-5 bg-border mx-2" />
-          <Link
-            href={pathname}
-            locale={otherLocale}
+          <NextLink
+            href={switchHref}
+            hrefLang={otherLocale}
             className="text-xs font-bold px-3 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-colors"
           >
             {otherLocale.toUpperCase()}
-          </Link>
+          </NextLink>
         </nav>
 
         {/* Mobile: locale switch + menu button */}
         <div className="sm:hidden flex items-center gap-1">
-          <Link
-            href={pathname}
-            locale={otherLocale}
+          <NextLink
+            href={switchHref}
+            hrefLang={otherLocale}
             className="text-xs font-bold px-2.5 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-colors"
           >
             {otherLocale.toUpperCase()}
-          </Link>
+          </NextLink>
           <button
             className="p-2 -mr-2 text-muted hover:text-foreground rounded-lg hover:bg-surface transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}

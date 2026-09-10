@@ -1,13 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 
 import ConfirmedFightCard from "@/components/predictions/ConfirmedFightCard";
-import { useInView } from "@/hooks/useInView";
 import { formatKstLongDate } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { PredictionData } from "@/types/prediction";
+
+import { Link } from "../../../i18n/navigation";
 
 interface PredictionPreviewProps {
   predictions: PredictionData; // AI 상대 예측 데이터 (확정 경기 포함 가능)
@@ -46,7 +46,6 @@ export default function PredictionPreview({
   locale,
 }: PredictionPreviewProps) {
   const t = useTranslations("predictions");
-  const { ref, isInView } = useInView(0.1);
   const lang = locale === "ko" ? "ko" : "en";
 
   // 확정된 경기가 있으면 확정 정보를 표시 (예측 상세 페이지와 공통 컴포넌트 사용)
@@ -67,16 +66,9 @@ export default function PredictionPreview({
   // 최근 경기 후 2달 미만이면 준비 중 메시지
   if (predictions.opponents.length === 0 && predictions.lastFightDate) {
     return (
-      <section className="py-20 px-4 bg-surface" ref={ref}>
+      <section className="py-20 px-4 bg-surface">
         <div className="max-w-5xl mx-auto">
-          <div
-            className="text-center"
-            style={{
-              opacity: isInView ? 1 : 0,
-              transform: isInView ? "translateY(0)" : "translateY(16px)",
-              transition: "opacity 0.5s ease, transform 0.5s ease",
-            }}
-          >
+          <div className="text-center animate-fade-up">
             <div className="flex items-center justify-center gap-2 mb-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-linear-to-r from-violet-600 to-blue-500 text-white text-[11px] font-bold tracking-wide">
                 <svg
@@ -111,17 +103,10 @@ export default function PredictionPreview({
   if (predictions.opponents.length === 0) return null;
 
   return (
-    <section className="py-20 px-4 bg-surface" ref={ref}>
+    <section className="py-20 px-4 bg-surface">
       <div className="max-w-5xl mx-auto">
         {/* 헤더 */}
-        <div
-          className="text-center mb-10"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
+        <div className="text-center mb-10 animate-fade-up">
           <div className="flex justify-center mb-4">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-linear-to-r from-violet-600 to-blue-500 text-white text-[11px] font-bold tracking-wide">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
@@ -179,13 +164,9 @@ export default function PredictionPreview({
             return (
               <Link
                 key={index}
-                href={`/${locale}/predictions`}
-                className="group relative rounded-3xl bg-linear-to-b from-[#0f1724] via-[#162033] to-[#0f1724] border border-white/5 shadow-xl hover:shadow-2xl hover:border-white/15 transition-all duration-500 cursor-pointer overflow-hidden"
-                style={{
-                  opacity: isInView ? 1 : 0,
-                  transform: isInView ? "translateY(0)" : "translateY(16px)",
-                  transition: `opacity 0.5s ease ${150 + index * 100}ms, transform 0.5s ease ${150 + index * 100}ms`,
-                }}
+                href="/predictions"
+                className="group relative rounded-3xl bg-linear-to-b from-[#0f1724] via-[#162033] to-[#0f1724] border border-white/5 shadow-xl hover:shadow-2xl hover:border-white/15 transition-all duration-500 cursor-pointer overflow-hidden animate-fade-up"
+                style={{ animationDelay: `${150 + index * 100}ms` }}
               >
                 {/* 상단 배경 글로우 */}
                 <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full bg-blue-500/10 blur-3xl group-hover:bg-primary/15 transition-colors duration-500 pointer-events-none" />
@@ -281,14 +262,11 @@ export default function PredictionPreview({
 
         {/* 하단 CTA */}
         <div
-          className="text-center mt-8"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transition: "opacity 0.5s ease 500ms",
-          }}
+          className="text-center mt-8 animate-fade-in"
+          style={{ animationDelay: "500ms" }}
         >
           <Link
-            href={`/${locale}/predictions`}
+            href="/predictions"
             className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-foreground text-white hover:bg-foreground/90 transition-all duration-300 text-sm font-semibold shadow-lg shadow-foreground/10"
           >
             {t("viewDetail")}

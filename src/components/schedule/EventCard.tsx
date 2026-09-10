@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import { formatEventDate } from "@/lib/date-utils";
 import { displayFighterName } from "@/lib/fighter-name-utils";
 import { eventHasKoSeokhyeon } from "@/lib/ko-fighter";
@@ -68,7 +67,6 @@ export default function EventCard({
   index = 0,
 }: EventCardProps) {
   const t = useTranslations("schedule");
-  const { ref, isInView } = useInView(0.1);
   const [analysisExpanded, setAnalysisExpanded] = useState(false);
   const lang = locale === "ko" ? "ko" : "en";
 
@@ -96,15 +94,10 @@ export default function EventCard({
 
   return (
     <div
-      ref={ref}
       className={`rounded-2xl overflow-hidden shadow-lg border ${
         hasKo ? "border-primary/60 ring-2 ring-primary/30" : "border-white/5"
-      }`}
-      style={{
-        opacity: isInView ? 1 : 0,
-        transform: isInView ? "translateY(0)" : "translateY(16px)",
-        transition: `opacity 0.5s ease ${index * 80}ms, transform 0.5s ease ${index * 80}ms`,
-      }}
+      } animate-fade-up`}
+      style={{ animationDelay: `${index * 80}ms` }}
     >
       {/* 어두운 헤더: 이벤트 정보 + 파이터 매치업 */}
       <div className="bg-linear-to-br from-gray-900 via-gray-850 to-gray-900 px-6 pt-5 pb-6">

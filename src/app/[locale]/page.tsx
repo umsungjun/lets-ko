@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
-import Link from "next/link";
 
+import JsonLd from "@/components/common/JsonLd";
 import CareerTimeline from "@/components/fighter/CareerTimeline";
 import FightRecord from "@/components/fighter/FightRecord";
 import FighterProfile from "@/components/fighter/FighterProfile";
@@ -21,12 +21,20 @@ import { getRankings } from "@/lib/data/rankings";
 import { getSchedule } from "@/lib/data/schedule";
 import { buildKoComparisonStats } from "@/lib/ko-stats";
 import { fetchNews } from "@/lib/news";
+import {
+  buildConfirmedFightJsonLd,
+  buildPersonJsonLd,
+  buildWebSiteJsonLd,
+} from "@/lib/seo/json-ld";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 import { searchYouTubeVideos } from "@/lib/youtube";
 import type {
   CareerHighlight,
   FighterBio,
   FighterStats,
 } from "@/types/fighter";
+
+import { Link } from "../../../i18n/navigation";
 
 // 메인 페이지 ISR 30분. VideoSection 최신 영상 노출 속도와 quota 안전성의 절충점.
 //  - search.list(date) fetch는 자체 30분 캐시 → 일 ~4,800 unit (한도 10k의 48%)
@@ -41,16 +49,33 @@ export async function generateMetadata({
   const { locale } = await params;
   const isKo = locale === "ko";
 
-  return {
+  return buildPageMetadata({
+    locale,
+    path: "",
     title: isKo ? "고석현" : "Ko Seokhyeon",
     description: isKo
       ? "UFC 웰터급 파이터 고석현(The Korean Tyson) 선수의 비공식 팬 응원 사이트. 전적, 경기 기록, 하이라이트 영상, 응원 메시지를 확인하세요."
       : "UFC welterweight fighter Ko Seokhyeon (The Korean Tyson) - unofficial fan support site. Check out fight records, career highlights, videos, and fan messages.",
-    alternates: {
-      canonical: locale === "ko" ? "/" : `/${locale}`,
-      languages: { ko: "/", en: "/en", "x-default": "/" },
-    },
-  };
+    keywords: isKo
+      ? [
+          "고석현",
+          "고석현 다음 경기",
+          "고석현 다음 상대",
+          "Ko Seokhyeon",
+          "코리안 타이슨",
+          "UFC 웰터급",
+          "고석현 전적",
+          "HAVAS MMA",
+        ]
+      : [
+          "Ko Seokhyeon",
+          "The Korean Tyson",
+          "UFC welterweight",
+          "Ko Seokhyeon next fight",
+          "Ko Seokhyeon record",
+          "HAVAS MMA",
+        ],
+  });
 }
 
 async function getFighterStats(): Promise<FighterStats> {
@@ -126,39 +151,19 @@ export default async function HomePage({
     predictions.lastFightDate
   );
 
-  const siteOrigin = (() => {
-    const raw =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
-    try {
-      return new URL(raw).origin;
-    } catch {
-      return "https://lets-ko.vercel.app";
-    }
-  })();
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: "고석현",
-    alternateName: ["Ko Seokhyeon", "The Korean Tyson", "코리안 타이슨"],
-    description:
-      locale === "ko"
-        ? "UFC 웰터급 파이터. 유도/삼보 기반의 강력한 그래플링과 타격으로 활약 중."
-        : "UFC welterweight fighter known for powerful grappling and striking rooted in judo and sambo.",
-    birthDate: "1993-09-24",
-    nationality: { "@type": "Country", name: "South Korea" },
-    jobTitle: "UFC Fighter",
-    affiliation: { "@type": "SportsTeam", name: "HAVAS MMA" },
-    sport: "Mixed Martial Arts",
-    image: `${siteOrigin}/og.png`,
-    url: `${siteOrigin}/${locale}`,
-  };
+  // 확정 경기는 지난 날짜면 null이 되므로 존재하는 노드만 @graph에 넣는다
+  const confirmedFightNode = predictions.confirmedFight
+    ? buildConfirmedFightJsonLd(predictions.confirmedFight, locale)
+    : null;
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      <JsonLd
+        data={[
+          buildWebSiteJsonLd(locale),
+          buildPersonJsonLd(locale),
+          ...(confirmedFightNode ? [confirmedFightNode] : []),
+        ]}
       />
       {predictions.confirmedFight && (
         <NextFightBanner fight={predictions.confirmedFight} locale={locale} />
@@ -197,7 +202,7 @@ export default async function HomePage({
                 : "Leave a warm cheer message for Ko Seokhyeon"}
             </p>
             <Link
-              href={`/${locale}/cheer`}
+              href="/cheer"
               className="inline-block px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-card hover:shadow-card-hover"
             >
               {t("cheerCta")}

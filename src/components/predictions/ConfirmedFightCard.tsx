@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import { formatEventDate, getKstDaysUntil } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { ConfirmedFight } from "@/types/prediction";
@@ -11,6 +10,8 @@ interface ConfirmedFightCardProps {
   fight: ConfirmedFight; // 확정된 다음 경기 정보
   koStats: KoComparisonStats; // Tale of the Tape 비교용 고석현 측 데이터
   locale: string; // "ko" | "en"
+  /** 페이지에 이미 h1이 있으면 "h2"(기본), 이 카드가 페이지 최상위 콘텐츠면 배지·헤딩을 상위로 넘기고 "none" */
+  headingMode?: "standalone" | "nested";
 }
 
 // 상대 이미지 없음/placeholder URL일 때 표시할 실루엣 (다크 배경용)
@@ -42,14 +43,15 @@ const getDdayLabel = (dateStr: string): string | null => {
  * @param props.fight - 확정 경기 정보 (상대/이벤트/날짜/장소)
  * @param props.koStats - 고석현 측 비교 데이터 (전적/나이/신장/체중/리치/스타일)
  * @param props.locale - "ko" | "en"
+ * @param props.headingMode - "standalone"(기본, 자체 배지 표시) | "nested"(상위가 배지·h1을 렌더)
  */
 export default function ConfirmedFightCard({
   fight,
   koStats,
   locale,
+  headingMode = "standalone",
 }: ConfirmedFightCardProps) {
   const t = useTranslations("predictions");
-  const { ref, isInView } = useInView(0.1);
   const lang = locale === "ko" ? "ko" : "en";
 
   const dday = getDdayLabel(fight.date);
@@ -94,34 +96,33 @@ export default function ConfirmedFightCard({
   ].filter(Boolean) as { label: string; left: string; right: string }[];
 
   return (
-    <div ref={ref}>
-      {/* 헤더 */}
-      <div
-        className="text-center mb-10"
-        style={{
-          opacity: isInView ? 1 : 0,
-          transform: isInView ? "translateY(0)" : "translateY(16px)",
-          transition: "opacity 0.5s ease, transform 0.5s ease",
-        }}
-      >
-        <div className="flex items-center justify-center mb-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-xs font-bold">
-            {t("confirmed")}
-          </span>
-        </div>
+    <div>
+      {/* 헤더. nested면 상위가 배지와 h1을 이미 렌더했으므로 대진 헤딩만 남긴다 */}
+      <div className="text-center mb-10 animate-fade-up">
+        {headingMode === "standalone" && (
+          <div className="flex items-center justify-center mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-xs font-bold">
+              {t("confirmed")}
+            </span>
+          </div>
+        )}
         <h2 className="section-heading section-heading-center text-center">
           {t("koName")} {t("vs")} {fight.opponent.name[lang]}
         </h2>
+        {/* 검색 결과 스니펫으로 그대로 쓰일 한 문장. 대진 헤딩만으로는 날짜·대회가 본문 텍스트에 남지 않는다 */}
+        <p className="text-sm text-muted mt-4 max-w-lg mx-auto">
+          {t("confirmedSummary", {
+            date: formatEventDate(fight.date, locale) || fight.date,
+            event: fight.event,
+            opponent: fight.opponent.name[lang],
+          })}
+        </p>
       </div>
 
       {/* 대전 카드 (Tale of the Tape) */}
       <div
-        className="max-w-2xl mx-auto rounded-3xl overflow-hidden bg-linear-to-b from-[#0f1724] via-[#162033] to-[#0f1724] border border-white/5 shadow-2xl"
-        style={{
-          opacity: isInView ? 1 : 0,
-          transform: isInView ? "translateY(0)" : "translateY(16px)",
-          transition: "opacity 0.5s ease 150ms, transform 0.5s ease 150ms",
-        }}
+        className="max-w-2xl mx-auto rounded-3xl overflow-hidden bg-linear-to-b from-[#0f1724] via-[#162033] to-[#0f1724] border border-white/5 shadow-2xl animate-fade-up"
+        style={{ animationDelay: "150ms" }}
       >
         {/* 이벤트 정보 스트립 */}
         <div className="relative px-4 pt-7 text-center">

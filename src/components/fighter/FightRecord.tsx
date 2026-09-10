@@ -2,7 +2,6 @@
 
 import { useLocale, useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import { formatFullDate } from "@/lib/date-utils";
 import type { FightHistoryEntry } from "@/types/fighter";
 
@@ -13,31 +12,19 @@ interface FightRecordProps {
 export default function FightRecord({ fights }: FightRecordProps) {
   const t = useTranslations("fightRecord");
   const locale = useLocale();
-  const { ref, isInView } = useInView(0.1);
 
   if (fights.length === 0) return null;
 
   return (
-    <section className="py-16 px-4" ref={ref}>
+    <section className="py-16 px-4">
       <div className="max-w-5xl mx-auto">
-        <h2
-          className="section-heading section-heading-center text-center mb-12"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
+        <h2 className="section-heading section-heading-center text-center mb-12 animate-fade-up">
           {t("title")}
         </h2>
 
         <div
-          className="rounded-2xl border border-border bg-white shadow-card overflow-hidden"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(20px)",
-            transition: "opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s",
-          }}
+          className="rounded-2xl border border-border bg-white shadow-card overflow-hidden animate-fade-up"
+          style={{ animationDelay: "0.2s" }}
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -64,11 +51,8 @@ export default function FightRecord({ fights }: FightRecordProps) {
                 {fights.map((fight, index) => (
                   <tr
                     key={index}
-                    className="hover:bg-surface/50 transition-colors"
-                    style={{
-                      opacity: isInView ? 1 : 0,
-                      transition: `opacity 0.4s ease ${300 + index * 80}ms`,
-                    }}
+                    className="hover:bg-surface/50 transition-colors animate-fade-in"
+                    style={{ animationDelay: `${300 + index * 80}ms` }}
                   >
                     <td className="py-3.5 px-4 text-center">
                       <span

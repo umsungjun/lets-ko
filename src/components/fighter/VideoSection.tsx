@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import { formatKstDate } from "@/lib/date-utils";
 import type { YouTubeVideo } from "@/lib/youtube";
 import { SEARCH_QUERY } from "@/lib/youtube";
@@ -21,7 +20,6 @@ export default function VideoSection({
   videosByViews,
 }: VideoSectionProps) {
   const t = useTranslations("videos");
-  const { ref, isInView } = useInView(0.1);
   const [activeTab, setActiveTab] = useState<SortOrder>("date");
   const [activeVideo, setActiveVideo] = useState<YouTubeVideo | null>(null);
 
@@ -56,29 +54,15 @@ export default function VideoSection({
 
   return (
     <>
-      <section
-        className="py-20 px-4 bg-linear-to-b from-surface to-white"
-        ref={ref}
-      >
+      <section className="py-20 px-4 bg-linear-to-b from-surface to-white">
         <div className="max-w-5xl mx-auto">
-          <h2
-            className="section-heading section-heading-center text-center mb-8"
-            style={{
-              opacity: isInView ? 1 : 0,
-              transform: isInView ? "translateY(0)" : "translateY(16px)",
-              transition: "opacity 0.5s ease, transform 0.5s ease",
-            }}
-          >
+          <h2 className="section-heading section-heading-center text-center mb-8 animate-fade-up">
             {t("title")}
           </h2>
 
           <div
-            className="flex items-center justify-between mb-8"
-            style={{
-              opacity: isInView ? 1 : 0,
-              transform: isInView ? "translateY(0)" : "translateY(12px)",
-              transition: "opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s",
-            }}
+            className="flex items-center justify-between mb-8 animate-fade-up"
+            style={{ animationDelay: "0.1s" }}
           >
             <div className="flex gap-2">
               <button
@@ -131,12 +115,8 @@ export default function VideoSection({
               <button
                 key={video.id}
                 onClick={() => openVideo(video)}
-                className="group rounded-2xl overflow-hidden bg-white border border-border shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-500 cursor-pointer text-left w-full"
-                style={{
-                  opacity: isInView ? 1 : 0,
-                  transform: isInView ? "translateY(0)" : "translateY(20px)",
-                  transition: `opacity 0.5s ease ${150 + index * 80}ms, transform 0.5s ease ${150 + index * 80}ms`,
-                }}
+                className="group rounded-2xl overflow-hidden bg-white border border-border shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-500 cursor-pointer text-left w-full animate-fade-up"
+                style={{ animationDelay: `${150 + index * 80}ms` }}
               >
                 {/* 썸네일 */}
                 <div className="relative aspect-video bg-slate-900 overflow-hidden">

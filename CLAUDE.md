@@ -116,14 +116,19 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 - **스타일링**: Tailwind CSS v4, `globals.css`에 `@theme inline` 사용. 주요 색상: `#dc2626`. 폰트: Pretendard (CDN)
 - **포맷팅**: Prettier + `@trivago/prettier-plugin-sort-imports` — 큰따옴표, 80자 너비, 2칸 들여쓰기, trailing comma. Import 정렬: CSS → react → next → `@/` 별칭 → node_modules
 - **경로 별칭**: `@/*` → `./src/*`
-- **스크롤 애니메이션**: `useInView` 커스텀 훅 (`src/hooks/useInView.ts`) + CSS 키프레임 (`fade-up`, `fade-in`, `scale-in`, `slide-left`). 모바일 IntersectionObserver 미감지 대비 800ms fallback timer 포함
+- **등장 애니메이션**: `globals.css`의 `.animate-fade-up`·`.animate-fade-in`·`.animate-scale-in`·`.animate-slide-left`를 쓴다. 지연은 인라인 `animationDelay`. `prefers-reduced-motion` 가드 있음. **`useInView`로 `opacity: isInView ? 1 : 0` 같은 리빌을 만들지 말 것**. 초기값이 false라 서버 렌더 HTML에 인라인 `opacity:0`이 박히고, JS를 실행하지 않는 네이버 Yeti에는 빈 페이지로 읽힌다(2026-09에 메인 62개 요소를 전부 CSS로 전환). `useInView`(`src/hooks/useInView.ts`)는 `StatsCard` 링 게이지 채움 전용으로만 남아 있다
 - **컴포넌트**: 서버 컴포넌트 기본, `"use client"`는 애니메이션·인터랙티브에만
 - **TypeScript 타입**: `interface` — Props, API 계약 등 외부 계약. `type` — 유니온, 유틸리티 조합
 - **방명록 레이트 리미팅**: IP당 30초 쿨다운 (SHA256 해시). 수정/삭제는 localStorage ID + 서버 IP 검증
 - **방명록 UI**: 이모지 리액션 `max-w-0 → max-w-72` 슬라이딩 애니메이션. 리액션 토글은 optimistic update — 클릭 즉시 카운트·활성 상태 반영 후 서버 확정값으로 보정, 실패(429 쿨다운·네트워크 오류) 시 롤백+토스트 안내, 같은 이모지 in-flight 중 재클릭 무시(토글 경합 방지)
 - **토스트**: sonner 전역 사용 — `AppToaster`(`src/components/common/AppToaster.tsx`)를 `[locale]/layout.tsx`에 1회 마운트(bottom-center, richColors). 클라이언트 컴포넌트에서 `import { toast } from "sonner"` 후 `toast.error(t("..."))` 호출, 메시지는 next-intl 번역 키 사용
 - **애널리틱스**: Microsoft Clarity (ID: `vkw0n969lk`, `[locale]/layout.tsx` head 인라인)
-- **SEO**: 메인 페이지 Schema.org JSON-LD, `robots.ts`, `sitemap.ts`, `hreflang`
+- **SEO**: `src/lib/seo/` 3종이 단일 출처다. `site-url.ts`(`SITE_ORIGIN`·`localeUrl`·`localePath`), `metadata.ts`(`buildPageMetadata`, 6개 라우트의 `generateMetadata`가 전부 이걸 호출), `json-ld.ts`(빌더). JSON-LD 출력은 `JsonLd` 컴포넌트가 `@graph` 하나로 묶는다
+  - 루트 `layout.tsx`에는 `openGraph`·`twitter`·`keywords`를 두지 말 것. 재정의하지 않는 en 페이지가 한국어 OG를 상속해 `og:locale=ko_KR`로 나간다
+  - `i18n/routing.ts`의 `localeDetection: false`는 SEO 목적이다. 켜면 `Accept-Language: en` 요청에서 canonical URL(`/`, `/schedule`)이 307로 `/en/...`에 넘어간다
+  - 내부 링크는 반드시 `i18n/navigation`의 `Link`에 locale 없는 경로를 준다. `next/link` + `/${locale}/...`는 307 리다이렉트 URL을 링크하게 된다(2026-09 이전 홈 HTML에서 `/ko/rankings` 12회 대 `/rankings` 1회)
+  - `SportsEvent`는 Google 리치 결과 대상이 아니다. 실제로 노출되는 건 `BreadcrumbList`뿐이고 나머지는 엔티티 이해용 보조 신호
+  - 확정 경기 브랜치 검증은 `src/data/confirmed-fight.json`에 임시 값을 넣고 빌드한 뒤 **반드시 `{}`로 되돌린다**
 - **DOM 사이드 이펙트**: 컴포넌트 외부 DOM 변경은 반드시 `useEffect` 안에서
 - **에러 바운더리**: `[locale]/error.tsx`(런타임 예외, 재시도), `[locale]/not-found.tsx`(404), `global-error.tsx`(레이아웃 예외). 작은 예외가 전체 500으로 확대되는 것을 방지. 데이터 로더/렌더는 옵셔널 체이닝으로 방어(`schedule.predictions ?? []`, `prediction.analysis?.[lang] ?? ""`)
 - **날짜 포맷**: 사용자에게 보이는 모든 날짜·예정 이벤트 "오늘" 비교는 `src/lib/date-utils.ts` 경유 (`formatKstLongDate`/`formatEventDate`/`formatKstDate`/`getKstTodayStr`/`getKstDaysUntil`). `getKstDaysUntil(dateStr)`는 D-day 계산(오늘=0, 미래=양수, 과거=음수) — 확정 경기 D-day 배너·카드에 사용. `toLocaleDateString`/`toISOString().split` 직접 호출 금지 — timeZone 미지정 시 Vercel 서버리스(UTC) 기준이라 KST와 하루 어긋남. 저장용 타임스탬프(`crawledAt`/`updatedAt`/`generatedAt`)는 UTC `toISOString()` 유지
