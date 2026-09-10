@@ -1,10 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 
 import { formatEventDate, getKstDaysUntil } from "@/lib/date-utils";
 import type { ConfirmedFight } from "@/types/prediction";
+
+import { Link } from "../../../i18n/navigation";
 
 interface NextFightBannerProps {
   fight: ConfirmedFight;
@@ -30,7 +31,7 @@ export default function NextFightBanner({
 
   return (
     <Link
-      href={`/${locale}/predictions`}
+      href="/predictions"
       className="block bg-primary text-white hover:bg-primary-dark transition-colors"
     >
       <div className="max-w-5xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-center text-[13px] sm:text-sm">

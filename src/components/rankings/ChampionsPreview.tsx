@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 
 import { useInView } from "@/hooks/useInView";
 import { displayFighterName } from "@/lib/fighter-name-utils";
 import type { DivisionRanking } from "@/types/rankings";
+
+import { Link } from "../../../i18n/navigation";
 
 const WEIGHT_LIMITS: Record<string, string> = {
   flyweight: "56.7kg",
@@ -53,7 +54,7 @@ export default function ChampionsPreview({
         >
           <h2 className="section-heading">{t("championsTitle")}</h2>
           <Link
-            href={`/${locale}/rankings`}
+            href="/rankings"
             className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium text-muted transition-all duration-300 hover:border-primary/40 hover:text-primary"
           >
             {t("viewAll")}
@@ -135,7 +136,7 @@ function ChampionCard({
 
   return (
     <Link
-      href={`/${locale}/rankings`}
+      href="/rankings"
       className="group relative overflow-hidden rounded-2xl border border-border/60 shadow-card transition-all duration-500 hover:-translate-y-0.5 hover:shadow-card-hover"
       style={{
         opacity: isInView ? 1 : 0,

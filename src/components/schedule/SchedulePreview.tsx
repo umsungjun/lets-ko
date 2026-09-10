@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 
 import { useInView } from "@/hooks/useInView";
 import { formatEventDate, getKstTodayStr } from "@/lib/date-utils";
@@ -14,6 +13,8 @@ import {
   isTbaMatchup,
 } from "@/lib/schedule-utils";
 import type { UfcSchedule } from "@/types/schedule";
+
+import { Link } from "../../../i18n/navigation";
 
 import FightCardTabs from "./FightCardTabs";
 
@@ -288,7 +289,7 @@ export default function SchedulePreview({
           }}
         >
           <Link
-            href={`/${locale}/schedule`}
+            href="/schedule"
             className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-foreground text-white hover:bg-foreground/90 transition-all duration-300 text-sm font-semibold shadow-lg shadow-foreground/10"
           >
             {t("viewAll")}

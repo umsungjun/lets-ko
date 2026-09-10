@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ChannelGroup } from "@/components/youtube/YouTubeChannelsView";
 import YouTubeChannelsView from "@/components/youtube/YouTubeChannelsView";
 import { YOUTUBE_CHANNELS } from "@/config/youtube-channels";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 import { fetchChannelInfos, fetchChannelUploads } from "@/lib/youtube";
 
 // 페이지 SSR 캐시 30분 — 내부 fetch revalidate와 동기화 (CHANNEL_CACHE_SECONDS)
@@ -17,18 +18,12 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "youtubePage" });
 
-  return {
+  return buildPageMetadata({
+    locale,
+    path: "/youtube",
     title: t("metaTitle"),
     description: t("metaDescription"),
-    alternates: {
-      canonical: locale === "ko" ? "/youtube" : `/${locale}/youtube`,
-      languages: {
-        ko: "/youtube",
-        en: "/en/youtube",
-        "x-default": "/youtube",
-      },
-    },
-  };
+  });
 }
 
 /**

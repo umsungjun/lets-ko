@@ -1,13 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 
 import ConfirmedFightCard from "@/components/predictions/ConfirmedFightCard";
 import { useInView } from "@/hooks/useInView";
 import { formatKstLongDate } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { PredictionData } from "@/types/prediction";
+
+import { Link } from "../../../i18n/navigation";
 
 interface PredictionPreviewProps {
   predictions: PredictionData; // AI 상대 예측 데이터 (확정 경기 포함 가능)
@@ -179,7 +180,7 @@ export default function PredictionPreview({
             return (
               <Link
                 key={index}
-                href={`/${locale}/predictions`}
+                href="/predictions"
                 className="group relative rounded-3xl bg-linear-to-b from-[#0f1724] via-[#162033] to-[#0f1724] border border-white/5 shadow-xl hover:shadow-2xl hover:border-white/15 transition-all duration-500 cursor-pointer overflow-hidden"
                 style={{
                   opacity: isInView ? 1 : 0,
@@ -288,7 +289,7 @@ export default function PredictionPreview({
           }}
         >
           <Link
-            href={`/${locale}/predictions`}
+            href="/predictions"
             className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-foreground text-white hover:bg-foreground/90 transition-all duration-300 text-sm font-semibold shadow-lg shadow-foreground/10"
           >
             {t("viewDetail")}

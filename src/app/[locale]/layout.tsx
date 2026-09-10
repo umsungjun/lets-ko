@@ -35,26 +35,9 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  const siteOrigin = (() => {
-    const raw =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://lets-ko.vercel.app";
-    try {
-      return new URL(raw).origin;
-    } catch {
-      return "https://lets-ko.vercel.app";
-    }
-  })();
-  const ogImageUrl = `${siteOrigin}/og.png`;
-
   return (
     <html lang={locale}>
       <head>
-        {/* og:image을 직접 주입 — Next.js 메타데이터 API의 locale prefix 자동 추가 우회 */}
-        <meta property="og:image" content={ogImageUrl} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="LET'S KO - 고석현 응원" />
-        <meta name="twitter:image" content={ogImageUrl} />
         <link
           rel="stylesheet"
           as="style"
