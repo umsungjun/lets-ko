@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import { formatEventDate, getKstDaysUntil } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { ConfirmedFight } from "@/types/prediction";
@@ -49,7 +48,6 @@ export default function ConfirmedFightCard({
   locale,
 }: ConfirmedFightCardProps) {
   const t = useTranslations("predictions");
-  const { ref, isInView } = useInView(0.1);
   const lang = locale === "ko" ? "ko" : "en";
 
   const dday = getDdayLabel(fight.date);
@@ -94,16 +92,9 @@ export default function ConfirmedFightCard({
   ].filter(Boolean) as { label: string; left: string; right: string }[];
 
   return (
-    <div ref={ref}>
+    <div>
       {/* 헤더 */}
-      <div
-        className="text-center mb-10"
-        style={{
-          opacity: isInView ? 1 : 0,
-          transform: isInView ? "translateY(0)" : "translateY(16px)",
-          transition: "opacity 0.5s ease, transform 0.5s ease",
-        }}
-      >
+      <div className="text-center mb-10 animate-fade-up">
         <div className="flex items-center justify-center mb-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-xs font-bold">
             {t("confirmed")}
@@ -116,12 +107,8 @@ export default function ConfirmedFightCard({
 
       {/* 대전 카드 (Tale of the Tape) */}
       <div
-        className="max-w-2xl mx-auto rounded-3xl overflow-hidden bg-linear-to-b from-[#0f1724] via-[#162033] to-[#0f1724] border border-white/5 shadow-2xl"
-        style={{
-          opacity: isInView ? 1 : 0,
-          transform: isInView ? "translateY(0)" : "translateY(16px)",
-          transition: "opacity 0.5s ease 150ms, transform 0.5s ease 150ms",
-        }}
+        className="max-w-2xl mx-auto rounded-3xl overflow-hidden bg-linear-to-b from-[#0f1724] via-[#162033] to-[#0f1724] border border-white/5 shadow-2xl animate-fade-up"
+        style={{ animationDelay: "150ms" }}
       >
         {/* 이벤트 정보 스트립 */}
         <div className="relative px-4 pt-7 text-center">

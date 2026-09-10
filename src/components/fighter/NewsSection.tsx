@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import type { NewsArticle } from "@/lib/news";
 import { SEARCH_QUERY } from "@/lib/news";
 
@@ -16,21 +15,13 @@ interface NewsSectionProps {
 
 export default function NewsSection({ articles, locale }: NewsSectionProps) {
   const t = useTranslations("news");
-  const { ref, isInView } = useInView(0.1);
 
   if (articles.length === 0) return null;
 
   return (
-    <section className="py-20 px-4" ref={ref}>
+    <section className="py-20 px-4">
       <div className="max-w-5xl mx-auto">
-        <div
-          className="flex items-center justify-between mb-10"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
+        <div className="flex items-center justify-between mb-10 animate-fade-up">
           <h2 className="section-heading">{t("title")}</h2>
           <a
             href={`https://news.google.com/search?q=${encodeURIComponent(SEARCH_QUERY)}&hl=ko&gl=KR`}
@@ -73,12 +64,8 @@ export default function NewsSection({ articles, locale }: NewsSectionProps) {
                 href={article.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/20 transition-all duration-500 cursor-pointer"
-                style={{
-                  opacity: isInView ? 1 : 0,
-                  transform: isInView ? "translateY(0)" : "translateY(16px)",
-                  transition: `opacity 0.5s ease ${150 + index * 80}ms, transform 0.5s ease ${150 + index * 80}ms`,
-                }}
+                className="group p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/20 transition-all duration-500 cursor-pointer animate-fade-up"
+                style={{ animationDelay: `${150 + index * 80}ms` }}
               >
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-xl bg-linear-to-br from-primary/15 to-primary/5 flex items-center justify-center shrink-0 mt-0.5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all duration-500">

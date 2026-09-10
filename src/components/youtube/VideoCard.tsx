@@ -14,8 +14,6 @@ interface VideoCardProps {
   locale: string;
   /** 스태거 애니메이션을 위한 인덱스 */
   index?: number;
-  /** 부모의 isInView 신호 (스크롤 진입 시 페이드업) */
-  isInView?: boolean;
 }
 
 /**
@@ -27,7 +25,6 @@ interface VideoCardProps {
  * @param props.channelBadge - 채널명 배지 (없으면 미표시)
  * @param props.locale - 날짜 포맷용 로케일
  * @param props.index - 스태거 애니메이션 인덱스
- * @param props.isInView - 부모 IntersectionObserver 결과
  */
 export default function VideoCard({
   video,
@@ -35,17 +32,12 @@ export default function VideoCard({
   channelBadge,
   locale,
   index = 0,
-  isInView = true,
 }: VideoCardProps) {
   return (
     <button
       onClick={() => onOpen(video)}
-      className="group rounded-2xl overflow-hidden bg-white border border-border shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-500 cursor-pointer text-left w-full"
-      style={{
-        opacity: isInView ? 1 : 0,
-        transform: isInView ? "translateY(0)" : "translateY(20px)",
-        transition: `opacity 0.5s ease ${150 + index * 60}ms, transform 0.5s ease ${150 + index * 60}ms`,
-      }}
+      className="group rounded-2xl overflow-hidden bg-white border border-border shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-500 cursor-pointer text-left w-full animate-fade-up"
+      style={{ animationDelay: `${150 + index * 60}ms` }}
     >
       <div className="relative aspect-video bg-slate-900 overflow-hidden">
         <img

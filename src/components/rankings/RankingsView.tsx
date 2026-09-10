@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import type { UfcRankings } from "@/types/rankings";
 
 import DivisionCard from "./DivisionCard";
@@ -19,7 +18,6 @@ interface RankingsViewProps {
 
 export default function RankingsView({ rankings, locale }: RankingsViewProps) {
   const t = useTranslations("rankings");
-  const { ref, isInView } = useInView(0.1);
   const [activeTab, setActiveTab] = useState<TabId>("mens");
 
   const mensDivisions = rankings.divisions.filter(
@@ -36,26 +34,15 @@ export default function RankingsView({ rankings, locale }: RankingsViewProps) {
   ];
 
   return (
-    <div ref={ref}>
-      <h1
-        className="section-heading section-heading-center mb-10 text-center"
-        style={{
-          opacity: isInView ? 1 : 0,
-          transform: isInView ? "translateY(0)" : "translateY(16px)",
-          transition: "opacity 0.5s ease, transform 0.5s ease",
-        }}
-      >
+    <div>
+      <h1 className="section-heading section-heading-center mb-10 text-center animate-fade-up">
         {t("title")}
       </h1>
 
       {/* Tabs */}
       <div
-        className="mb-8 flex justify-center"
-        style={{
-          opacity: isInView ? 1 : 0,
-          transform: isInView ? "translateY(0)" : "translateY(12px)",
-          transition: "opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s",
-        }}
+        className="mb-8 flex justify-center animate-fade-up"
+        style={{ animationDelay: "0.1s" }}
       >
         <div className="inline-flex gap-1 rounded-2xl border border-border bg-surface p-1">
           {tabs.map((tab) => (
@@ -75,13 +62,7 @@ export default function RankingsView({ rankings, locale }: RankingsViewProps) {
       </div>
 
       {/* Content */}
-      <div
-        style={{
-          opacity: isInView ? 1 : 0,
-          transform: isInView ? "translateY(0)" : "translateY(16px)",
-          transition: "opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s",
-        }}
-      >
+      <div className="animate-fade-up" style={{ animationDelay: "0.15s" }}>
         {activeTab === "p4p" && (
           <P4PList
             men={rankings.poundForPoundMen}

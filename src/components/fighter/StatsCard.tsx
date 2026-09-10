@@ -27,12 +27,8 @@ function StatCircle({
 
   return (
     <div
-      className="flex flex-col items-center gap-3 p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover transition-shadow"
-      style={{
-        opacity: animate ? 1 : 0,
-        transform: animate ? "translateY(0)" : "translateY(16px)",
-        transition: `opacity 0.5s ease ${delay}ms, transform 0.5s ease ${delay}ms`,
-      }}
+      className="flex flex-col items-center gap-3 p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover transition-shadow animate-fade-up"
+      style={{ animationDelay: `${delay}ms` }}
     >
       <div className="relative w-28 h-28">
         <svg className="w-28 h-28 -rotate-90" viewBox="0 0 88 88">
@@ -75,22 +71,16 @@ function RecordBox({
   label,
   color,
   delay,
-  animate,
 }: {
   value: number;
   label: string;
   color: string;
   delay: number;
-  animate: boolean;
 }) {
   return (
     <div
-      className="flex flex-col items-center p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover transition-shadow"
-      style={{
-        opacity: animate ? 1 : 0,
-        transform: animate ? "scale(1)" : "scale(0.9)",
-        transition: `opacity 0.4s ease ${delay}ms, transform 0.4s ease ${delay}ms`,
-      }}
+      className="flex flex-col items-center p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover transition-shadow animate-scale-in"
+      style={{ animationDelay: `${delay}ms` }}
     >
       <p className={`text-5xl font-black ${color}`}>{value}</p>
       <p className="text-sm font-medium text-muted mt-1">{label}</p>
@@ -108,14 +98,7 @@ export default function StatsCard({ stats }: StatsCardProps) {
       <div className="max-w-5xl mx-auto space-y-12">
         {stats.externalRankings && stats.externalRankings.length > 0 && (
           <div>
-            <h2
-              className="section-heading section-heading-center text-center mb-8"
-              style={{
-                opacity: isInView ? 1 : 0,
-                transform: isInView ? "translateY(0)" : "translateY(16px)",
-                transition: "opacity 0.5s ease, transform 0.5s ease",
-              }}
-            >
+            <h2 className="section-heading section-heading-center text-center mb-8 animate-fade-up">
               {t("currentRanking")}
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -125,12 +108,8 @@ export default function StatsCard({ stats }: StatsCardProps) {
                   href={ranking.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative flex flex-col items-center p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all group"
-                  style={{
-                    opacity: isInView ? 1 : 0,
-                    transform: isInView ? "translateY(0)" : "translateY(16px)",
-                    transition: `opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms`,
-                  }}
+                  className="relative flex flex-col items-center p-5 rounded-2xl bg-white border border-border shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all group animate-fade-up"
+                  style={{ animationDelay: `${i * 100}ms` }}
                 >
                   <svg
                     className="absolute top-3 right-3 w-4 h-4 text-muted group-hover:text-primary transition-colors"
@@ -187,14 +166,7 @@ export default function StatsCard({ stats }: StatsCardProps) {
         )}
 
         <div>
-          <h2
-            className="section-heading section-heading-center text-center mb-12"
-            style={{
-              opacity: isInView ? 1 : 0,
-              transform: isInView ? "translateY(0)" : "translateY(16px)",
-              transition: "opacity 0.5s ease, transform 0.5s ease",
-            }}
-          >
+          <h2 className="section-heading section-heading-center text-center mb-12 animate-fade-up">
             {t("title")}
           </h2>
 
@@ -204,28 +176,24 @@ export default function StatsCard({ stats }: StatsCardProps) {
               label={t("wins")}
               color="text-win"
               delay={0}
-              animate={isInView}
             />
             <RecordBox
               value={losses}
               label={t("losses")}
               color="text-loss"
               delay={100}
-              animate={isInView}
             />
             <RecordBox
               value={draws}
               label={t("draws")}
               color="text-muted"
               delay={200}
-              animate={isInView}
             />
             <RecordBox
               value={stats.knockouts}
               label={t("knockouts")}
               color="text-primary"
               delay={300}
-              animate={isInView}
             />
           </div>
 

@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import type { CareerHighlight } from "@/types/fighter";
 
 interface CareerTimelineProps {
@@ -22,29 +21,18 @@ export default function CareerTimeline({
   locale,
 }: CareerTimelineProps) {
   const t = useTranslations("timeline");
-  const { ref, isInView } = useInView(0.05);
 
   return (
-    <section className="py-16 px-4 bg-surface" ref={ref}>
+    <section className="py-16 px-4 bg-surface">
       <div className="max-w-5xl mx-auto">
-        <h2
-          className="section-heading section-heading-center text-center mb-12"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
+        <h2 className="section-heading section-heading-center text-center mb-12 animate-fade-up">
           {t("title")}
         </h2>
 
         <div className="relative">
           <div
-            className="absolute left-6 top-0 bottom-0 w-px bg-linear-to-b from-primary/40 via-primary/20 to-transparent"
-            style={{
-              opacity: isInView ? 1 : 0,
-              transition: "opacity 0.8s ease 0.2s",
-            }}
+            className="absolute left-6 top-0 bottom-0 w-px bg-linear-to-b from-primary/40 via-primary/20 to-transparent animate-fade-in"
+            style={{ animationDelay: "0.2s" }}
           />
 
           <div className="flex flex-col gap-6">
@@ -56,12 +44,8 @@ export default function CareerTimeline({
               return (
                 <div
                   key={index}
-                  className="relative flex items-start gap-5"
-                  style={{
-                    opacity: isInView ? 1 : 0,
-                    transform: isInView ? "translateX(0)" : "translateX(-20px)",
-                    transition: `opacity 0.5s ease ${200 + index * 120}ms, transform 0.5s ease ${200 + index * 120}ms`,
-                  }}
+                  className="relative flex items-start gap-5 animate-slide-left"
+                  style={{ animationDelay: `${200 + index * 120}ms` }}
                 >
                   <div className="relative z-10 w-12 h-12 rounded-full bg-white border-2 border-primary/30 shadow-card flex items-center justify-center shrink-0 text-lg">
                     {categoryIcons[item.category] || "📌"}

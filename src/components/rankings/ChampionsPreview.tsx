@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import { displayFighterName } from "@/lib/fighter-name-utils";
 import type { DivisionRanking } from "@/types/rankings";
 
@@ -32,7 +31,6 @@ export default function ChampionsPreview({
   locale,
 }: ChampionsPreviewProps) {
   const t = useTranslations("rankings");
-  const { ref, isInView } = useInView(0.1);
 
   const mensDivisions = divisions.filter(
     (d) => !d.divisionName.startsWith("여성")
@@ -42,16 +40,9 @@ export default function ChampionsPreview({
   );
 
   return (
-    <section className="px-4 py-20" ref={ref}>
+    <section className="px-4 py-20">
       <div className="mx-auto max-w-5xl">
-        <div
-          className="mb-10 flex items-center justify-between"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
+        <div className="mb-10 flex items-center justify-between animate-fade-up">
           <h2 className="section-heading">{t("championsTitle")}</h2>
           <Link
             href="/rankings"
@@ -81,7 +72,6 @@ export default function ChampionsPreview({
               key={division.divisionSlug}
               division={division}
               locale={locale}
-              isInView={isInView}
               index={index}
               variant="men"
             />
@@ -95,7 +85,6 @@ export default function ChampionsPreview({
               key={division.divisionSlug}
               division={division}
               locale={locale}
-              isInView={isInView}
               index={mensDivisions.length + index}
               variant="women"
             />
@@ -109,13 +98,11 @@ export default function ChampionsPreview({
 function ChampionCard({
   division,
   locale,
-  isInView,
   index,
   variant,
 }: {
   division: DivisionRanking;
   locale: string;
-  isInView: boolean;
   index: number;
   variant: "men" | "women";
 }) {
@@ -137,12 +124,8 @@ function ChampionCard({
   return (
     <Link
       href="/rankings"
-      className="group relative overflow-hidden rounded-2xl border border-border/60 shadow-card transition-all duration-500 hover:-translate-y-0.5 hover:shadow-card-hover"
-      style={{
-        opacity: isInView ? 1 : 0,
-        transform: isInView ? "translateY(0)" : "translateY(20px)",
-        transition: `opacity 0.5s ease ${100 + index * 50}ms, transform 0.5s ease ${100 + index * 50}ms`,
-      }}
+      className="group relative overflow-hidden rounded-2xl border border-border/60 shadow-card transition-all duration-500 hover:-translate-y-0.5 hover:shadow-card-hover animate-fade-up"
+      style={{ animationDelay: `${100 + index * 50}ms` }}
     >
       {/* Background */}
       <div className="relative bg-linear-to-br from-gray-900 via-gray-800 to-gray-900">

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import { formatKstLongDate } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { PredictionData } from "@/types/prediction";
@@ -32,7 +31,6 @@ export default function PredictionDetail({
   locale,
 }: PredictionDetailProps) {
   const t = useTranslations("predictions");
-  const { ref, isInView } = useInView(0.1);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const lang = locale === "ko" ? "ko" : "en";
 
@@ -93,17 +91,10 @@ export default function PredictionDetail({
   const generatedDate = formatKstLongDate(predictions.generatedAt, locale);
 
   return (
-    <div className="py-12 sm:py-16 px-4" ref={ref}>
+    <div className="py-12 sm:py-16 px-4">
       <div className="max-w-2xl mx-auto">
         {/* 헤더 */}
-        <div
-          className="text-center mb-10"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
+        <div className="text-center mb-10 animate-fade-up">
           <div className="flex justify-center mb-4">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-linear-to-r from-violet-600 to-blue-500 text-white text-[11px] font-bold tracking-wide">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
@@ -123,12 +114,10 @@ export default function PredictionDetail({
 
         {/* 후보 선택 탭 */}
         <div
-          className="grid gap-3 mb-8"
+          className="grid gap-3 mb-8 animate-fade-up"
           style={{
             gridTemplateColumns: `repeat(${predictions.opponents.length}, 1fr)`,
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease 100ms, transform 0.5s ease 100ms",
+            animationDelay: "100ms",
           }}
         >
           {predictions.opponents.map((opponent, index) => {
@@ -192,13 +181,7 @@ export default function PredictionDetail({
         </div>
 
         {/* 선수 비교 */}
-        <div
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease 200ms, transform 0.5s ease 200ms",
-          }}
-        >
+        <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
           <FighterComparison
             opponent={selectedOpponent}
             locale={locale}
@@ -208,24 +191,16 @@ export default function PredictionDetail({
 
         {/* 승률 바 */}
         <div
-          className="mt-5"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease 300ms, transform 0.5s ease 300ms",
-          }}
+          className="mt-5 animate-fade-up"
+          style={{ animationDelay: "300ms" }}
         >
           <WinProbabilityBar opponent={selectedOpponent} locale={locale} />
         </div>
 
         {/* 분석 카드들 */}
         <div
-          className="mt-5 space-y-4"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease 400ms, transform 0.5s ease 400ms",
-          }}
+          className="mt-5 space-y-4 animate-fade-up"
+          style={{ animationDelay: "400ms" }}
         >
           {/* 매칭 가능성 */}
           <div className="p-5 sm:p-6 rounded-2xl bg-white border border-border/60 shadow-card">

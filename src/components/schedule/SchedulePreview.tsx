@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 
-import { useInView } from "@/hooks/useInView";
 import { formatEventDate, getKstTodayStr } from "@/lib/date-utils";
 import { displayFighterName } from "@/lib/fighter-name-utils";
 import {
@@ -65,7 +64,6 @@ export default function SchedulePreview({
   locale,
 }: SchedulePreviewProps) {
   const t = useTranslations("schedule");
-  const { ref, isInView } = useInView(0.1);
   const lang = locale === "ko" ? "ko" : "en";
 
   // 오늘 이후 이벤트 중 1개만 표시 (KST 기준 "오늘")
@@ -95,17 +93,10 @@ export default function SchedulePreview({
   const isWinner1 = isPredictedWinner1(prediction, nextEvent.mainEvent);
 
   return (
-    <section className="py-20 px-4" ref={ref}>
+    <section className="py-20 px-4">
       <div className="max-w-2xl mx-auto">
         {/* 섹션 헤더 */}
-        <div
-          className="text-center mb-8"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(16px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
-          }}
-        >
+        <div className="text-center mb-8 animate-fade-up">
           <h2 className="section-heading section-heading-center text-center">
             {t("previewTitle")}
           </h2>
@@ -113,12 +104,8 @@ export default function SchedulePreview({
 
         {/* 피처드 이벤트 카드 */}
         <div
-          className="rounded-2xl overflow-hidden shadow-xl"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transform: isInView ? "translateY(0)" : "translateY(20px)",
-            transition: "opacity 0.6s ease 150ms, transform 0.6s ease 150ms",
-          }}
+          className="rounded-2xl overflow-hidden shadow-xl animate-fade-up"
+          style={{ animationDelay: "150ms" }}
         >
           {/* 어두운 헤더 */}
           <div className="bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 px-6 pt-5 pb-6">
@@ -282,11 +269,8 @@ export default function SchedulePreview({
 
         {/* CTA */}
         <div
-          className="text-center mt-6"
-          style={{
-            opacity: isInView ? 1 : 0,
-            transition: "opacity 0.5s ease 400ms",
-          }}
+          className="text-center mt-6 animate-fade-in"
+          style={{ animationDelay: "400ms" }}
         >
           <Link
             href="/schedule"
