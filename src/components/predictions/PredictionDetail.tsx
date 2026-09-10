@@ -64,15 +64,28 @@ export default function PredictionDetail({
     };
   }, [activeVideo]);
 
-  // 확정된 경기가 있으면 메인 프리뷰와 동일하게 확정 정보를 우선 표시
+  // 확정된 경기가 있으면 메인 프리뷰와 동일하게 확정 정보를 우선 표시.
+  // 카드만 반환하면 이 페이지의 최상위 헤딩이 h2가 되어 h1이 사라지므로 헤더를 함께 렌더한다.
   if (predictions.confirmedFight) {
     return (
       <div className="py-12 sm:py-16 px-4">
         <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10 animate-fade-up">
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-[11px] font-bold tracking-wide">
+                {t("confirmed")}
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+              {t("confirmedTitle")}
+            </h1>
+            <p className="text-sm text-muted mt-3">{t("confirmedLead")}</p>
+          </div>
           <ConfirmedFightCard
             fight={predictions.confirmedFight}
             koStats={koStats}
             locale={locale}
+            headingMode="nested"
           />
         </div>
       </div>
@@ -106,7 +119,10 @@ export default function PredictionDetail({
           <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
             {t("title")}
           </h1>
-          <p className="text-xs text-muted mt-2">{t("poweredBy")}</p>
+          <p className="text-sm text-muted mt-3 max-w-lg mx-auto">
+            {t("lead")}
+          </p>
+          <p className="text-xs text-muted mt-3">{t("poweredBy")}</p>
           <p className="text-[11px] text-muted/50 mt-1">
             {t("updatedAt", { date: generatedDate })}
           </p>

@@ -108,7 +108,10 @@
     "viewAll": "View All Rankings"
   },
   "predictions": {
-    "title": "AI Next Opponent Prediction",
+    "title": "Ko Seokhyeon Next Opponent Prediction",
+    "confirmedTitle": "Ko Seokhyeon's Next Fight",
+    "lead": "Ko Seokhyeon's next opponent is not confirmed yet. Gemini AI analyzed three likely candidates based on FightMatrix rankings and recent results.",
+    "confirmedLead": "A look at Ko Seokhyeon's next fight and how the two fighters match up.",
     "poweredBy": "Powered by Gemini AI",
     "viewDetail": "View Detailed Analysis",
     "rank": "FightMatrix Rank",
@@ -129,8 +132,9 @@
     "koName": "Ko Seokhyeon",
     "vs": "VS",
     "candidate": "Candidate {number}",
-    "nextFightLabel": "Next Fight",
+    "nextFightLabel": "Ko Seokhyeon's Next Fight",
     "confirmed": "Next Fight Confirmed",
+    "confirmedSummary": "Ko Seokhyeon's next fight is against {opponent} at {event} on {date}.",
     "confirmedDate": "Date",
     "confirmedLocation": "Location",
     "confirmedEvent": "Event",

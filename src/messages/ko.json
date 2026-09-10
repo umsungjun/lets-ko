@@ -108,7 +108,10 @@
     "viewAll": "전체 랭킹 보기"
   },
   "predictions": {
-    "title": "AI 다음 상대 예측",
+    "title": "고석현 다음 상대 예측",
+    "confirmedTitle": "고석현 다음 경기",
+    "lead": "고석현 다음 상대는 아직 확정되지 않았습니다. Gemini AI가 FightMatrix 랭킹과 최근 전적을 기준으로 상대 후보 3명을 분석했습니다.",
+    "confirmedLead": "고석현 다음 경기 일정과 상대 전력을 비교했습니다.",
     "poweredBy": "Gemini AI 기반 분석",
     "viewDetail": "상세 분석 보기",
     "rank": "FightMatrix 랭킹",
@@ -129,8 +132,9 @@
     "koName": "고석현",
     "vs": "VS",
     "candidate": "후보 {number}",
-    "nextFightLabel": "다음 경기",
+    "nextFightLabel": "고석현 다음 경기",
     "confirmed": "다음 경기 확정",
+    "confirmedSummary": "고석현 다음 경기는 {date} {event}에서 {opponent} 선수와 열립니다.",
     "confirmedDate": "경기 일시",
     "confirmedLocation": "장소",
     "confirmedEvent": "대회",
