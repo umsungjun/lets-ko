@@ -1,3 +1,4 @@
+import { extractNameFromImageUrl } from "@/lib/fighter-name-utils";
 import type {
   ExternalRanking,
   FightHistoryEntry,
@@ -8,7 +9,8 @@ import * as cheerio from "cheerio";
 
 // Vercel 함수 리전이 US라 www.ufc.com 사용 (kr.ufc.com은 한국 사이트라 US IP에 403).
 // 영문 페이지가 반환되지만 아래 파서가 영/한 라벨을 모두 처리하므로 무관.
-const UFC_ATHLETE_URL = "https://www.ufc.com/athlete/seokhyeon-ko";
+const KO_ATHLETE_SLUG = "seokhyeon-ko";
+const UFC_ATHLETE_URL = `https://www.ufc.com/athlete/${KO_ATHLETE_SLUG}`;
 const FIGHTMATRIX_URL =
   "https://www.fightmatrix.com/fighter-profile/Seok%20Hyeon%20Ko/185137/";
 const CRAWLER_HEADERS = {
@@ -206,30 +208,39 @@ export async function crawlUfcStats(): Promise<FighterStats> {
           const $ajax = cheerio.load(insertCmd.data);
 
           $ajax(".c-card-event--athlete-results").each((_, el) => {
-            // 상대 이름: headline 내 <a> 중 본인(seokhyeon-ko)이 아닌 링크
-            const headlineLinks = $ajax(el).find(
-              ".c-card-event--athlete-results__headline a"
+            // 코너 div(red/blue)에 해당 선수의 프로필 링크와 헤드샷이 함께 들어있어, 승패·상대 이름의 판정 기준이 된다
+            const corners = $ajax(el).find(
+              ".c-card-event--athlete-results__red-image, .c-card-event--athlete-results__blue-image"
             );
-            let opponent = "";
-            headlineLinks.each((_, link) => {
-              const href = $ajax(link).attr("href") || "";
-              if (!href.includes("seokhyeon-ko")) {
-                opponent = $ajax(link).text().trim();
-              }
-            });
+            const koLink = `a[href*="${KO_ATHLETE_SLUG}"]`;
+            const koCorner = corners
+              .filter((_, c) => $ajax(c).find(koLink).length > 0)
+              .first();
+            const opponentCorner = corners
+              .filter((_, c) => $ajax(c).find(koLink).length === 0)
+              .first();
+
+            // 상대 이름: headline <a>에는 성만 담기므로(예: "Rowe") 코너 헤드샷 파일명에서 풀네임을 복원
+            let opponentSurname = "";
+            $ajax(el)
+              .find(".c-card-event--athlete-results__headline a")
+              .each((_, link) => {
+                const href = $ajax(link).attr("href") || "";
+                if (!href.includes(KO_ATHLETE_SLUG)) {
+                  opponentSurname = $ajax(link).text().trim();
+                }
+              });
+            const opponent = extractNameFromImageUrl(
+              opponentCorner.find("img").first().attr("src"),
+              opponentSurname
+            );
 
             if (!opponent) return;
 
-            // 승패: plaque 클래스의 win/loss
-            const plaqueClass =
-              $ajax(el)
-                .find(".c-card-event--athlete-results__plaque")
-                .attr("class") || "";
-            const resultStr: "win" | "loss" | "draw" = plaqueClass.includes(
-              "win"
-            )
+            // 승패: __plaque("Win" 배지)는 승자 코너 div 안에만 렌더되므로 클래스가 항상 win이다. 고석현 코너 div의 win/loss 클래스로 판정해야 한다
+            const resultStr: "win" | "loss" | "draw" = koCorner.hasClass("win")
               ? "win"
-              : plaqueClass.includes("loss")
+              : koCorner.hasClass("loss")
                 ? "loss"
                 : "draw";
 

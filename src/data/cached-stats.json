@@ -1,5 +1,9 @@
 {
-  "record": { "wins": 13, "losses": 2, "draws": 0 },
+  "record": {
+    "wins": 13,
+    "losses": 3,
+    "draws": 0
+  },
   "knockouts": 6,
   "strikeAccuracy": 59,
   "strikesLandedPerMin": 0,
@@ -10,6 +14,15 @@
   "weight": "170 lbs",
   "reach": "71\"",
   "fightHistory": [
+    {
+      "date": "2026-07-18",
+      "event": "UFC Fight Night: Du Plessis vs Usman",
+      "opponent": "Jean-Paul Lebosnoyani",
+      "result": "loss",
+      "method": "Decision (Unanimous)",
+      "round": 3,
+      "time": "5:00"
+    },
     {
       "date": "2025-11-01",
       "event": "UFC Fight Night 263",

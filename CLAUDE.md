@@ -43,6 +43,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 **Supabase → 캐시 JSON 폴백** 패턴이 모든 데이터에 공통 적용됩니다.
 
 - **선수 통계**: `fighter_stats` 테이블 → `cached-stats.json`. 전적 0-0-0 등 비정상 데이터면 캐시로 폴백
+- **전적 히스토리 파싱**: UFC 선수 페이지 전적 카드에서 `__plaque`("Win" 배지)는 **승자 코너 div 안에만** 렌더되므로 plaque 클래스를 읽으면 모든 경기가 `win`이 된다(2026-09 패배가 승으로 표시된 원인). 고석현 코너(`__red-image`/`__blue-image` 중 `seokhyeon-ko` 링크를 가진 쪽) div의 `win`/`loss` 클래스로 판정한다. 상대 이름도 headline `<a>`에는 성만 들어 있어 코너 헤드샷 파일명에서 `extractNameFromImageUrl()`로 풀네임을 복원한다
 - **UFC 랭킹**: `ufc_rankings` 테이블 → `cached-rankings.json`. 로더는 `src/lib/data/getRankings()` 공통 함수 사용(메인·랭킹 페이지 공유). UFC 페이지 반응형 중복 마크업으로 체급이 2번 저장되는 문제를 `dedupeDivisions()`(divisionSlug 기준)로 방어 — 미적용 시 `ChampionsPreview`에서 React duplicate key 에러 발생
 - **AI 상대 예측**: `opponent_predictions` 테이블 → `cached-predictions.json`. 로더 `src/lib/data/getPredictions()`. `confirmedFight`(고석현 확정 경기)가 있으면 opponents 이미지 조건과 무관하게 채택. 수동 오버라이드 `confirmed-fight.json`이 있으면 자동 감지보다 우선
 - **고석현 확정 경기**: 크롤 시 `detectKoConfirmedFight()`가 일정에서 고석현 매치를 자동 감지해 `opponent_predictions.data.confirmedFight`에 부착 → `ConfirmedFightCard`/`NextFightBanner`로 표시. 자동 감지 실패 대비 `confirmed-fight.json` 수동 안전망
@@ -106,7 +107,7 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 - `fighter-names-ko.json` — 파이터 영문명 → 한국어명 시드 사전(현역 로스터 기준). DB 행보다 **우선**하므로 오역 수정은 이 파일에서 한다. 선수명만 등록 — 이벤트명은 UFC 공식 대회명이라 번역 대상이 아님
 - `cached-schedule.json` — UFC 경기 일정 + AI 예측 폴백 (`UfcSchedule` 구조). 배포 초기 또는 Supabase 미접근 시 사용
 - `cached-predictions.json` — AI 상대 예측 폴백
-- `confirmed-fight.json` — 고석현 확정 경기 수동 오버라이드 안전망. 자동 감지가 놓칠 때만 `ConfirmedFight` 구조로 채우고, 평소엔 `{}`로 비워둠(비어있으면 무시)
+- `confirmed-fight.json` — 고석현 확정 경기 수동 오버라이드 안전망. 자동 감지가 놓칠 때만 `ConfirmedFight` 구조로 채우고, 평소엔 `{}`로 비워둠(비어있으면 무시). UFC는 두 달 앞 이벤트를 `www.ufc.com/events` 목록에 아직 안 올리거나 올려도 파이트 카드를 비워두는 경우가 있어, 국내 매체 발표가 먼저 나온 확정 경기는 자동 감지가 불가능하다. **오버라이드는 자동 감지보다 우선하므로, UFC가 카드를 공개해 자동 감지가 잡기 시작하면 반드시 `{}`로 되돌린다**
 - `career-highlights.json` — 커리어 타임라인 이정표 (다국어)
 - `fighter-bio.json` — 선수 바이오 데이터 (다국어)
 - `videos.json` — YouTube API 할당량 초과 시 폴백 영상 메타데이터
@@ -133,7 +134,7 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 - **에러 바운더리**: `[locale]/error.tsx`(런타임 예외, 재시도), `[locale]/not-found.tsx`(404), `global-error.tsx`(레이아웃 예외). 작은 예외가 전체 500으로 확대되는 것을 방지. 데이터 로더/렌더는 옵셔널 체이닝으로 방어(`schedule.predictions ?? []`, `prediction.analysis?.[lang] ?? ""`)
 - **날짜 포맷**: 사용자에게 보이는 모든 날짜·예정 이벤트 "오늘" 비교는 `src/lib/date-utils.ts` 경유 (`formatKstLongDate`/`formatEventDate`/`formatKstDate`/`getKstTodayStr`/`getKstDaysUntil`). `getKstDaysUntil(dateStr)`는 D-day 계산(오늘=0, 미래=양수, 과거=음수) — 확정 경기 D-day 배너·카드에 사용. `toLocaleDateString`/`toISOString().split` 직접 호출 금지 — timeZone 미지정 시 Vercel 서버리스(UTC) 기준이라 KST와 하루 어긋남. 저장용 타임스탬프(`crawledAt`/`updatedAt`/`generatedAt`)는 UTC `toISOString()` 유지
 - **파이터 이름**: `name`(영문)이 source of truth — 고석현 매칭(`isKoSeokhyeon`)과 AI 승자 판정(`isPredictedWinner1`)이 이 값을 비교하므로 한국어로 덮어쓰면 카드 강조가 깨진다. 한국어명은 `nameKo`(`LocalizableFighterName`, 일정·랭킹 파이터 공용)에 별도 주입하고 화면 출력은 `displayFighterName(fighter, lang)`(`src/lib/fighter-name-utils.ts`)·`displayWinnerName(prediction, mainEvent, lang)` 경유. 승자 표시명을 `prediction.winner.ko`가 아니라 사전 값으로 해석하는 이유는 같은 카드 안에서 표기가 갈리는 것을 막기 위함
-- **파이터 풀네임**: UFC 목록 페이지 헤드샷 파일명 파싱이 실패하면 메인 이벤트만 성으로 남는다(예: "Makhachev"). `backfillMainEventNames()`를 크롤 시점과 렌더 시점(`getSchedule()`) 양쪽에서 호출해 같은 이벤트 `fightCard.mainCard[0]`의 풀네임으로 보정 — 렌더에서도 하는 이유는 구버전 저장 데이터가 크롤을 기다리지 않고 즉시 고쳐지도록 하기 위함
+- **파이터 풀네임**: 헤드샷 파일명(`{LAST}_{FIRST}...png`) 파서는 `src/lib/fighter-name-utils.ts`의 `extractNameFromImageUrl()` 하나로 일정 크롤·전적 크롤이 공유한다. UFC 목록 페이지 헤드샷 파일명 파싱이 실패하면 메인 이벤트만 성으로 남는다(예: "Makhachev"). `backfillMainEventNames()`를 크롤 시점과 렌더 시점(`getSchedule()`) 양쪽에서 호출해 같은 이벤트 `fightCard.mainCard[0]`의 풀네임으로 보정 — 렌더에서도 하는 이유는 구버전 저장 데이터가 크롤을 기다리지 않고 즉시 고쳐지도록 하기 위함
 - **이벤트명은 번역하지 않음**: `UFC 331: Van vs Pantoja`는 UFC 공식 대회명이라 ko에서도 원문 유지. 사전에는 선수명만 넣는다
 - **JSDoc**: 새로 작성하는 컴포넌트·유틸 함수에 반드시 JSDoc 작성. 설명은 한국어로. 컴포넌트는 `@description`, `@param`(props 각각), 유틸 함수는 `@description`, `@param`, `@returns`, 필요 시 `@throws`. 인터페이스 필드는 인라인 `/** */` 주석.
 

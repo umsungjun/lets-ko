@@ -37,3 +37,30 @@ export const displayFighterName = (
   fighter: LocalizableFighterName,
   lang: "ko" | "en"
 ): string => (lang === "ko" ? (fighter.nameKo ?? fighter.name) : fighter.name);
+
+/**
+ * @description UFC 헤드샷 이미지 URL 파일명에서 파이터 풀네임을 복원.
+ * UFC 파일명 규칙: `{LAST}_{FIRST}[_{수식어}...][_{MM-YY}].png` (챔피언은 `_BELT_`, 코너별 컷은 `_L_`/`_R_` 토큰이 붙는다).
+ * 목록 페이지 headline과 선수 전적 카드는 성만 노출하므로 풀네임 출처가 파일명뿐이다.
+ * @param url - 헤드샷 이미지 URL (없으면 fallback 반환)
+ * @param fallback - 파일명 파싱 실패 시 사용할 이름
+ * @returns "First Last" 형태의 풀네임 또는 fallback
+ */
+export const extractNameFromImageUrl = (
+  url: string | undefined,
+  fallback: string
+): string => {
+  if (!url) return fallback;
+  // 성·이름 모두 하이픈 허용 ("ABDUL-MALIK_MANSUR", "LEBOSNOYANI_JEAN-PAUL")
+  const match = url.match(
+    /\/([A-Z][A-Z-]*)_([A-Z][A-Z-]*)(?:_[A-Z]+)*(?:_[\d-]+)?\.png/
+  );
+  if (!match) return fallback;
+  // 하이픈 성은 세그먼트별로 대문자화 ("ABDUL-MALIK" → "Abdul-Malik")
+  const toTitle = (s: string) =>
+    s
+      .split("-")
+      .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+      .join("-");
+  return `${toTitle(match[2])} ${toTitle(match[1])}`;
+};

@@ -1,1 +1,16 @@
-{}
+{
+  "opponent": {
+    "name": { "ko": "웰링턴 투르만", "en": "Wellington Turman" },
+    "imageUrl": "https://ufc.com/images/styles/athlete_bio_full_body/s3/2023-11/TURMAN_WELLINGTON_L_12-02.png?itok=icqJ0amp",
+    "country": "Brazil",
+    "record": { "wins": 18, "losses": 8, "draws": 0 },
+    "fightingStyle": { "ko": "주짓수, 그래플링", "en": "Jiu-Jitsu, Grappling" },
+    "age": 30,
+    "height": "183cm",
+    "weight": "77.1kg",
+    "reach": "183cm"
+  },
+  "date": "2026-11-08",
+  "location": { "ko": "라스베이거스", "en": "Las Vegas" },
+  "event": "UFC Fight Night: Bonfim vs Brady"
+}
