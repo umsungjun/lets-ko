@@ -166,6 +166,8 @@ export async function crawlUfcStats(): Promise<FighterStats> {
   // Extract fight history via Drupal AJAX API
   // 초기 HTML에는 최근 1경기만 새 구조로 표시되므로, AJAX로 전체 전적 로드
   const fightHistory: FightHistoryEntry[] = [];
+  // 코너 판별 실패로 버린 카드 수. 전부 버려졌다면 파서가 마크업 변경을 따라가지 못한 것이므로 로그로 남긴다
+  let skippedCards = 0;
   try {
     const viewDomId = html.match(/view_dom_id":"([a-f0-9]+)"/)?.[1] || "";
     const viewArgs =
@@ -237,7 +239,13 @@ export async function crawlUfcStats(): Promise<FighterStats> {
 
             if (!opponent) return;
 
-            // 승패: __plaque("Win" 배지)는 승자 코너 div 안에만 렌더되므로 클래스가 항상 win이다. 고석현 코너 div의 win/loss 클래스로 판정해야 한다
+            // 마크업이 바뀌어 고석현 코너를 못 찾으면 승패를 알 수 없으므로 이 경기를 버린다. __plaque로 폴백하면 안 된다. plaque는 승자 코너에만 렌더돼 클래스가 항상 win이라 전패를 전승으로 기록한다(2026-09 실제 발생)
+            if (koCorner.length === 0) {
+              skippedCards += 1;
+              return;
+            }
+
+            // 승패: 고석현 코너 div의 win/loss 클래스로 판정. draw는 두 클래스가 모두 없을 때
             const resultStr: "win" | "loss" | "draw" = koCorner.hasClass("win")
               ? "win"
               : koCorner.hasClass("loss")
@@ -300,6 +308,13 @@ export async function crawlUfcStats(): Promise<FighterStats> {
     // Fight history fetch failed — non-blocking, use empty array
   }
 
+  if (skippedCards > 0) {
+    console.error(
+      `Fight history: 고석현 코너를 찾지 못해 ${skippedCards}경기 스킵 (UFC 마크업 변경 의심). 저장된 경기 ${fightHistory.length}건`
+    );
+  }
+
+  // 전부 스킵돼 비었으면 로더가 cached-stats.json으로 폴백한다
   stats.fightHistory = fightHistory;
 
   // Fetch external rankings (failures are non-blocking)
