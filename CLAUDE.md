@@ -25,10 +25,13 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 - `/[locale]/predictions` — AI 상대 예측 페이지 (ISR 24시간)
 - `/[locale]/rankings` — UFC 체급별 랭킹 페이지 (ISR 24시간)
 - `/[locale]/cheer` — 응원 방명록 페이지 (`force-dynamic`, 항상 최신 데이터)
+- `/[locale]/youtube` — YouTube 채널 모음 페이지: `src/config/youtube-channels.ts`에 등록된 채널의 최신 업로드 (ISR 30분, 헤더·푸터·사이트맵에 노출)
 - `/api/guestbook` — REST API (GET/POST/PATCH/DELETE)
 - `/api/guestbook/reactions` — 이모지 리액션 토글 (POST), 허용 이모지: 👊🔥💪❤️👏
 - `/api/og` — OG 이미지 동적 생성 (Node.js 런타임, `ImageResponse`)
+- `/api/youtube/opponent` — 상대 선수 하이라이트 영상 검색 (GET `?name=`, 최대 3건, 클라이언트 `PredictionDetail`에서 호출, fetch revalidate 24시간)
 - `/api/cron/crawl` — 크롤 트리거 엔드포인트 (GitHub Actions가 하루 2회 UTC 05:00·17:00 호출, `CRON_SECRET` 필요)
+- `/api/cron/rankings` — 랭킹 전용 크론 (GitHub Actions 주 1회 호출, `maxDuration = 30`, `CRON_SECRET` 필요, 저장 후 `/rankings` 한/영 자체 워밍)
 
 ### 다국어 (i18n)
 
@@ -43,13 +46,14 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 **Supabase → 캐시 JSON 폴백** 패턴이 모든 데이터에 공통 적용됩니다.
 
 - **선수 통계**: `fighter_stats` 테이블 → `cached-stats.json`. 전적 0-0-0 등 비정상 데이터면 캐시로 폴백
+- **전적 히스토리 파싱**: UFC 선수 페이지 전적 카드에서 `__plaque`("Win" 배지)는 **승자 코너 div 안에만** 렌더되므로 plaque 클래스를 읽으면 모든 경기가 `win`이 된다(2026-09 패배가 승으로 표시된 원인). 고석현 코너(`__red-image`/`__blue-image` 중 `seokhyeon-ko` 링크를 가진 쪽) div의 `win`/`loss` 클래스로 판정한다. 상대 이름도 headline `<a>`에는 성만 들어 있어 코너 헤드샷 파일명에서 `extractNameFromImageUrl()`로 풀네임을 복원한다
 - **UFC 랭킹**: `ufc_rankings` 테이블 → `cached-rankings.json`. 로더는 `src/lib/data/getRankings()` 공통 함수 사용(메인·랭킹 페이지 공유). UFC 페이지 반응형 중복 마크업으로 체급이 2번 저장되는 문제를 `dedupeDivisions()`(divisionSlug 기준)로 방어 — 미적용 시 `ChampionsPreview`에서 React duplicate key 에러 발생
 - **AI 상대 예측**: `opponent_predictions` 테이블 → `cached-predictions.json`. 로더 `src/lib/data/getPredictions()`. `confirmedFight`(고석현 확정 경기)가 있으면 opponents 이미지 조건과 무관하게 채택. 수동 오버라이드 `confirmed-fight.json`이 있으면 자동 감지보다 우선
 - **고석현 확정 경기**: 크롤 시 `detectKoConfirmedFight()`가 일정에서 고석현 매치를 자동 감지해 `opponent_predictions.data.confirmedFight`에 부착 → `ConfirmedFightCard`/`NextFightBanner`로 표시. 자동 감지 실패 대비 `confirmed-fight.json` 수동 안전망
 - **UFC 경기 일정 + AI 승부 예측**: `ufc_schedule` 테이블 → `cached-schedule.json`. 두 데이터(이벤트 + 예측)를 하나의 JSONB blob(`UfcSchedule`)으로 저장. 로더는 `src/lib/data/schedule.ts`의 `getSchedule()` 공통 함수 사용(메인·일정 페이지 공유, `enrichImages` 옵션으로 헤드샷 보완 여부 선택)
 - **이벤트명**: 크롤러가 ufc.com 슬러그에서 `deriveEventName()`(`schedule-utils.ts`)으로 derive. UFC가 스폰서 접두어를 붙인 슬러그(`cryptocom-ufc-331`)를 쓰므로 `^ufc-` 시작 고정이 아니라 **슬러그 어디서든** `ufc-<숫자>`를 찾아야 함 — 시작 고정이면 넘버링 대회가 "UFC Fight Night"으로 잘못 표기됨(issue #33)
 - **파이터 한국어명**: `fighter_names_ko` 테이블(`name_en` PK) + 리포지토리 시드 `src/data/fighter-names-ko.json`(현역 로스터 456명). 로더 `src/lib/data/fighter-names.ts`의 `loadFighterNamesKo()`가 DB 행 위에 **시드를 덮어써** 병합(`cache()`로 요청당 1회 쿼리) — 사람이 검수해 커밋한 값이 기계 번역보다 우선이라 오역은 시드 JSON 한 줄만 고쳐 배포하면 되고 DB는 손대지 않아도 된다(`confirmed-fight.json` 수동 오버라이드와 같은 방향). 시드가 있어 배포 직후·DB 미접근 로컬에서도 동작. 크롤은 **사전에 없는 이름만** Gemini 배치 번역(실행당 상한 80명, 40명씩 배치)해 신규 행만 추가하므로 한 번 정해진 표기가 고정됨. 일정은 `attachFighterNamesKo()`, 랭킹은 `attachRankingNamesKo()`로 `nameKo` 주입. 시드 JSON은 서버 번들에만 포함(약 19KB) — 클라이언트로는 화면에 뜬 이름 문자열만 전달
-- **YouTube 영상**: YouTube Data API v3 (`src/lib/youtube.ts`), ISR 24시간
+- **YouTube 영상**: YouTube Data API v3 (`src/lib/youtube.ts`). 메인 영상 섹션은 `searchYouTubeVideos(order)`로 최신순 30분·인기순 24시간 캐시, `/youtube` 페이지는 `fetchChannelUploads`/`fetchChannelInfos`로 30분(`CHANNEL_CACHE_SECONDS`) 캐시. 채널 목록은 `src/config/youtube-channels.ts`에 객체 한 줄로 추가하고 `uploadsPlaylistId`는 `channelId`의 두 번째 글자만 C에서 U로 바꾼 값
 - **뉴스**: Google News RSS 파싱 (`src/lib/news.ts`), ISR 24시간
 - **방명록**: `guestbook_messages` 테이블, `/api/guestbook` API
 - **닉네임 생성**: `src/lib/nickname-generator.ts` — 로케일 기반 랜덤 닉네임 (예: "행복한 석현")
@@ -106,7 +110,7 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 - `fighter-names-ko.json` — 파이터 영문명 → 한국어명 시드 사전(현역 로스터 기준). DB 행보다 **우선**하므로 오역 수정은 이 파일에서 한다. 선수명만 등록 — 이벤트명은 UFC 공식 대회명이라 번역 대상이 아님
 - `cached-schedule.json` — UFC 경기 일정 + AI 예측 폴백 (`UfcSchedule` 구조). 배포 초기 또는 Supabase 미접근 시 사용
 - `cached-predictions.json` — AI 상대 예측 폴백
-- `confirmed-fight.json` — 고석현 확정 경기 수동 오버라이드 안전망. 자동 감지가 놓칠 때만 `ConfirmedFight` 구조로 채우고, 평소엔 `{}`로 비워둠(비어있으면 무시)
+- `confirmed-fight.json` — 고석현 확정 경기 수동 오버라이드 안전망. 자동 감지가 놓칠 때만 `ConfirmedFight` 구조로 채우고, 평소엔 `{}`로 비워둠(비어있으면 무시). UFC는 두 달 앞 이벤트를 `www.ufc.com/events` 목록에 아직 안 올리거나 올려도 파이트 카드를 비워두는 경우가 있어, 국내 매체 발표가 먼저 나온 확정 경기는 자동 감지가 불가능하다. **오버라이드는 자동 감지보다 우선하므로, UFC가 카드를 공개해 자동 감지가 잡기 시작하면 반드시 `{}`로 되돌린다**
 - `career-highlights.json` — 커리어 타임라인 이정표 (다국어)
 - `fighter-bio.json` — 선수 바이오 데이터 (다국어)
 - `videos.json` — YouTube API 할당량 초과 시 폴백 영상 메타데이터
@@ -128,12 +132,12 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
   - `i18n/routing.ts`의 `localeDetection: false`는 SEO 목적이다. 켜면 `Accept-Language: en` 요청에서 canonical URL(`/`, `/schedule`)이 307로 `/en/...`에 넘어간다
   - 내부 링크는 반드시 `i18n/navigation`의 `Link`에 locale 없는 경로를 준다. `next/link` + `/${locale}/...`는 307 리다이렉트 URL을 링크하게 된다(2026-09 이전 홈 HTML에서 `/ko/rankings` 12회 대 `/rankings` 1회)
   - `SportsEvent`는 Google 리치 결과 대상이 아니다. 실제로 노출되는 건 `BreadcrumbList`뿐이고 나머지는 엔티티 이해용 보조 신호
-  - 확정 경기 브랜치 검증은 `src/data/confirmed-fight.json`에 임시 값을 넣고 빌드한 뒤 **반드시 `{}`로 되돌린다**
+  - 확정 경기 브랜치를 **임시 값으로** 검증했다면 빌드 후 **반드시 `{}`로 되돌린다**. 실제 확정 경기가 등록된 상태는 예외이며, 그 해제 조건은 위 정적 데이터 절에 있다
 - **DOM 사이드 이펙트**: 컴포넌트 외부 DOM 변경은 반드시 `useEffect` 안에서
 - **에러 바운더리**: `[locale]/error.tsx`(런타임 예외, 재시도), `[locale]/not-found.tsx`(404), `global-error.tsx`(레이아웃 예외). 작은 예외가 전체 500으로 확대되는 것을 방지. 데이터 로더/렌더는 옵셔널 체이닝으로 방어(`schedule.predictions ?? []`, `prediction.analysis?.[lang] ?? ""`)
 - **날짜 포맷**: 사용자에게 보이는 모든 날짜·예정 이벤트 "오늘" 비교는 `src/lib/date-utils.ts` 경유 (`formatKstLongDate`/`formatEventDate`/`formatKstDate`/`getKstTodayStr`/`getKstDaysUntil`). `getKstDaysUntil(dateStr)`는 D-day 계산(오늘=0, 미래=양수, 과거=음수) — 확정 경기 D-day 배너·카드에 사용. `toLocaleDateString`/`toISOString().split` 직접 호출 금지 — timeZone 미지정 시 Vercel 서버리스(UTC) 기준이라 KST와 하루 어긋남. 저장용 타임스탬프(`crawledAt`/`updatedAt`/`generatedAt`)는 UTC `toISOString()` 유지
 - **파이터 이름**: `name`(영문)이 source of truth — 고석현 매칭(`isKoSeokhyeon`)과 AI 승자 판정(`isPredictedWinner1`)이 이 값을 비교하므로 한국어로 덮어쓰면 카드 강조가 깨진다. 한국어명은 `nameKo`(`LocalizableFighterName`, 일정·랭킹 파이터 공용)에 별도 주입하고 화면 출력은 `displayFighterName(fighter, lang)`(`src/lib/fighter-name-utils.ts`)·`displayWinnerName(prediction, mainEvent, lang)` 경유. 승자 표시명을 `prediction.winner.ko`가 아니라 사전 값으로 해석하는 이유는 같은 카드 안에서 표기가 갈리는 것을 막기 위함
-- **파이터 풀네임**: UFC 목록 페이지 헤드샷 파일명 파싱이 실패하면 메인 이벤트만 성으로 남는다(예: "Makhachev"). `backfillMainEventNames()`를 크롤 시점과 렌더 시점(`getSchedule()`) 양쪽에서 호출해 같은 이벤트 `fightCard.mainCard[0]`의 풀네임으로 보정 — 렌더에서도 하는 이유는 구버전 저장 데이터가 크롤을 기다리지 않고 즉시 고쳐지도록 하기 위함
+- **파이터 풀네임**: 헤드샷 파일명(`{LAST}_{FIRST}...png`) 파서는 `src/lib/fighter-name-utils.ts`의 `extractNameFromImageUrl()` 하나로 일정 크롤·전적 크롤이 공유한다. UFC 목록 페이지 헤드샷 파일명 파싱이 실패하면 메인 이벤트만 성으로 남는다(예: "Makhachev"). `backfillMainEventNames()`를 크롤 시점과 렌더 시점(`getSchedule()`) 양쪽에서 호출해 같은 이벤트 `fightCard.mainCard[0]`의 풀네임으로 보정 — 렌더에서도 하는 이유는 구버전 저장 데이터가 크롤을 기다리지 않고 즉시 고쳐지도록 하기 위함
 - **이벤트명은 번역하지 않음**: `UFC 331: Van vs Pantoja`는 UFC 공식 대회명이라 ko에서도 원문 유지. 사전에는 선수명만 넣는다
 - **JSDoc**: 새로 작성하는 컴포넌트·유틸 함수에 반드시 JSDoc 작성. 설명은 한국어로. 컴포넌트는 `@description`, `@param`(props 각각), 유틸 함수는 `@description`, `@param`, `@returns`, 필요 시 `@throws`. 인터페이스 필드는 인라인 `/** */` 주석.
 
