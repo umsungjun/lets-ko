@@ -15,6 +15,15 @@ export interface OpponentPrediction {
   fightAnalysis: { ko: string; en: string };
 }
 
+// 확정 경기용 AI 승부 예측. 프로필 보강과 별개 호출로 만들어지므로 구버전 데이터엔 없을 수 있음
+export interface ConfirmedFightPrediction {
+  /** 고석현 승률 (0-100) */
+  winProbability: number;
+  fightAnalysis: { ko: string; en: string };
+  /** 생성 시각 (UTC ISO) */
+  generatedAt: string;
+}
+
 // 확정된 다음 경기 정보
 export interface ConfirmedFight {
   opponent: {
@@ -35,6 +44,8 @@ export interface ConfirmedFight {
   date: string; // ISO date (e.g. "2026-06-21")
   location: { ko: string; en: string };
   event: string; // e.g. "UFC Fight Night 280"
+  /** Gemini 승부 예측. 크롤이 상대·대회가 바뀔 때만 다시 생성 */
+  aiPrediction?: ConfirmedFightPrediction;
 }
 
 export interface PredictionData {

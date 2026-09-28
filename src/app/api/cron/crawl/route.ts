@@ -18,7 +18,9 @@ import {
   loadFighterNamesKo,
   saveFighterNamesKo,
 } from "@/lib/data/fighter-names";
+import { getConfirmedOverride } from "@/lib/data/predictions";
 import { createServerClient } from "@/lib/supabase/server";
+import type { FighterStats } from "@/types/fighter";
 import type { PredictionData } from "@/types/prediction";
 import type { UfcRankings } from "@/types/rankings";
 import type { UfcSchedule } from "@/types/schedule";
@@ -92,24 +94,47 @@ export async function GET(request: NextRequest) {
 
   // 고석현 확정 경기 감지를 Phase 2(AI 예측)와 병렬 실행해 크리티컬 패스 시간 추가 방지.
   // 기존 confirmedFight를 읽어 상대 미변경 시 Gemini 재호출 생략. 감지 실패는 non-blocking.
+  // 일정 크롤이 실패해도 빈 배열로 호출해 수동 오버라이드 경기의 승부 예측은 계속 만든다.
   const confirmedFightPromise: Promise<
     PredictionData["confirmedFight"] | null
-  > = scheduleData
-    ? (async () => {
-        const { data: prevPred } = await supabase
-          .from("opponent_predictions")
+  > = (async () => {
+    // 스탯 크롤이 실패한 날엔 DB 최신 스탯으로 승부 예측 프롬프트를 채운다.
+    // 이 조회까지 실패하면 예측만 건너뛰고 확정 경기 감지 자체는 계속한다.
+    const loadStoredStats = async (): Promise<FighterStats | undefined> => {
+      if (latestStats) return latestStats;
+      try {
+        const { data } = await supabase
+          .from("fighter_stats")
           .select("data")
           .order("crawled_at", { ascending: false })
           .limit(1)
           .single();
-        const existingConfirmed =
-          (prevPred?.data as PredictionData | null)?.confirmedFight ?? null;
-        return detectKoConfirmedFight(scheduleData.events, existingConfirmed);
-      })().catch((err) => {
-        console.error("Confirmed fight detection failed:", err);
-        return null;
-      })
-    : Promise.resolve(null);
+        return (data?.data as FighterStats | null) ?? undefined;
+      } catch {
+        return undefined;
+      }
+    };
+
+    const [{ data: prevPred }, koStats] = await Promise.all([
+      supabase
+        .from("opponent_predictions")
+        .select("data")
+        .order("crawled_at", { ascending: false })
+        .limit(1)
+        .single(),
+      loadStoredStats(),
+    ]);
+    const existing =
+      (prevPred?.data as PredictionData | null)?.confirmedFight ?? null;
+    return detectKoConfirmedFight(scheduleData?.events ?? [], {
+      existing,
+      override: getConfirmedOverride(),
+      koStats,
+    });
+  })().catch((err) => {
+    console.error("Confirmed fight detection failed:", err);
+    return null;
+  });
 
   // Phase 2: DB 저장(stats) + AI 예측 + 파이터명 한국어 번역 병렬 실행
   // DB 저장은 I/O 위주라 Gemini 호출과 병렬로 실행 가능
@@ -166,6 +191,7 @@ export async function GET(request: NextRequest) {
       opponent: confirmed.opponent.name.en,
       event: confirmed.event,
       date: confirmed.date,
+      aiPrediction: Boolean(confirmed.aiPrediction),
     };
   }
 

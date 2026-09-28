@@ -1,11 +1,14 @@
 import { analyzeOpponent, selectOpponents } from "@/lib/gemini";
+import {
+  KO_DEFAULT_FIGHTMATRIX_RANK,
+  getKoFightMatrixRank,
+} from "@/lib/ko-stats";
 import type { FighterStats } from "@/types/fighter";
 import type { OpponentPrediction, PredictionData } from "@/types/prediction";
 
 import { crawlFightMatrixCandidates } from "./fightmatrix-crawler";
 import { scrapeUfcFighterImage } from "./ufc-image-scraper";
 
-const DEFAULT_RANK = 46;
 // 최소 경과 일수 (최근 경기 후 이 기간이 지나야 예측 활성화)
 const MIN_DAYS_SINCE_LAST_FIGHT = 60;
 
@@ -45,7 +48,7 @@ export async function generatePredictions(
     if (daysSinceLastFight < MIN_DAYS_SINCE_LAST_FIGHT) {
       return {
         generatedAt: new Date().toISOString(),
-        koFightMatrixRank: DEFAULT_RANK,
+        koFightMatrixRank: KO_DEFAULT_FIGHTMATRIX_RANK,
         lastFightDate,
         opponents: [],
       };
@@ -53,9 +56,7 @@ export async function generatePredictions(
   }
 
   // 2. FightMatrix 랭킹에서 고석현 랭크 확인
-  const koRank =
-    koStats.externalRankings?.find((r) => r.site === "FightMatrix")?.rank ||
-    DEFAULT_RANK;
+  const koRank = getKoFightMatrixRank(koStats);
 
   // 3. FightMatrix 웰터급 후보 크롤링 (실패 시 빈 배열 — Gemini가 자체 지식으로 선정)
   let candidates: Awaited<ReturnType<typeof crawlFightMatrixCandidates>> = [];

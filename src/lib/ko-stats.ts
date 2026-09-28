@@ -12,6 +12,23 @@ export const KO_PROFILE = {
   country: { ko: "대한민국", en: "South Korea" },
 } as const;
 
+// FightMatrix 순위가 크롤 스탯에 없을 때 쓰는 고석현 웰터급 순위 (수동 확인값)
+export const KO_DEFAULT_FIGHTMATRIX_RANK = 46;
+
+/**
+ * @description 크롤 스탯의 externalRankings에서 고석현 FightMatrix 순위를 꺼낸다. 예측 생성·비교 UI가 공유.
+ * 순위는 1부터라 0은 파싱 실패로 보고 fallback으로 보낸다.
+ * @param stats - 크롤된 고석현 스탯
+ * @param fallback - 순위가 없을 때 쓸 값
+ * @returns FightMatrix 순위
+ */
+export const getKoFightMatrixRank = (
+  stats: FighterStats,
+  fallback: number = KO_DEFAULT_FIGHTMATRIX_RANK
+): number =>
+  stats.externalRankings?.find((r) => r.site === "FightMatrix")?.rank ||
+  fallback;
+
 // 고석현 vs 상대 비교(Tale of the Tape) UI에서 공통으로 쓰는 고석현 측 데이터
 export interface KoComparisonStats {
   record: string;
@@ -37,9 +54,7 @@ export function buildKoComparisonStats(
   fallbackRank: number,
   fallbackLastFightDate?: string
 ): KoComparisonStats {
-  const fightMatrixRank =
-    stats.externalRankings?.find((r) => r.site === "FightMatrix")?.rank ??
-    fallbackRank;
+  const fightMatrixRank = getKoFightMatrixRank(stats, fallbackRank);
 
   return {
     record: `${stats.record.wins}-${stats.record.losses}-${stats.record.draws}`,

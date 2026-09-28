@@ -8,12 +8,33 @@ import type { ConfirmedFight, PredictionData } from "@/types/prediction";
  * 확정 경기가 없으면 `{}`로 두면 되고, 그 경우 null을 반환한다.
  * @returns 유효한 확정 경기 또는 null
  */
-const getConfirmedOverride = (): ConfirmedFight | null => {
+export const getConfirmedOverride = (): ConfirmedFight | null => {
   const o = confirmedFightOverride as Partial<ConfirmedFight>;
   if (o && o.opponent && o.date && o.event && o.location) {
     return o as ConfirmedFight;
   }
   return null;
+};
+
+/**
+ * @description 오버라이드 JSON은 프로필만 손으로 채운다. AI 예측은 크롤이 DB에 남긴 것을 같은 상대일 때만 이어받는다.
+ * JSON에 `aiPrediction`을 직접 넣었으면 그 값이 우선.
+ * @param override - 수동 오버라이드 확정 경기
+ * @param stored - DB(또는 캐시)에 저장된 확정 경기
+ * @returns 예측이 병합된 오버라이드
+ */
+const mergeOverridePrediction = (
+  override: ConfirmedFight,
+  stored?: ConfirmedFight
+): ConfirmedFight => {
+  if (override.aiPrediction || !stored?.aiPrediction) return override;
+  // 대회명은 비교하지 않는다. 손으로 적은 오버라이드와 슬러그에서 derive한 대회명은 표기가 어긋나기 쉽다
+  const sameOpponent =
+    stored.opponent.name.en.trim().toLowerCase() ===
+    override.opponent.name.en.trim().toLowerCase();
+  return sameOpponent
+    ? { ...override, aiPrediction: stored.aiPrediction }
+    : override;
 };
 
 /**
@@ -26,7 +47,8 @@ const getConfirmedOverride = (): ConfirmedFight | null => {
  * 확정 카드를 띄워야 하므로 confirmedFight 존재를 별도 통과 조건으로 둔다.
  * (과거엔 이미지 조건만 검사해 confirmedFight-only 데이터가 캐시로 폴백되는 숨은 결합이 있었음)
  *
- * 마지막으로 수동 오버라이드(`confirmed-fight.json`)가 있으면 자동 감지보다 우선 적용한다.
+ * 마지막으로 수동 오버라이드(`confirmed-fight.json`)가 있으면 자동 감지보다 우선 적용하되,
+ * AI 승부 예측은 저장된 확정 경기가 같은 상대일 때 이어받는다.
  * @returns 예측 데이터 (Supabase 또는 cached 폴백, 오버라이드 반영)
  */
 export const getPredictions = async (): Promise<PredictionData> => {
@@ -65,7 +87,12 @@ export const getPredictions = async (): Promise<PredictionData> => {
 
   // 수동 오버라이드가 있으면 자동 감지 결과보다 우선
   const override = getConfirmedOverride();
-  if (override) return { ...base, confirmedFight: override };
+  if (override) {
+    return {
+      ...base,
+      confirmedFight: mergeOverridePrediction(override, base.confirmedFight),
+    };
+  }
 
   return base;
 };
