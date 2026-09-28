@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import AiPredictionBadge from "@/components/predictions/AiPredictionBadge";
 import ConfirmedFightCard from "@/components/predictions/ConfirmedFightCard";
 import { formatKstLongDate } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
@@ -70,16 +71,7 @@ export default function PredictionPreview({
         <div className="max-w-5xl mx-auto">
           <div className="text-center animate-fade-up">
             <div className="flex items-center justify-center gap-2 mb-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-linear-to-r from-violet-600 to-blue-500 text-white text-[11px] font-bold tracking-wide">
-                <svg
-                  className="w-3 h-3"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                </svg>
-                AI PREDICTION
-              </span>
+              <AiPredictionBadge />
             </div>
             <h2 className="section-heading section-heading-center text-center">
               {t("title")}
@@ -108,12 +100,7 @@ export default function PredictionPreview({
         {/* 헤더 */}
         <div className="text-center mb-10 animate-fade-up">
           <div className="flex justify-center mb-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-linear-to-r from-violet-600 to-blue-500 text-white text-[11px] font-bold tracking-wide">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-              </svg>
-              AI PREDICTION
-            </span>
+            <AiPredictionBadge />
           </div>
           <h2 className="section-heading section-heading-center text-center">
             {t("title")}

@@ -8,6 +8,8 @@ import { formatKstLongDate } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { PredictionData } from "@/types/prediction";
 
+import AiPredictionBadge from "./AiPredictionBadge";
+import AnalysisCard from "./AnalysisCard";
 import ConfirmedFightCard from "./ConfirmedFightCard";
 import FighterComparison from "./FighterComparison";
 import WinProbabilityBar from "./WinProbabilityBar";
@@ -41,8 +43,9 @@ export default function PredictionDetail({
   const [activeVideo, setActiveVideo] = useState<OpponentVideo | null>(null);
 
   useEffect(() => {
+    // 확정 경기 화면은 후보 탭이 없으므로 영상 조회로 YouTube 쿼터를 쓰지 않는다
     const opponent = predictions.opponents[selectedIndex];
-    if (!opponent) return;
+    if (!opponent || predictions.confirmedFight) return;
 
     const name = opponent.name.en;
     const controller = new AbortController();
@@ -55,7 +58,7 @@ export default function PredictionDetail({
       .catch(() => setOpponentVideos([]));
 
     return () => controller.abort();
-  }, [selectedIndex, predictions.opponents]);
+  }, [selectedIndex, predictions.opponents, predictions.confirmedFight]);
 
   useEffect(() => {
     document.body.style.overflow = activeVideo ? "hidden" : "";
@@ -67,6 +70,9 @@ export default function PredictionDetail({
   // 확정된 경기가 있으면 메인 프리뷰와 동일하게 확정 정보를 우선 표시.
   // 카드만 반환하면 이 페이지의 최상위 헤딩이 h2가 되어 h1이 사라지므로 헤더를 함께 렌더한다.
   if (predictions.confirmedFight) {
+    const fight = predictions.confirmedFight;
+    // 크롤이 붙인 승부 예측. 구버전 데이터·생성 실패면 없으므로 카드만 표시
+    const ai = fight.aiPrediction;
     return (
       <div className="py-12 sm:py-16 px-4">
         <div className="max-w-2xl mx-auto">
@@ -82,11 +88,44 @@ export default function PredictionDetail({
             <p className="text-sm text-muted mt-3">{t("confirmedLead")}</p>
           </div>
           <ConfirmedFightCard
-            fight={predictions.confirmedFight}
+            fight={fight}
             koStats={koStats}
             locale={locale}
             headingMode="nested"
           />
+
+          {ai && (
+            <div
+              className="mt-10 animate-fade-up"
+              style={{ animationDelay: "300ms" }}
+            >
+              <div className="flex justify-center mb-5">
+                <AiPredictionBadge />
+              </div>
+              <WinProbabilityBar
+                koProbability={ai.winProbability}
+                opponentName={fight.opponent.name[lang]}
+              />
+              <div className="mt-5">
+                <AnalysisCard
+                  tone="blue"
+                  title={t("fightAnalysis")}
+                  text={ai.fightAnalysis[lang]}
+                />
+              </div>
+              <p className="text-center text-xs text-muted mt-6">
+                {t("poweredBy")}
+              </p>
+              <p className="text-center text-[11px] text-muted/50 mt-1">
+                {t("updatedAt", {
+                  date: formatKstLongDate(ai.generatedAt, locale),
+                })}
+              </p>
+              <p className="text-center text-[11px] text-muted/40 mt-3">
+                {t("confirmedDisclaimer")}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -109,12 +148,7 @@ export default function PredictionDetail({
         {/* 헤더 */}
         <div className="text-center mb-10 animate-fade-up">
           <div className="flex justify-center mb-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-linear-to-r from-violet-600 to-blue-500 text-white text-[11px] font-bold tracking-wide">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-              </svg>
-              AI PREDICTION
-            </span>
+            <AiPredictionBadge />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
             {t("title")}
@@ -210,7 +244,10 @@ export default function PredictionDetail({
           className="mt-5 animate-fade-up"
           style={{ animationDelay: "300ms" }}
         >
-          <WinProbabilityBar opponent={selectedOpponent} locale={locale} />
+          <WinProbabilityBar
+            koProbability={selectedOpponent.winProbability}
+            opponentName={selectedOpponent.name[lang]}
+          />
         </div>
 
         {/* 분석 카드들 */}
@@ -218,59 +255,16 @@ export default function PredictionDetail({
           className="mt-5 space-y-4 animate-fade-up"
           style={{ animationDelay: "400ms" }}
         >
-          {/* 매칭 가능성 */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-white border border-border/60 shadow-card">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center">
-                <svg
-                  className="w-3.5 h-3.5 text-amber-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </span>
-              <h3 className="text-xs font-bold text-muted uppercase tracking-wider">
-                {t("matchReason")}
-              </h3>
-            </div>
-            <p className="text-sm text-foreground/80 leading-relaxed">
-              {selectedOpponent.matchReasoning[lang]}
-            </p>
-          </div>
-
-          {/* 승부 분석 */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-white border border-border/60 shadow-card">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center">
-                <svg
-                  className="w-3.5 h-3.5 text-blue-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </span>
-              <h3 className="text-xs font-bold text-muted uppercase tracking-wider">
-                {t("fightAnalysis")}
-              </h3>
-            </div>
-            <p className="text-sm text-foreground/80 leading-relaxed">
-              {selectedOpponent.fightAnalysis[lang]}
-            </p>
-          </div>
+          <AnalysisCard
+            tone="amber"
+            title={t("matchReason")}
+            text={selectedOpponent.matchReasoning[lang]}
+          />
+          <AnalysisCard
+            tone="blue"
+            title={t("fightAnalysis")}
+            text={selectedOpponent.fightAnalysis[lang]}
+          />
         </div>
 
         {/* 상대 관련 영상 */}

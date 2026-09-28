@@ -2,20 +2,24 @@
 
 import { useTranslations } from "next-intl";
 
-import type { OpponentPrediction } from "@/types/prediction";
-
 interface WinProbabilityBarProps {
-  opponent: OpponentPrediction;
-  locale: string;
+  /** 고석현 승률 (0-100) */
+  koProbability: number;
+  /** 상대 표시명 (로케일 반영된 값) */
+  opponentName: string;
 }
 
+/**
+ * @description 고석현 vs 상대 AI 승률을 좌우 색 바로 표시. 후보 예측·확정 경기 공용
+ * @param props.koProbability - 고석현 승률 (0-100)
+ * @param props.opponentName - 상대 표시명
+ */
 export default function WinProbabilityBar({
-  opponent,
-  locale,
+  koProbability,
+  opponentName,
 }: WinProbabilityBarProps) {
   const t = useTranslations("predictions");
-  const lang = locale === "ko" ? "ko" : "en";
-  const koProb = opponent.winProbability;
+  const koProb = koProbability;
   const opProb = 100 - koProb;
 
   return (
@@ -39,7 +43,7 @@ export default function WinProbabilityBar({
             {opProb}%
           </span>
           <span className="text-sm font-bold text-foreground">
-            {opponent.name[lang]}
+            {opponentName}
           </span>
         </div>
       </div>

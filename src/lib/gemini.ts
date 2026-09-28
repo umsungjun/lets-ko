@@ -1,5 +1,6 @@
 import type { FightHistoryEntry, FighterStats } from "@/types/fighter";
 import type {
+  ConfirmedFight,
   FightMatrixCandidate,
   OpponentAnalysis,
   SelectedOpponent,
@@ -37,6 +38,25 @@ const describeMomentum = (history: FightHistoryEntry[]): string => {
 };
 
 /**
+ * @description 최근 경기를 "상대: 결과 by 방식 (R라운드 시간)" 한 줄씩으로 나열. 프롬프트 공용
+ * @param history - 최근 경기가 먼저 오도록 정렬된 전적 목록
+ * @param count - 포함할 경기 수
+ * @returns 줄바꿈으로 이은 문자열. 전적이 없으면 "unknown"
+ */
+const formatRecentFights = (
+  history: FightHistoryEntry[] | undefined,
+  count = 5
+): string => {
+  if (!history?.length) return "unknown";
+  return history
+    .slice(0, count)
+    .map(
+      (f) => `${f.opponent}: ${f.result} by ${f.method} (R${f.round} ${f.time})`
+    )
+    .join("\n");
+};
+
+/**
  * 호출 1: FightMatrix 후보 풀에서 3명의 상대를 선정
  */
 export async function selectOpponents(
@@ -48,12 +68,7 @@ export async function selectOpponents(
     .map((c) => `- ${c.name} (Rank #${c.rank})`)
     .join("\n");
 
-  const recentFights = koStats.fightHistory
-    .slice(0, 5)
-    .map(
-      (f) => `${f.opponent}: ${f.result} by ${f.method} (R${f.round} ${f.time})`
-    )
-    .join("\n");
+  const recentFights = formatRecentFights(koStats.fightHistory);
 
   // 현재 모멘텀 — 매치메이킹 "위너 vs 위너" 규칙의 핵심 입력
   const momentum = describeMomentum(koStats.fightHistory);
@@ -174,6 +189,47 @@ IMPORTANT:
   return parsed.slice(0, 3);
 }
 
+// 승부 분석 응답 스키마·검증. 후보 예측(analyzeOpponent)과 확정 경기 예측(analyzeConfirmedFight)이 공유
+const requestFightAnalysis = async (
+  prompt: string
+): Promise<OpponentAnalysis> => {
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          winProbability: {
+            type: SchemaType.NUMBER,
+            description: "Ko Seokhyeon win probability (0-100)",
+          },
+          fightAnalysis: {
+            type: SchemaType.OBJECT,
+            properties: {
+              ko: { type: SchemaType.STRING },
+              en: { type: SchemaType.STRING },
+            },
+            required: ["ko", "en"],
+          },
+        },
+        required: ["winProbability", "fightAnalysis"],
+      },
+    },
+  });
+
+  const parsed = JSON.parse(result.response.text()) as OpponentAnalysis;
+
+  if (typeof parsed.winProbability !== "number") {
+    throw new Error("Invalid analysis response from Gemini");
+  }
+
+  // 승률을 0-100 범위로 제한
+  parsed.winProbability = Math.max(0, Math.min(100, parsed.winProbability));
+
+  return parsed;
+};
+
 /**
  * 호출 2~4: 개별 상대에 대한 상세 승부 분석
  */
@@ -207,42 +263,63 @@ Analyze:
 
 IMPORTANT: Provide fightAnalysis in both Korean and English. Be specific about techniques, game plans, and key moments that could decide the fight. Write 3-4 sentences per language.`;
 
-  const result = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          winProbability: {
-            type: SchemaType.NUMBER,
-            description: "Ko Seokhyeon win probability (0-100)",
-          },
-          fightAnalysis: {
-            type: SchemaType.OBJECT,
-            properties: {
-              ko: { type: SchemaType.STRING },
-              en: { type: SchemaType.STRING },
-            },
-            required: ["ko", "en"],
-          },
-        },
-        required: ["winProbability", "fightAnalysis"],
-      },
-    },
-  });
+  return requestFightAnalysis(prompt);
+}
 
-  const text = result.response.text();
-  const parsed = JSON.parse(text) as OpponentAnalysis;
+/**
+ * @description 고석현 확정 경기의 승부 예측(승률·분석). 후보 예측과 달리 대회·날짜가 정해져 있어 프롬프트에 함께 넣는다.
+ * 상대 프로필은 `analyzeConfirmedOpponent()` 보강이 끝난 값을 받으며, 비어 있는 항목은 프롬프트에서 뺀다.
+ * @param koStats - 고석현 크롤 스탯
+ * @param koRank - 고석현 FightMatrix 순위
+ * @param fight - 확정 경기 (상대·대회·날짜·장소)
+ * @returns 고석현 승률(0-100)·승부 분석(한/영)
+ * @throws Gemini 응답이 유효하지 않을 때
+ */
+export async function analyzeConfirmedFight(
+  koStats: FighterStats,
+  koRank: number,
+  fight: ConfirmedFight
+): Promise<OpponentAnalysis> {
+  const { opponent } = fight;
+  const { wins, losses, draws } = opponent.record;
+  const opponentLines = [
+    wins + losses + draws > 0 && `- Record: ${wins}-${losses}-${draws}`,
+    opponent.fightingStyle.en && `- Style: ${opponent.fightingStyle.en}`,
+    opponent.height &&
+      `- Height: ${opponent.height}, Weight: ${opponent.weight ?? "unknown"}, Reach: ${opponent.reach ?? "unknown"}`,
+    opponent.age && `- Age: ${opponent.age}`,
+    opponent.country && `- Country: ${opponent.country}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-  if (typeof parsed.winProbability !== "number") {
-    throw new Error("Invalid analysis response from Gemini");
-  }
+  const prompt = `You are a UFC fight analyst. This bout is officially booked. Write a fight preview for:
 
-  // 승률을 0-100 범위로 제한
-  parsed.winProbability = Math.max(0, Math.min(100, parsed.winProbability));
+## Ko Seokhyeon (고석현) vs ${opponent.name.en} (${opponent.name.ko})
+- Event: ${fight.event}
+- Date: ${fight.date}
+- Location: ${fight.location.en}
 
-  return parsed;
+### Ko Seokhyeon
+- Record: ${koStats.record.wins}-${koStats.record.losses}-${koStats.record.draws}
+- FightMatrix Rank: #${koRank}
+- Knockouts: ${koStats.knockouts}
+- Strike Accuracy: ${koStats.strikeAccuracy}%, Takedown Accuracy: ${koStats.takedownAccuracy}%
+- Height: ${koStats.height}, Weight: ${koStats.weight}, Reach: ${koStats.reach}
+- Base: Judo/Sambo — powerful grappling, heavy hands, pressure fighter
+- Recent fights (most recent first):
+${formatRecentFights(koStats.fightHistory)}
+
+### ${opponent.name.en}
+${opponentLines || "- Details unknown; use your own knowledge of this fighter."}
+
+Analyze:
+1. Win probability for Ko Seokhyeon (0-100)
+2. Detailed fight analysis covering striking, grappling, cardio, each fighter's likely game plan, and the most likely outcome (winner and method)
+
+IMPORTANT: Provide fightAnalysis in both Korean and English. Be specific about techniques, game plans, and key moments that could decide the fight. Write 4-5 sentences per language.`;
+
+  return requestFightAnalysis(prompt);
 }
 
 /**

@@ -135,6 +135,7 @@
     "fightAnalysis": "Fight Analysis",
     "updatedAt": "Updated {date}",
     "disclaimer": "AI-generated prediction. Actual matchups may differ.",
+    "confirmedDisclaimer": "AI-generated prediction. The actual result may differ.",
     "koName": "Ko Seokhyeon",
     "vs": "VS",
     "candidate": "Candidate {number}",
