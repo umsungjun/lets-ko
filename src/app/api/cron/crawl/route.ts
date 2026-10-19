@@ -7,7 +7,10 @@ import {
   collectScheduleFighterNames,
   translateMissingFighterNames,
 } from "@/lib/crawl/fighter-name-translator";
-import { generatePredictions } from "@/lib/crawl/prediction-generator";
+import {
+  carryOverPredictions,
+  generatePredictions,
+} from "@/lib/crawl/prediction-generator";
 import { crawlUfcSchedule } from "@/lib/crawl/schedule-crawler";
 import {
   extractExistingPredictions,
@@ -92,6 +95,17 @@ export async function GET(request: NextRequest) {
     console.error("Schedule crawl failed:", scheduleRawResult.reason);
   }
 
+  // 확정 경기 감지와 상대 예측 이어쓰기가 같은 직전 행을 본다
+  const prevPredictionsPromise = (async (): Promise<PredictionData | null> => {
+    const { data } = await supabase
+      .from("opponent_predictions")
+      .select("data")
+      .order("crawled_at", { ascending: false })
+      .limit(1)
+      .single();
+    return (data?.data as PredictionData | null) ?? null;
+  })();
+
   // 고석현 확정 경기 감지를 Phase 2(AI 예측)와 병렬 실행해 크리티컬 패스 시간 추가 방지.
   // 기존 confirmedFight를 읽어 상대 미변경 시 Gemini 재호출 생략. 감지 실패는 non-blocking.
   // 일정 크롤이 실패해도 빈 배열로 호출해 수동 오버라이드 경기의 승부 예측은 계속 만든다.
@@ -115,17 +129,11 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    const [{ data: prevPred }, koStats] = await Promise.all([
-      supabase
-        .from("opponent_predictions")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single(),
+    const [prevPredictions, koStats] = await Promise.all([
+      prevPredictionsPromise,
       loadStoredStats(),
     ]);
-    const existing =
-      (prevPred?.data as PredictionData | null)?.confirmedFight ?? null;
+    const existing = prevPredictions?.confirmedFight ?? null;
     return detectKoConfirmedFight(scheduleData?.events ?? [], {
       existing,
       override: getConfirmedOverride(),
@@ -135,6 +143,15 @@ export async function GET(request: NextRequest) {
     console.error("Confirmed fight detection failed:", err);
     return null;
   });
+
+  // 확정 경기가 있으면 화면이 상대 예측을 그리지 않으므로 Gemini 4회 호출을 건너뛰고 직전 값을 이어 쓴다.
+  // 매 실행 생성하던 때 크롤이 60초를 넘겨 504가 났다(2026-09~10, 68회 중 5회)
+  let opponentsCarriedOver = false;
+  const opponentPredictionsPromise = (async (): Promise<PredictionData> => {
+    if (!(await confirmedFightPromise)) return generatePredictions(latestStats);
+    opponentsCarriedOver = true;
+    return carryOverPredictions(await prevPredictionsPromise, latestStats);
+  })();
 
   // Phase 2: DB 저장(stats) + AI 예측 + 파이터명 한국어 번역 병렬 실행
   // DB 저장은 I/O 위주라 Gemini 호출과 병렬로 실행 가능
@@ -149,7 +166,7 @@ export async function GET(request: NextRequest) {
               if (error) throw error;
             })
         : Promise.reject(statsResult.reason),
-      generatePredictions(latestStats),
+      opponentPredictionsPromise,
       scheduleData
         ? generateSchedulePredictions(
             scheduleData.events,
@@ -242,6 +259,7 @@ export async function GET(request: NextRequest) {
             predictionsResult.status === "fulfilled"
               ? predictionsResult.value.opponents.length
               : 0,
+          carriedOver: opponentsCarriedOver,
         }
       : { success: false, error: serializeError(predSave.reason) };
 

@@ -64,7 +64,7 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 
 1. `crawlUfcStats()` — 선수 전적/스탯. 파싱 실패 시 `throw` (잘못된 데이터 저장 방지)
 2. `crawlUfcRankings()` — UFC 전 체급 랭킹
-3. `generatePredictions()` — AI 상대 예측 (Gemini)
+3. `generatePredictions()` — AI 상대 예측 (Gemini 4회: 후보 선정 → 상세 분석 3건). **확정 경기가 있으면 생성하지 않고** `carryOverPredictions()`로 직전 `opponents`를 이어 쓴다. 확정 경기가 있으면 화면이 상대 예측을 그리지 않기 때문이다. 이 파이프라인을 매 실행 돌리던 2026-09~10에는 크롤이 60초를 넘겨 68회 중 5회가 504로 끝났고, Gemini 503이 난 날엔 확정 경기까지 저장되지 않았다. 응답 `results.predictions.carriedOver`로 어느 경로를 탔는지 확인한다
 4. **UFC 일정 + 예측**: `crawlUfcSchedule()` → `generateSchedulePredictions()` → `ufc_schedule` 저장
    - 일정 크롤: CloudFront CDN API(`d29dxerjsp82wz.cloudfront.net`)는 폐기됨(404) → 실질적으로 `www.ufc.com/events` HTML 파싱이 주 소스
    - 저장 이벤트 상한: `MAX_UPCOMING_EVENTS`(`schedule-crawler.ts`) = 10. 두 소스 경로 모두 이 값으로 `slice`하므로 상한 밖 이벤트는 DB에 아예 없고, `detectKoConfirmedFight()`가 훑을 카드에도 없다. 8이던 시절 고석현 확정 경기가 9번째 이벤트라 감지 자체가 불가능했음(2026-09). UFC가 두세 달 앞까지 발표하므로 상한은 그 범위를 덮어야 함

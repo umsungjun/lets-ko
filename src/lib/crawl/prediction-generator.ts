@@ -13,6 +13,25 @@ import { scrapeUfcFighterImage } from "./ufc-image-scraper";
 const MIN_DAYS_SINCE_LAST_FIGHT = 60;
 
 /**
+ * @description 확정 경기가 있는 동안 상대 예측을 새로 만들지 않고 직전 결과를 이어 쓴다.
+ * 확정 경기가 있으면 화면이 상대 예측을 그리지 않으므로 Gemini 호출만 아끼면 된다.
+ * @param previous - DB에 저장된 직전 예측 데이터. 없으면 빈 상대 목록으로 시작
+ * @param stats - 이번 크롤 스탯. 최근 경기 날짜를 최신으로 맞추는 데 쓴다
+ * @returns confirmedFight를 뺀 예측 데이터 (확정 경기는 호출부가 붙인다)
+ */
+export const carryOverPredictions = (
+  previous: PredictionData | null,
+  stats?: FighterStats
+): PredictionData => ({
+  generatedAt: previous?.generatedAt ?? new Date().toISOString(),
+  koFightMatrixRank:
+    previous?.koFightMatrixRank ??
+    (stats ? getKoFightMatrixRank(stats) : KO_DEFAULT_FIGHTMATRIX_RANK),
+  lastFightDate: stats?.fightHistory?.[0]?.date ?? previous?.lastFightDate,
+  opponents: previous?.opponents ?? [],
+});
+
+/**
  * AI 상대 예측 전체 파이프라인.
  * Gemini 4회 호출: 후보 선정 1회 + 상세 분석 3회
  */
