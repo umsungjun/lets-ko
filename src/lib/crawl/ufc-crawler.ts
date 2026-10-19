@@ -21,7 +21,10 @@ const CRAWLER_HEADERS = {
 
 async function crawlFightMatrixRank(): Promise<ExternalRanking | undefined> {
   try {
-    const res = await fetch(FIGHTMATRIX_URL, { headers: CRAWLER_HEADERS });
+    const res = await fetch(FIGHTMATRIX_URL, {
+      headers: CRAWLER_HEADERS,
+      signal: AbortSignal.timeout(8000),
+    });
     if (!res.ok) return undefined;
     const $ = cheerio.load(await res.text());
     let result: ExternalRanking | undefined;
@@ -54,6 +57,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "Accept-Language": "en-US,en;q=0.9",
     },
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!response.ok) {
@@ -194,6 +198,7 @@ export async function crawlUfcStats(): Promise<FighterStats> {
             Accept: "application/json",
             "X-Requested-With": "XMLHttpRequest",
           },
+          signal: AbortSignal.timeout(10000),
         }
       );
 

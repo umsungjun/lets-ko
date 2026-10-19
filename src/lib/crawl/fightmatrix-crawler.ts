@@ -36,7 +36,10 @@ export async function crawlFightMatrixCandidates(
           ? FIGHTMATRIX_RANKINGS_URL
           : `${FIGHTMATRIX_RANKINGS_URL}?PAGE=${page}`;
 
-      const res = await fetch(url, { headers: CRAWLER_HEADERS });
+      const res = await fetch(url, {
+        headers: CRAWLER_HEADERS,
+        signal: AbortSignal.timeout(8000),
+      });
       if (!res.ok) continue;
 
       const $ = cheerio.load(await res.text());
