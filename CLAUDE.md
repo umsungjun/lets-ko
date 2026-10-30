@@ -38,7 +38,7 @@ Node.js는 `package.json`의 `engines.node`를 **24.x**로 고정한다. Vercel�
 ### 다국어 (i18n)
 
 - URL 기반 로케일: `/ko` (기본값), `/en`
-- `src/middleware.ts`에서 로케일 리다이렉트 처리 (`/` → `/ko`)
+- `src/proxy.ts`(Next 16에서 `middleware` 파일 규칙을 대체)에서 next-intl 로케일 라우팅 처리. `localePrefix: "as-needed"`라 기본 로케일은 접두사가 빠진다(`/ko/rankings` → `/rankings` 307)
 - 루트 `i18n/` 디렉토리: `routing.ts` (로케일 정의), `request.ts` (메시지 로드) — `next.config.ts`에서 `createNextIntlPlugin("./i18n/request.ts")` 연결
 - 번역 파일: `src/messages/{ko,en}.json` (네임스페이스: `hero`, `nav`, `guestbook`, `schedule` 등)
 - Next.js 15+에서 `params`는 Promise — 반드시 `await params` 사용
