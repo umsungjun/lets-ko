@@ -48,7 +48,9 @@ export default function GuestbookList() {
 
   const dateLocale = locale === "ko" ? ko : enUS;
 
+  // localStorage는 브라우저에만 있어 마운트 후에 읽어야 SSR 결과와 어긋나지 않는다.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMyIds(getMyIds());
     setMyReactions(getMyReactions());
   }, []);
