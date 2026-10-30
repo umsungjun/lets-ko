@@ -2,6 +2,9 @@
   "name": "lets-ko",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +17,7 @@
     "@supabase/supabase-js": "^2.95.3",
     "cheerio": "^1.2.0",
     "date-fns": "^4.1.0",
-    "next": "16.1.6",
+    "next": "16.4.3",
     "next-intl": "^4.8.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -23,12 +26,12 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "@types/node": "^20",
+    "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "agentation": "^3.0.2",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.4.3",
     "postgres": "^3.4.8",
     "prettier": "^3.8.1",
     "tailwindcss": "^4",

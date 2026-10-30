@@ -14,6 +14,8 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 
 데이터베이스 셋업: `npx tsx --env-file=.env.local scripts/setup-db.ts`
 
+Node.js는 `package.json`의 `engines.node`를 **24.x**로 고정한다. Vercel은 이 값을 프로젝트 설정보다 우선해 빌드·함수를 24.x 최신 패치로 돌린다. 로컬도 Node 보안 릴리스가 나오면 같은 24.x 최신 패치로 올린다.
+
 ## 아키텍처
 
 **LET'S KO**는 UFC 파이터 고석현 팬 응원 사이트로, 다국어(ko/en)를 지원합니다. Next.js 16 App Router + TypeScript + Tailwind CSS v4 + Supabase + next-intl로 구축되었습니다.
@@ -36,7 +38,7 @@ pnpm prettier --write "src/**/*.{ts,tsx,json,css}"  # 전체 포맷팅
 ### 다국어 (i18n)
 
 - URL 기반 로케일: `/ko` (기본값), `/en`
-- `src/middleware.ts`에서 로케일 리다이렉트 처리 (`/` → `/ko`)
+- `src/proxy.ts`(Next 16에서 `middleware` 파일 규칙을 대체)에서 next-intl 로케일 라우팅 처리. `localePrefix: "as-needed"`라 기본 로케일은 접두사가 빠진다(`/ko/rankings` → `/rankings` 307)
 - 루트 `i18n/` 디렉토리: `routing.ts` (로케일 정의), `request.ts` (메시지 로드) — `next.config.ts`에서 `createNextIntlPlugin("./i18n/request.ts")` 연결
 - 번역 파일: `src/messages/{ko,en}.json` (네임스페이스: `hero`, `nav`, `guestbook`, `schedule` 등)
 - Next.js 15+에서 `params`는 Promise — 반드시 `await params` 사용
