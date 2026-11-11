@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Link } from "../../../i18n/navigation";
 
@@ -15,6 +15,7 @@ const FOOTER_LINKS = [
  */
 export default function Footer() {
   const t = useTranslations("footer");
+  const locale = useLocale();
 
   return (
     <footer className="border-t border-border/60 bg-surface py-8 mt-0">
@@ -37,6 +38,19 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
         <p>{t("disclaimer")}</p>
         <div className="flex items-center gap-4">
+          {/* noreferrer 를 빼야 umsungjun.com 유입 경로에 이 사이트가 잡힌다 */}
+          <a
+            href={
+              locale === "en"
+                ? "https://umsungjun.com/en"
+                : "https://umsungjun.com"
+            }
+            target="_blank"
+            rel="noopener"
+            className="hover:text-primary transition-colors"
+          >
+            umsungjun.com
+          </a>
           <a
             href="mailto:umseongjun@naver.com"
             className="font-medium hover:text-primary transition-colors"
