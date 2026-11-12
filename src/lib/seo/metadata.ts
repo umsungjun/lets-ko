@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 
 import { SITE_ORIGIN, localePath, localeUrl } from "./site-url";
 
+// og.png 를 바꾸면 올린다. 카카오톡은 그림을 주소로 따로 저장해, 공유 디버거로 캐시를 지워도 같은 주소면 옛 그림이 나왔다
+const OG_VERSION = 2;
+
 const OG_IMAGE = {
-  url: `${SITE_ORIGIN}/og.png`,
+  url: `${SITE_ORIGIN}/og.png?v=${OG_VERSION}`,
   width: 1200,
   height: 630,
   alt: "LET'S KO - 고석현 응원",
