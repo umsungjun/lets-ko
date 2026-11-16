@@ -1,6 +1,6 @@
 {
   "record": {
-    "wins": 13,
+    "wins": 14,
     "losses": 3,
     "draws": 0
   },
@@ -14,6 +14,15 @@
   "weight": "170 lbs",
   "reach": "71\"",
   "fightHistory": [
+    {
+      "date": "2026-11-08",
+      "event": "UFC Fight Night: Bonfim vs Brady",
+      "opponent": "Wellington Turman",
+      "result": "win",
+      "method": "Decision (Unanimous)",
+      "round": 3,
+      "time": "5:00"
+    },
     {
       "date": "2026-07-18",
       "event": "UFC Fight Night: Du Plessis vs Usman",

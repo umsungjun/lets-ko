@@ -47,11 +47,11 @@ Node.js는 `package.json`의 `engines.node`를 **24.x**로 고정한다. Vercel�
 
 **Supabase → 캐시 JSON 폴백** 패턴이 모든 데이터에 공통 적용됩니다.
 
-- **선수 통계**: `fighter_stats` 테이블 → `cached-stats.json`. 전적 0-0-0 등 비정상 데이터면 캐시로 폴백
+- **선수 통계**: `fighter_stats` 테이블 → `cached-stats.json`. 전적 0-0-0 등 비정상 데이터면 캐시로 폴백. `fightHistory`만 비면 그 필드만 캐시로 채운다. 크롤이 전적을 못 읽은 날엔 크롤 라우트가 **직전 행의 `fightHistory`를 이어 저장**한다. 더 거슬러 올라가지 않는 이유는 잘못 파싱된 옛 전적이 되살아나지 않게 하기 위함. 전적 AJAX 실패는 크롤을 멈추지 않으므로 응답 `results.stats`의 `fightHistory`(건수)·`fightHistoryCarriedOver`·`fightHistoryIssue`(끊긴 단계)로 확인한다. 2026-11 투르만전이 화면 전적에서 빠진 원인이 이 실패였고, 당시 응답에는 아무 신호가 없었다
 - **전적 히스토리 파싱**: UFC 선수 페이지 전적 카드에서 `__plaque`("Win" 배지)는 **승자 코너 div 안에만** 렌더되므로 plaque 클래스를 읽으면 모든 경기가 `win`이 된다(2026-09 패배가 승으로 표시된 원인). 고석현 코너(`__red-image`/`__blue-image` 중 `seokhyeon-ko` 링크를 가진 쪽) div의 `win`/`loss` 클래스로 판정한다. 상대 이름도 headline `<a>`에는 성만 들어 있어 코너 헤드샷 파일명에서 `extractNameFromImageUrl()`로 풀네임을 복원한다
 - **UFC 랭킹**: `ufc_rankings` 테이블 → `cached-rankings.json`. 로더는 `src/lib/data/getRankings()` 공통 함수 사용(메인·랭킹 페이지 공유). UFC 페이지 반응형 중복 마크업으로 체급이 2번 저장되는 문제를 `dedupeDivisions()`(divisionSlug 기준)로 방어 — 미적용 시 `ChampionsPreview`에서 React duplicate key 에러 발생
-- **AI 상대 예측**: `opponent_predictions` 테이블 → `cached-predictions.json`. 로더 `src/lib/data/getPredictions()`. `confirmedFight`(고석현 확정 경기)가 있으면 opponents 이미지 조건과 무관하게 채택. 수동 오버라이드 `confirmed-fight.json`이 있으면 자동 감지보다 우선하되, AI 승부 예측(`aiPrediction`)은 DB에 저장된 확정 경기가 **같은 상대(`name.en`)일 때만** 오버라이드에 이어붙인다(`mergeOverridePrediction`). 오버라이드 JSON에 `aiPrediction`을 직접 넣으면 그 값이 우선
-- **고석현 확정 경기**: 크롤 시 `detectKoConfirmedFight()`가 일정에서 고석현 매치를 자동 감지해 `opponent_predictions.data.confirmedFight`에 부착 → `ConfirmedFightCard`/`NextFightBanner`로 표시. 자동 감지 실패 대비 `confirmed-fight.json` 수동 안전망. `ConfirmedFight.aiPrediction`(고석현 승률·승부 분석 한/영·`generatedAt`)은 크롤이 `analyzeConfirmedFight()`로 붙이며, `/predictions` 확정 분기가 Tale of the Tape 아래에 `WinProbabilityBar`·`AnalysisCard`로 표시한다. 없으면(구버전 데이터·생성 실패) 카드만 표시
+- **AI 상대 예측**: `opponent_predictions` 테이블 → `cached-predictions.json`. 로더 `src/lib/data/getPredictions()`. `confirmedFight`(고석현 확정 경기)가 있으면 opponents 이미지 조건과 무관하게 채택. 경기 직후 대기 상태(opponents 0명 + `lastFightDate`)도 채택해 "다음 경기 준비 중"을 띄운다. 거부하면 몇 달 묵은 캐시 예측이 뜬다. 수동 오버라이드 `confirmed-fight.json`이 있으면 자동 감지보다 우선하되, AI 승부 예측(`aiPrediction`)은 DB에 저장된 확정 경기가 **같은 상대(`name.en`)일 때만** 오버라이드에 이어붙인다(`mergeOverridePrediction`). 오버라이드 JSON에 `aiPrediction`을 직접 넣으면 그 값이 우선
+- **고석현 확정 경기**: 크롤 시 `detectKoConfirmedFight()`가 일정에서 고석현 매치를 자동 감지해 `opponent_predictions.data.confirmedFight`에 부착 → `ConfirmedFightCard`/`NextFightBanner`로 표시. 자동 감지 실패 대비 `confirmed-fight.json` 수동 안전망. `ConfirmedFight.aiPrediction`(고석현 승률·승부 분석 한/영·`generatedAt`)은 크롤이 `analyzeConfirmedFight()`로 붙이며, `/predictions` 확정 분기가 Tale of the Tape 아래에 `WinProbabilityBar`·`AnalysisCard`로 표시한다. 없으면(구버전 데이터·생성 실패) 카드만 표시. 끝난 경기는 `isConfirmedFightOver()`(경기일 다음 날까지 유지, 이틀째부터 만료)로 걸러 오버라이드·DB 값 모두 화면과 크롤에서 빠진다. 만료가 없던 2026-11에는 끝난 투르만전이 오버라이드에 남아 크롤이 매번 그 경기를 다시 저장했고, 확정 경기가 있다고 판단해 상대 예측 생성도 계속 건너뛰었다
 - **UFC 경기 일정 + AI 승부 예측**: `ufc_schedule` 테이블 → `cached-schedule.json`. 두 데이터(이벤트 + 예측)를 하나의 JSONB blob(`UfcSchedule`)으로 저장. 로더는 `src/lib/data/schedule.ts`의 `getSchedule()` 공통 함수 사용(메인·일정 페이지 공유, `enrichImages` 옵션으로 헤드샷 보완 여부 선택)
 - **이벤트명**: 크롤러가 ufc.com 슬러그에서 `deriveEventName()`(`schedule-utils.ts`)으로 derive. UFC가 스폰서 접두어를 붙인 슬러그(`cryptocom-ufc-331`)를 쓰므로 `^ufc-` 시작 고정이 아니라 **슬러그 어디서든** `ufc-<숫자>`를 찾아야 함 — 시작 고정이면 넘버링 대회가 "UFC Fight Night"으로 잘못 표기됨(issue #33)
 - **파이터 한국어명**: `fighter_names_ko` 테이블(`name_en` PK) + 리포지토리 시드 `src/data/fighter-names-ko.json`(현역 로스터 456명). 로더 `src/lib/data/fighter-names.ts`의 `loadFighterNamesKo()`가 DB 행 위에 **시드를 덮어써** 병합(`cache()`로 요청당 1회 쿼리) — 사람이 검수해 커밋한 값이 기계 번역보다 우선이라 오역은 시드 JSON 한 줄만 고쳐 배포하면 되고 DB는 손대지 않아도 된다(`confirmed-fight.json` 수동 오버라이드와 같은 방향). 시드가 있어 배포 직후·DB 미접근 로컬에서도 동작. 크롤은 **사전에 없는 이름만** Gemini 배치 번역(실행당 상한 80명, 40명씩 배치)해 신규 행만 추가하므로 한 번 정해진 표기가 고정됨. 일정은 `attachFighterNamesKo()`, 랭킹은 `attachRankingNamesKo()`로 `nameKo` 주입. 시드 JSON은 서버 번들에만 포함(약 19KB) — 클라이언트로는 화면에 뜬 이름 문자열만 전달
@@ -64,7 +64,7 @@ Node.js는 `package.json`의 `engines.node`를 **24.x**로 고정한다. Vercel�
 
 GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부분 실패 시 HTTP 207:
 
-1. `crawlUfcStats()` — 선수 전적/스탯. 파싱 실패 시 `throw` (잘못된 데이터 저장 방지)
+1. `crawlUfcStats()` — 선수 전적/스탯. 파싱 실패 시 `throw` (잘못된 데이터 저장 방지). 전적 히스토리 실패는 non-blocking이며 `{ stats, fightHistoryIssue }`로 끊긴 단계를 함께 반환한다(DB에는 저장하지 않음)
 2. `crawlUfcRankings()` — UFC 전 체급 랭킹
 3. `generatePredictions()` — AI 상대 예측 (Gemini 4회: 후보 선정 → 상세 분석 3건). **확정 경기가 있으면 생성하지 않고** `carryOverPredictions()`로 직전 `opponents`를 이어 쓴다. 확정 경기가 있으면 화면이 상대 예측을 그리지 않기 때문이다. 이 파이프라인을 매 실행 돌리던 2026-09~10에는 크롤이 60초를 넘겨 68회 중 5회가 504로 끝났고, Gemini 503이 난 날엔 확정 경기까지 저장되지 않았다. 응답 `results.predictions.carriedOver`로 어느 경로를 탔는지 확인한다
 4. **UFC 일정 + 예측**: `crawlUfcSchedule()` → `generateSchedulePredictions()` → `ufc_schedule` 저장
@@ -112,7 +112,7 @@ GitHub Actions가 하루 2회(UTC 05:00·17:00) 호출. `maxDuration = 60`. 부�
 - `fighter-names-ko.json` — 파이터 영문명 → 한국어명 시드 사전(현역 로스터 기준). DB 행보다 **우선**하므로 오역 수정은 이 파일에서 한다. 선수명만 등록 — 이벤트명은 UFC 공식 대회명이라 번역 대상이 아님
 - `cached-schedule.json` — UFC 경기 일정 + AI 예측 폴백 (`UfcSchedule` 구조). 배포 초기 또는 Supabase 미접근 시 사용
 - `cached-predictions.json` — AI 상대 예측 폴백
-- `confirmed-fight.json` — 고석현 확정 경기 수동 오버라이드 안전망. 자동 감지가 놓칠 때만 `ConfirmedFight` 구조로 채우고, 평소엔 `{}`로 비워둠(비어있으면 무시). 프로필(상대·대회·날짜·장소)만 채우면 되고 `aiPrediction`은 다음 크롤이 이 상대로 생성해 DB에 남긴 뒤 로더가 병합한다. 배포 직후 바로 띄우려면 크롤 워크플로를 수동 실행한다. UFC는 두 달 앞 이벤트를 `www.ufc.com/events` 목록에 아직 안 올리거나 올려도 파이트 카드를 비워두는 경우가 있어, 국내 매체 발표가 먼저 나온 확정 경기는 자동 감지가 불가능하다. **오버라이드는 자동 감지보다 우선하므로, UFC가 카드를 공개해 자동 감지가 잡기 시작하면 반드시 `{}`로 되돌린다**
+- `confirmed-fight.json` — 고석현 확정 경기 수동 오버라이드 안전망. 자동 감지가 놓칠 때만 `ConfirmedFight` 구조로 채우고, 평소엔 `{}`로 비워둠(비어있으면 무시). 프로필(상대·대회·날짜·장소)만 채우면 되고 `aiPrediction`은 다음 크롤이 이 상대로 생성해 DB에 남긴 뒤 로더가 병합한다. 배포 직후 바로 띄우려면 크롤 워크플로를 수동 실행한다. UFC는 두 달 앞 이벤트를 `www.ufc.com/events` 목록에 아직 안 올리거나 올려도 파이트 카드를 비워두는 경우가 있어, 국내 매체 발표가 먼저 나온 확정 경기는 자동 감지가 불가능하다. **오버라이드는 자동 감지보다 우선하므로, UFC가 카드를 공개해 자동 감지가 잡기 시작하면 반드시 `{}`로 되돌린다**. 경기가 끝난 뒤에는 `getConfirmedOverride()`가 날짜로 스스로 만료시키므로 되돌리지 않아도 화면과 크롤은 풀린다. 파일은 다음 커밋 때 `{}`로 정리한다
 - `career-highlights.json` — 커리어 타임라인 이정표 (다국어)
 - `fighter-bio.json` — 선수 바이오 데이터 (다국어)
 - `videos.json` — YouTube API 할당량 초과 시 폴백 영상 메타데이터

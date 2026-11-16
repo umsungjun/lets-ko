@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 
 import AiPredictionBadge from "@/components/predictions/AiPredictionBadge";
 import ConfirmedFightCard from "@/components/predictions/ConfirmedFightCard";
-import { formatKstLongDate } from "@/lib/date-utils";
+import { formatFullDate, formatKstLongDate } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
 import type { PredictionData } from "@/types/prediction";
 
@@ -82,7 +82,9 @@ export default function PredictionPreview({
               </p>
               <p className="text-sm text-muted">{t("preparingDesc")}</p>
               <p className="text-xs text-muted/60 mt-3">
-                {t("lastFight", { date: predictions.lastFightDate })}
+                {t("lastFight", {
+                  date: formatFullDate(predictions.lastFightDate, locale),
+                })}
               </p>
             </div>
           </div>
