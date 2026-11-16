@@ -23,7 +23,7 @@ import {
 } from "@/lib/data/fighter-names";
 import { getConfirmedOverride } from "@/lib/data/predictions";
 import { createServerClient } from "@/lib/supabase/server";
-import type { FighterStats } from "@/types/fighter";
+import type { FightHistoryEntry, FighterStats } from "@/types/fighter";
 import type { PredictionData } from "@/types/prediction";
 import type { UfcRankings } from "@/types/rankings";
 import type { UfcSchedule } from "@/types/schedule";
@@ -47,9 +47,36 @@ export async function GET(request: NextRequest) {
   const supabase = createServerClient();
   const results: Record<string, unknown> = {};
 
+  const loadPreviousFightHistory = async (): Promise<FightHistoryEntry[]> => {
+    try {
+      const { data } = await supabase
+        .from("fighter_stats")
+        .select("data")
+        .order("crawled_at", { ascending: false })
+        .limit(1)
+        .single();
+      return (data?.data as FighterStats | null)?.fightHistory ?? [];
+    } catch {
+      return [];
+    }
+  };
+
   // Phase 1: 독립 크롤링 병렬 실행 (stats/schedule은 서로 의존성 없음)
   const [statsResult, scheduleRawResult] = await Promise.allSettled([
-    crawlUfcStats(),
+    (async () => {
+      const crawled = await crawlUfcStats();
+      if (crawled.stats.fightHistory.length > 0) {
+        return { ...crawled, fightHistoryCarriedOver: false };
+      }
+      // 전적 파싱이 빈 날엔 직전 행의 전적을 이어 쓴다. 비운 채 저장하면 로더가 손으로 관리하는 캐시 전적을 띄워 새 경기가 빠진다(2026-11 투르만전)
+      // 직전 행만 본다. 더 거슬러 올라가면 잘못 파싱된 옛 전적까지 되살릴 수 있다
+      const previous = await loadPreviousFightHistory();
+      return {
+        ...crawled,
+        stats: { ...crawled.stats, fightHistory: previous },
+        fightHistoryCarriedOver: previous.length > 0,
+      };
+    })(),
     (async () => {
       const { data: existingRow } = await supabase
         .from("ufc_schedule")
@@ -84,7 +111,7 @@ export async function GET(request: NextRequest) {
   ]);
 
   const latestStats =
-    statsResult.status === "fulfilled" ? statsResult.value : undefined;
+    statsResult.status === "fulfilled" ? statsResult.value.stats : undefined;
   const scheduleData =
     scheduleRawResult.status === "fulfilled" ? scheduleRawResult.value : null;
 
@@ -148,7 +175,10 @@ export async function GET(request: NextRequest) {
   // 매 실행 생성하던 때 크롤이 60초를 넘겨 504가 났다(2026-09~10, 68회 중 5회)
   let opponentsCarriedOver = false;
   const opponentPredictionsPromise = (async (): Promise<PredictionData> => {
-    if (!(await confirmedFightPromise)) return generatePredictions(latestStats);
+    if (!(await confirmedFightPromise)) {
+      const previous = await prevPredictionsPromise;
+      return generatePredictions(latestStats, previous?.lastFightDate);
+    }
     opponentsCarriedOver = true;
     return carryOverPredictions(await prevPredictionsPromise, latestStats);
   })();
@@ -161,7 +191,7 @@ export async function GET(request: NextRequest) {
       statsResult.status === "fulfilled"
         ? supabase
             .from("fighter_stats")
-            .insert({ data: statsResult.value, source: "ufc_korea" })
+            .insert({ data: statsResult.value.stats, source: "ufc_korea" })
             .then(({ error }) => {
               if (error) throw error;
             })
@@ -246,9 +276,18 @@ export async function GET(request: NextRequest) {
   ]);
 
   // Collect results
+  // 전적 크롤이 비어도 응답은 success라 실패가 드러나지 않았다. 건수와 끊긴 단계를 남겨 Actions 로그에서 보이게 한다
+  const crawledStats =
+    statsResult.status === "fulfilled" ? statsResult.value : null;
   results.stats =
     statsSave.status === "fulfilled"
-      ? { success: true, record: latestStats?.record }
+      ? {
+          success: true,
+          record: latestStats?.record,
+          fightHistory: latestStats?.fightHistory.length ?? 0,
+          fightHistoryCarriedOver: crawledStats?.fightHistoryCarriedOver,
+          fightHistoryIssue: crawledStats?.fightHistoryIssue,
+        }
       : { success: false, error: serializeError(statsSave.reason) };
 
   results.predictions =

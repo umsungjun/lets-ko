@@ -50,7 +50,18 @@ async function crawlFightMatrixRank(): Promise<ExternalRanking | undefined> {
   }
 }
 
-export async function crawlUfcStats(): Promise<FighterStats> {
+export interface UfcStatsCrawlResult {
+  stats: FighterStats;
+  /** 전적 파싱이 끊긴 단계·스킵 건수. 문제가 없으면 undefined. DB에는 저장하지 않고 크롤 응답으로만 내보낸다 */
+  fightHistoryIssue?: string;
+}
+
+/**
+ * @description UFC 선수 페이지에서 고석현 전적·스탯·전적 히스토리를 크롤한다.
+ * @returns 스탯과 전적 히스토리 진단 메시지
+ * @throws 페이지 요청 실패 또는 전적(W-L-D)을 읽지 못하면
+ */
+export async function crawlUfcStats(): Promise<UfcStatsCrawlResult> {
   const response = await fetch(UFC_ATHLETE_URL, {
     headers: {
       "User-Agent":
@@ -172,12 +183,17 @@ export async function crawlUfcStats(): Promise<FighterStats> {
   const fightHistory: FightHistoryEntry[] = [];
   // 코너 판별 실패로 버린 카드 수. 전부 버려졌다면 파서가 마크업 변경을 따라가지 못한 것이므로 로그로 남긴다
   let skippedCards = 0;
+  let noOpponentCards = 0;
+  // 전적이 어느 단계에서 끊겼는지. 예전엔 전부 조용히 삼켜 빈 전적이 저장돼도 크롤 응답이 success였다
+  const historyIssues: string[] = [];
   try {
     const viewDomId = html.match(/view_dom_id":"([a-f0-9]+)"/)?.[1] || "";
     const viewArgs =
       html.match(/view_args":"([^"]+)"/)?.[1]?.replace(/\\\//g, "/") || "";
 
-    if (viewDomId && viewArgs) {
+    if (!viewDomId || !viewArgs) {
+      historyIssues.push("페이지에 view_dom_id·view_args 없음");
+    } else {
       const ajaxParams = new URLSearchParams({
         view_name: "athlete_results",
         view_display_id: "entity_view_1",
@@ -202,7 +218,9 @@ export async function crawlUfcStats(): Promise<FighterStats> {
         }
       );
 
-      if (ajaxRes.ok) {
+      if (!ajaxRes.ok) {
+        historyIssues.push(`전적 AJAX HTTP ${ajaxRes.status}`);
+      } else {
         const ajaxJson = (await ajaxRes.json()) as Array<{
           command: string;
           data?: string;
@@ -211,10 +229,14 @@ export async function crawlUfcStats(): Promise<FighterStats> {
           (c) => c.command === "insert" && c.data && c.data.length > 0
         );
 
-        if (insertCmd?.data) {
+        if (!insertCmd?.data) {
+          historyIssues.push("전적 AJAX 응답에 insert 데이터 없음");
+        } else {
           const $ajax = cheerio.load(insertCmd.data);
+          const cards = $ajax(".c-card-event--athlete-results");
+          if (cards.length === 0) historyIssues.push("전적 카드 0건");
 
-          $ajax(".c-card-event--athlete-results").each((_, el) => {
+          cards.each((_, el) => {
             // 코너 div(red/blue)에 해당 선수의 프로필 링크와 헤드샷이 함께 들어있어, 승패·상대 이름의 판정 기준이 된다
             const corners = $ajax(el).find(
               ".c-card-event--athlete-results__red-image, .c-card-event--athlete-results__blue-image"
@@ -242,7 +264,10 @@ export async function crawlUfcStats(): Promise<FighterStats> {
               opponentSurname
             );
 
-            if (!opponent) return;
+            if (!opponent) {
+              noOpponentCards += 1;
+              return;
+            }
 
             // 마크업이 바뀌어 고석현 코너를 못 찾으면 승패를 알 수 없으므로 이 경기를 버린다. __plaque로 폴백하면 안 된다. plaque는 승자 코너에만 렌더돼 클래스가 항상 win이라 전패를 전승으로 기록한다(2026-09 실제 발생)
             if (koCorner.length === 0) {
@@ -309,17 +334,26 @@ export async function crawlUfcStats(): Promise<FighterStats> {
         }
       }
     }
-  } catch {
-    // Fight history fetch failed — non-blocking, use empty array
-  }
-
-  if (skippedCards > 0) {
-    console.error(
-      `Fight history: 고석현 코너를 찾지 못해 ${skippedCards}경기 스킵 (UFC 마크업 변경 의심). 저장된 경기 ${fightHistory.length}건`
+  } catch (err) {
+    // 전적 실패는 non-blocking. 스탯·전적 숫자는 그대로 저장한다
+    historyIssues.push(
+      `전적 요청 실패: ${err instanceof Error ? err.message : String(err)}`
     );
   }
 
-  // 전부 스킵돼 비었으면 로더가 cached-stats.json으로 폴백한다
+  if (skippedCards > 0) {
+    historyIssues.push(`고석현 코너 판별 실패 ${skippedCards}건`);
+  }
+  if (noOpponentCards > 0) {
+    historyIssues.push(`상대 이름 추출 실패 ${noOpponentCards}건`);
+  }
+  if (historyIssues.length > 0) {
+    console.error(
+      `Fight history: ${historyIssues.join(", ")}. 저장된 경기 ${fightHistory.length}건`
+    );
+  }
+
+  // 비었으면 크롤 라우트가 직전에 성공한 전적을 이어 쓰고, 그마저 없으면 로더가 cached-stats.json으로 폴백한다
   stats.fightHistory = fightHistory;
 
   // Fetch external rankings (failures are non-blocking)
@@ -328,5 +362,8 @@ export async function crawlUfcStats(): Promise<FighterStats> {
     stats.externalRankings = [fightmatrixRank];
   }
 
-  return stats as FighterStats;
+  return {
+    stats: stats as FighterStats,
+    fightHistoryIssue: historyIssues.join(", ") || undefined,
+  };
 }

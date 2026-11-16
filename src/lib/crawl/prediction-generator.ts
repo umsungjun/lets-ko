@@ -32,11 +32,16 @@ export const carryOverPredictions = (
 });
 
 /**
- * AI 상대 예측 전체 파이프라인.
- * Gemini 4회 호출: 후보 선정 1회 + 상세 분석 3회
+ * @description AI 상대 예측 전체 파이프라인. Gemini 4회 호출: 후보 선정 1회 + 상세 분석 3회.
+ * 최근 경기 후 60일이 안 됐으면 생성하지 않고 대기 상태(opponents 0명)를 반환한다.
+ * @param stats - 이번 크롤 스탯. 없으면 DB 최신 스탯을 읽는다
+ * @param fallbackLastFightDate - 크롤 전적이 비었을 때 쓸 최근 경기일(직전 예측 행의 값)
+ * @returns 예측 데이터 (confirmedFight는 호출부가 붙인다)
+ * @throws 스탯이 없거나 모든 후보 분석이 실패하면
  */
 export async function generatePredictions(
-  stats?: FighterStats
+  stats?: FighterStats,
+  fallbackLastFightDate?: string
 ): Promise<PredictionData> {
   // 1. 고석현 스탯 (외부에서 전달받거나 Supabase에서 가져오기)
   let koStats: FighterStats;
@@ -59,7 +64,9 @@ export async function generatePredictions(
   }
 
   // 최근 경기 날짜 확인 — 2달 미만이면 예측 스킵
-  const lastFightDate = koStats.fightHistory?.[0]?.date;
+  // 전적 크롤이 빈 날 폴백이 없으면 대기가 풀려 Gemini 4회가 매 실행 돈다. 2026-09~10 504의 원인 경로
+  const lastFightDate =
+    koStats.fightHistory?.[0]?.date || fallbackLastFightDate;
   if (lastFightDate) {
     const daysSinceLastFight = Math.floor(
       (Date.now() - new Date(lastFightDate).getTime()) / (1000 * 60 * 60 * 24)
@@ -141,7 +148,7 @@ export async function generatePredictions(
   return {
     generatedAt: new Date().toISOString(),
     koFightMatrixRank: koRank,
-    lastFightDate: koStats.fightHistory?.[0]?.date,
+    lastFightDate,
     opponents,
   };
 }
