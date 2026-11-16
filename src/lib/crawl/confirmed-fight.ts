@@ -12,7 +12,7 @@ import type { UfcEvent, UfcEventFighter } from "@/types/schedule";
 interface DetectOptions {
   /** DB에 저장된 기존 confirmedFight. 상대·대회가 같으면 Gemini 보강·예측을 재사용 */
   existing?: ConfirmedFight | null;
-  /** 수동 오버라이드(confirmed-fight.json). 일정에서 고석현 매치를 못 찾으면 이 경기로 예측을 만든다 */
+  /** 수동 오버라이드(confirmed-fight.json). 일정에서 고석현 매치를 못 찾으면 이 경기로 예측을 만든다. 끝난 경기는 `getConfirmedOverride()`가 이미 null로 거른다 */
   override?: ConfirmedFight | null;
   /** 승부 예측 프롬프트용 고석현 스탯. 없으면 예측 생성을 건너뛴다 */
   koStats?: FighterStats;
