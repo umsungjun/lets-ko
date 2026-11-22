@@ -13,12 +13,12 @@ import StatsCard from "@/components/fighter/StatsCard";
 import VideoSection from "@/components/fighter/VideoSection";
 import ChampionsPreview from "@/components/rankings/ChampionsPreview";
 import SchedulePreview from "@/components/schedule/SchedulePreview";
-import cachedStats from "@/data/cached-stats.json";
 import careerHighlights from "@/data/career-highlights.json";
 import fighterBio from "@/data/fighter-bio.json";
 import { getPredictions } from "@/lib/data/predictions";
 import { getRankings } from "@/lib/data/rankings";
 import { getSchedule } from "@/lib/data/schedule";
+import { getFighterStats } from "@/lib/data/stats";
 import { buildKoComparisonStats } from "@/lib/ko-stats";
 import { fetchNews } from "@/lib/news";
 import {
@@ -28,11 +28,7 @@ import {
 } from "@/lib/seo/json-ld";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { searchYouTubeVideos } from "@/lib/youtube";
-import type {
-  CareerHighlight,
-  FighterBio,
-  FighterStats,
-} from "@/types/fighter";
+import type { CareerHighlight, FighterBio } from "@/types/fighter";
 
 import { Link } from "../../../i18n/navigation";
 
@@ -76,45 +72,6 @@ export async function generateMetadata({
           "HAVAS MMA",
         ],
   });
-}
-
-async function getFighterStats(): Promise<FighterStats> {
-  if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    try {
-      const { createServerClient } = await import("@/lib/supabase/server");
-      const supabase = createServerClient();
-      const { data } = await supabase
-        .from("fighter_stats")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data?.data) {
-        const stats = data.data as FighterStats;
-        // Reject invalid data (e.g. 0-0-0 from failed crawl)
-        if (stats.record.wins + stats.record.losses + stats.record.draws > 0) {
-          // 크론 미실행 또는 크롤 실패 시 캐시에서 보완
-          if (!stats.externalRankings?.length) {
-            stats.externalRankings = (
-              cachedStats as FighterStats
-            ).externalRankings;
-          }
-          if (!stats.fightHistory?.length) {
-            stats.fightHistory = (cachedStats as FighterStats).fightHistory;
-          }
-          return stats;
-        }
-      }
-    } catch {
-      // Fall through to cached data
-    }
-  }
-
-  return cachedStats as FighterStats;
 }
 
 export default async function HomePage({
