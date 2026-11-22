@@ -58,11 +58,13 @@ const formatRecentFights = (
 
 /**
  * 호출 1: FightMatrix 후보 풀에서 3명의 상대를 선정
+ * @param excludedNames - 후보에서 뺄 선수 영문명. 전적 반영이 늦은 직후 경기 상대까지 담기 위해 호출부가 넘긴다
  */
 export async function selectOpponents(
   koStats: FighterStats,
   koRank: number,
-  candidates: FightMatrixCandidate[]
+  candidates: FightMatrixCandidate[],
+  excludedNames: string[] = []
 ): Promise<SelectedOpponent[]> {
   const candidateList = candidates
     .map((c) => `- ${c.name} (Rank #${c.rank})`)
@@ -95,7 +97,7 @@ ${recentFights}
 2. **Momentum matching**: the UFC pairs winners with winners and losers with losers. Ko is ${momentum}, so prioritize opponents on a similar trajectory (comparable recent form) and AVOID fighters on 2+ consecutive losses.
 3. **Activity & availability**: only currently-active UFC welterweights who fought within roughly the last 12 months — not retired, injured/suspended, or already booked for another fight.
 4. **Style & narrative appeal**: favor matchups the UFC and fans would push — compelling style clashes, existing callouts/rivalries, and regional draws (e.g. cards in Asia featuring Korean/Asian fighters). Given Ko's grappling-heavy base a strong wrestler is a plausible test, but DO NOT restrict to wrestlers — strikers or well-rounded fighters who make a competitive, marketable matchup qualify equally.
-5. **Exclusions**: never pick Ko's teammates/training partners or anyone he has already faced.
+5. **Exclusions**: never pick Ko's teammates/training partners or anyone he has already faced.${excludedNames.length > 0 ? ` Already faced (never pick): ${[...new Set(excludedNames)].join(", ")}.` : ""}
 
 Weight these together to output the 3 MOST REALISTIC bookings — the fights the UFC would actually make — not merely the highest-ranked names.
 

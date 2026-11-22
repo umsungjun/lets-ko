@@ -146,9 +146,22 @@
     "confirmedLocation": "Location",
     "confirmedEvent": "Event",
     "preparing": "Preparing for Next Fight",
-    "preparingDesc": "Currently preparing after the recent fight. Updates will follow once the next opponent is confirmed.",
+    "preparingDesc": "The AI is analyzing candidates for the next opponent. Data refreshes twice a day, and three candidates with fight predictions will appear here once the analysis is done.",
     "lastFight": "Last fight: {date}",
-    "lastFightDate": "Last Fight"
+    "lastFightDate": "Last Fight",
+    "result": {
+      "win": "W",
+      "loss": "L",
+      "draw": "D",
+      "nc": "NC"
+    },
+    "previousPicks": "AI's Picks Before the Announcement",
+    "previousPicksDate": "Predicted {date}",
+    "previousPicksNote": "Next-opponent candidates the AI picked before this fight was announced.",
+    "pickHit": "Called it",
+    "pickMiss": "Missed",
+    "actualOpponent": "Actual opponent",
+    "koWinLabel": "Ko win"
   },
   "schedule": {
     "title": "UFC Fight Schedule",

@@ -3,15 +3,19 @@ import { setRequestLocale } from "next-intl/server";
 
 import JsonLd from "@/components/common/JsonLd";
 import PredictionDetail from "@/components/predictions/PredictionDetail";
-import cachedStats from "@/data/cached-stats.json";
+import { loadFighterNamesKo } from "@/lib/data/fighter-names";
 import { getPredictions } from "@/lib/data/predictions";
+import { getFighterStats } from "@/lib/data/stats";
+import {
+  buildFighterNameIndex,
+  fighterNameKey,
+} from "@/lib/fighter-name-utils";
 import { buildKoComparisonStats } from "@/lib/ko-stats";
 import {
   buildBreadcrumbJsonLd,
   buildConfirmedFightJsonLd,
 } from "@/lib/seo/json-ld";
 import { buildPageMetadata } from "@/lib/seo/metadata";
-import type { FighterStats } from "@/types/fighter";
 
 export const revalidate = 86400;
 
@@ -60,35 +64,6 @@ export async function generateMetadata({
   });
 }
 
-async function getFighterStats(): Promise<FighterStats> {
-  if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    try {
-      const { createServerClient } = await import("@/lib/supabase/server");
-      const supabase = createServerClient();
-      const { data } = await supabase
-        .from("fighter_stats")
-        .select("data")
-        .order("crawled_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data?.data) {
-        const stats = data.data as FighterStats;
-        if (stats.record.wins + stats.record.losses + stats.record.draws > 0) {
-          return stats;
-        }
-      }
-    } catch {
-      // Fall through
-    }
-  }
-
-  return cachedStats as FighterStats;
-}
-
 export default async function PredictionsPage({
   params,
 }: {
@@ -108,6 +83,20 @@ export default async function PredictionsPage({
     predictions.koFightMatrixRank,
     predictions.lastFightDate
   );
+
+  // 후보가 없을 때만 직전 경기를 띄우므로 이름 사전(테이블 전체 조회)도 그때만 읽는다
+  const latestFight = stats.fightHistory?.[0];
+  const lastFight =
+    latestFight &&
+    !predictions.confirmedFight &&
+    predictions.opponents.length === 0
+      ? {
+          fight: latestFight,
+          opponentKo: buildFighterNameIndex(await loadFighterNamesKo()).get(
+            fighterNameKey(latestFight.opponent)
+          ),
+        }
+      : undefined;
 
   const confirmedFightNode = predictions.confirmedFight
     ? buildConfirmedFightJsonLd(predictions.confirmedFight, locale)
@@ -132,6 +121,7 @@ export default async function PredictionsPage({
         predictions={predictions}
         koStats={koComparisonStats}
         locale={locale}
+        lastFight={lastFight}
       />
     </>
   );

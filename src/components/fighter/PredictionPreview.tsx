@@ -64,7 +64,7 @@ export default function PredictionPreview({
     );
   }
 
-  // 최근 경기 후 2달 미만이면 준비 중 메시지
+  // 후보가 아직 없으면 준비 중 메시지 (생성 실패·배포 직후)
   if (predictions.opponents.length === 0 && predictions.lastFightDate) {
     return (
       <section className="py-20 px-4 bg-surface">

@@ -1,25 +1,75 @@
+import { toCalendarDate } from "@/lib/date-utils";
+import { fighterNameKey } from "@/lib/fighter-name-utils";
 import { analyzeOpponent, selectOpponents } from "@/lib/gemini";
 import {
   KO_DEFAULT_FIGHTMATRIX_RANK,
   getKoFightMatrixRank,
 } from "@/lib/ko-stats";
+import {
+  hasRealOpponentImage,
+  isGeneratedAfterLastFight,
+} from "@/lib/prediction-utils";
 import type { FighterStats } from "@/types/fighter";
 import type { OpponentPrediction, PredictionData } from "@/types/prediction";
 
 import { crawlFightMatrixCandidates } from "./fightmatrix-crawler";
 import { scrapeUfcFighterImage } from "./ufc-image-scraper";
 
-// 최소 경과 일수 (최근 경기 후 이 기간이 지나야 예측 활성화)
-const MIN_DAYS_SINCE_LAST_FIGHT = 60;
+// 후보 생성은 Gemini 4회라 크롤마다 돌리면 60초를 넘긴다(2026-09~10 504). 이 기간 안에는 직전 후보를 이어 쓴다
+const CANDIDATE_REUSE_DAYS = 7;
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+/** 이번 크롤에서 상대 후보를 어디서 가져왔는지. 크롤 응답으로 노출한다 */
+export type CandidateSource = "confirmed-fight" | "reused" | "generated";
 
 /**
- * @description 확정 경기가 있는 동안 상대 예측을 새로 만들지 않고 직전 결과를 이어 쓴다.
- * 확정 경기가 있으면 화면이 상대 예측을 그리지 않으므로 Gemini 호출만 아끼면 된다.
+ * @description 고석현 최근 경기일. 전적 크롤이 빈 날엔 직전 예측 행의 값을 쓴다.
+ * 크롤 전적 날짜는 "Nov. 7, 2026" 같은 텍스트라 "YYYY-MM-DD"로 맞춰 저장한다.
+ * @param stats - 이번 크롤 스탯
+ * @param previous - DB에 저장된 직전 예측 데이터
+ * @returns "YYYY-MM-DD" (읽을 수 없으면 원문) 또는 undefined
+ */
+const resolveLastFightDate = (
+  stats: FighterStats | undefined,
+  previous: PredictionData | null
+): string | undefined => {
+  const raw = stats?.fightHistory?.[0]?.date || previous?.lastFightDate;
+  return toCalendarDate(raw) ?? raw;
+};
+
+/**
+ * @description 직전 후보를 그대로 써도 되는지 판정한다. 최근 경기가 바뀌었거나 그 경기 전에 만든 후보면 다시 만든다.
+ * @param previous - DB에 저장된 직전 예측 데이터
+ * @param lastFightDate - 이번 크롤 기준 최근 경기일
+ * @returns 재사용 가능하면 true
+ */
+const canReuseCandidates = (
+  previous: PredictionData | null,
+  lastFightDate: string | undefined
+): boolean => {
+  if (!previous?.opponents?.length) return false;
+  // 사진을 전부 못 가져온 행은 화면 로더가 거부해 캐시 후보가 뜨므로 이어 쓰지 않고 다시 만든다
+  if (!hasRealOpponentImage(previous.opponents)) return false;
+  // 전적 반영이 늦어 옛 경기일로 만든 후보는 생성 시각이 새 경기보다 뒤여도 결과를 모른다
+  // 옛 행은 경기일이 크롤 원문 그대로라 양쪽을 맞춰 비교한다
+  if (
+    toCalendarDate(previous.lastFightDate) !== toCalendarDate(lastFightDate)
+  ) {
+    return false;
+  }
+  if (!isGeneratedAfterLastFight(previous)) return false;
+  const ageDays =
+    (Date.now() - new Date(previous.generatedAt).getTime()) / DAY_MS;
+  return ageDays < CANDIDATE_REUSE_DAYS;
+};
+
+/**
+ * @description 직전 상대 후보를 새로 만들지 않고 이어 쓴다. 확정 경기가 있는 동안과 재사용 기간 안에서 쓴다.
  * @param previous - DB에 저장된 직전 예측 데이터. 없으면 빈 상대 목록으로 시작
  * @param stats - 이번 크롤 스탯. 최근 경기 날짜를 최신으로 맞추는 데 쓴다
  * @returns confirmedFight를 뺀 예측 데이터 (확정 경기는 호출부가 붙인다)
  */
-export const carryOverPredictions = (
+const carryOverPredictions = (
   previous: PredictionData | null,
   stats?: FighterStats
 ): PredictionData => ({
@@ -27,21 +77,50 @@ export const carryOverPredictions = (
   koFightMatrixRank:
     previous?.koFightMatrixRank ??
     (stats ? getKoFightMatrixRank(stats) : KO_DEFAULT_FIGHTMATRIX_RANK),
-  lastFightDate: stats?.fightHistory?.[0]?.date ?? previous?.lastFightDate,
+  lastFightDate: resolveLastFightDate(stats, previous),
   opponents: previous?.opponents ?? [],
 });
 
 /**
+ * @description 이번 크롤의 상대 후보를 정한다. 확정 경기가 있으면 이어 쓰고, 직전 후보가 신선하면 재사용하고, 아니면 새로 만든다.
+ * 확정 기간에 이어 쓴 후보는 예측 페이지가 "확정 전 AI가 꼽았던 후보"로 보여 준다.
+ * @param previous - DB에 저장된 직전 예측 데이터
+ * @param stats - 이번 크롤 스탯. 없으면 생성 시 DB 최신 스탯을 읽는다
+ * @param hasConfirmedFight - 이번 크롤에서 확정 경기가 잡혔는지
+ * @returns 예측 데이터와 후보 출처
+ * @throws 새로 만들어야 하는데 생성이 실패하면
+ */
+export const resolveOpponentPredictions = async (
+  previous: PredictionData | null,
+  stats: FighterStats | undefined,
+  hasConfirmedFight: boolean
+): Promise<{ data: PredictionData; source: CandidateSource }> => {
+  if (hasConfirmedFight) {
+    return {
+      data: carryOverPredictions(previous, stats),
+      source: "confirmed-fight",
+    };
+  }
+  if (canReuseCandidates(previous, resolveLastFightDate(stats, previous))) {
+    return { data: carryOverPredictions(previous, stats), source: "reused" };
+  }
+  return {
+    data: await generatePredictions(stats, previous),
+    source: "generated",
+  };
+};
+
+/**
  * @description AI 상대 예측 전체 파이프라인. Gemini 4회 호출: 후보 선정 1회 + 상세 분석 3회.
- * 최근 경기 후 60일이 안 됐으면 생성하지 않고 대기 상태(opponents 0명)를 반환한다.
+ * 이미 맞붙은 상대와 직전 확정 경기 상대는 후보에서 뺀다.
  * @param stats - 이번 크롤 스탯. 없으면 DB 최신 스탯을 읽는다
- * @param fallbackLastFightDate - 크롤 전적이 비었을 때 쓸 최근 경기일(직전 예측 행의 값)
+ * @param previous - DB에 저장된 직전 예측 데이터. 최근 경기일 폴백과 직전 확정 상대 제외에 쓴다
  * @returns 예측 데이터 (confirmedFight는 호출부가 붙인다)
- * @throws 스탯이 없거나 모든 후보 분석이 실패하면
+ * @throws 스탯이 없거나 후보가 하나도 남지 않으면
  */
 export async function generatePredictions(
   stats?: FighterStats,
-  fallbackLastFightDate?: string
+  previous: PredictionData | null = null
 ): Promise<PredictionData> {
   // 1. 고석현 스탯 (외부에서 전달받거나 Supabase에서 가져오기)
   let koStats: FighterStats;
@@ -63,23 +142,16 @@ export async function generatePredictions(
     koStats = data.data as FighterStats;
   }
 
-  // 최근 경기 날짜 확인 — 2달 미만이면 예측 스킵
-  // 전적 크롤이 빈 날 폴백이 없으면 대기가 풀려 Gemini 4회가 매 실행 돈다. 2026-09~10 504의 원인 경로
-  const lastFightDate =
-    koStats.fightHistory?.[0]?.date || fallbackLastFightDate;
-  if (lastFightDate) {
-    const daysSinceLastFight = Math.floor(
-      (Date.now() - new Date(lastFightDate).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    if (daysSinceLastFight < MIN_DAYS_SINCE_LAST_FIGHT) {
-      return {
-        generatedAt: new Date().toISOString(),
-        koFightMatrixRank: KO_DEFAULT_FIGHTMATRIX_RANK,
-        lastFightDate,
-        opponents: [],
-      };
-    }
-  }
+  const lastFightDate = resolveLastFightDate(koStats, previous);
+
+  // 경기 직후엔 UFC 전적 반영이 늦을 수 있어 방금 끝난 확정 경기 상대도 함께 뺀다
+  const excludedNames = [
+    ...(koStats.fightHistory ?? []).map((f) => f.opponent),
+    ...(previous?.confirmedFight
+      ? [previous.confirmedFight.opponent.name.en]
+      : []),
+  ];
+  const excludedKeys = new Set(excludedNames.map(fighterNameKey));
 
   // 2. FightMatrix 랭킹에서 고석현 랭크 확인
   const koRank = getKoFightMatrixRank(koStats);
@@ -94,8 +166,13 @@ export async function generatePredictions(
     );
   }
 
-  // 4. Gemini 호출 1: 후보 3명 선정
-  const selectedOpponents = await selectOpponents(koStats, koRank, candidates);
+  // 4. Gemini 호출 1: 후보 3명 선정. 프롬프트 지시만으로는 보장되지 않아 코드로 한 번 더 거른다
+  const selectedOpponents = (
+    await selectOpponents(koStats, koRank, candidates, excludedNames)
+  ).filter((op) => !excludedKeys.has(fighterNameKey(op.name)));
+  if (selectedOpponents.length === 0) {
+    throw new Error("Every selected opponent was already faced");
+  }
 
   // 5. UFC 프로필 이미지 스크래핑 (병렬)
   const imageUrls = await Promise.all(

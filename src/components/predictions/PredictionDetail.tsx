@@ -6,12 +6,16 @@ import { useTranslations } from "next-intl";
 
 import { formatKstLongDate } from "@/lib/date-utils";
 import type { KoComparisonStats } from "@/lib/ko-stats";
+import { isGeneratedAfterLastFight } from "@/lib/prediction-utils";
+import type { FightHistoryEntry } from "@/types/fighter";
 import type { PredictionData } from "@/types/prediction";
 
 import AiPredictionBadge from "./AiPredictionBadge";
 import AnalysisCard from "./AnalysisCard";
 import ConfirmedFightCard from "./ConfirmedFightCard";
 import FighterComparison from "./FighterComparison";
+import LastFightCard from "./LastFightCard";
+import PreviousCandidates from "./PreviousCandidates";
 import WinProbabilityBar from "./WinProbabilityBar";
 
 interface OpponentVideo {
@@ -25,12 +29,22 @@ interface PredictionDetailProps {
   predictions: PredictionData;
   koStats: KoComparisonStats;
   locale: string;
+  /** 고석현 최근 경기와 상대 한국어명. 후보가 없을 때만 페이지가 넘긴다 */
+  lastFight?: { fight: FightHistoryEntry; opponentKo?: string };
 }
 
+/**
+ * @description 예측 페이지 본문. 확정 경기 → 후보 예측 → 후보 없음(직전 경기 요약) 순으로 상태를 골라 그린다.
+ * @param props.predictions - AI 상대 예측 데이터
+ * @param props.koStats - 고석현 측 비교 데이터
+ * @param props.locale - "ko" | "en"
+ * @param props.lastFight - 후보가 없을 때 띄울 최근 경기
+ */
 export default function PredictionDetail({
   predictions,
   koStats,
   locale,
+  lastFight,
 }: PredictionDetailProps) {
   const t = useTranslations("predictions");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -73,6 +87,10 @@ export default function PredictionDetail({
     const fight = predictions.confirmedFight;
     // 크롤이 붙인 승부 예측. 구버전 데이터·생성 실패면 없으므로 카드만 표시
     const ai = fight.aiPrediction;
+    // 직전 경기 전에 만든 후보는 이번 경기 예측이 아니므로 숨긴다
+    const showPreviousPicks =
+      predictions.opponents.length > 0 &&
+      isGeneratedAfterLastFight(predictions);
     return (
       <div className="py-12 sm:py-16 px-4">
         <div className="max-w-2xl mx-auto">
@@ -126,15 +144,44 @@ export default function PredictionDetail({
               </p>
             </div>
           )}
+
+          {showPreviousPicks && (
+            <PreviousCandidates
+              candidates={predictions.opponents}
+              actualOpponentEn={fight.opponent.name.en}
+              generatedAt={predictions.generatedAt}
+              locale={locale}
+            />
+          )}
         </div>
       </div>
     );
   }
 
+  // 생성 실패나 배포 직후처럼 후보가 아직 없을 때. h1과 직전 경기를 남겨 빈 페이지가 되지 않게 한다
   if (predictions.opponents.length === 0) {
     return (
-      <div className="py-20 px-4 text-center">
-        <p className="text-muted">{t("preparingDesc")}</p>
+      <div className="py-12 sm:py-16 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10 animate-fade-up">
+            <div className="flex justify-center mb-4">
+              <AiPredictionBadge />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+              {t("title")}
+            </h1>
+            <p className="text-sm text-muted mt-3 max-w-lg mx-auto">
+              {t("preparingDesc")}
+            </p>
+          </div>
+          {lastFight && (
+            <LastFightCard
+              fight={lastFight.fight}
+              opponentKo={lastFight.opponentKo}
+              locale={locale}
+            />
+          )}
+        </div>
       </div>
     );
   }

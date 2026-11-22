@@ -53,8 +53,9 @@ export interface PredictionData {
   koFightMatrixRank: number;
   // 확정된 경기가 있으면 예측 대신 이것을 표시
   confirmedFight?: ConfirmedFight;
-  // 최근 경기 후 최소 기간(일) 미충족 시 예측 비활성
+  /** 고석현 최근 경기일. 새 행은 "YYYY-MM-DD", 옛 행은 크롤 원문("Nov. 7, 2026")일 수 있다. 후보 재사용 판정과 후보가 없을 때의 화면에 쓴다 */
   lastFightDate?: string;
+  /** AI 상대 후보. 확정 경기가 있는 동안엔 확정 전 마지막 후보가 이어 저장된다 */
   opponents: OpponentPrediction[];
 }
 
