@@ -1,6 +1,7 @@
 import cachedPredictions from "@/data/cached-predictions.json";
 import confirmedFightOverride from "@/data/confirmed-fight.json";
 import { getKstDaysUntil } from "@/lib/date-utils";
+import { hasRealOpponentImage } from "@/lib/prediction-utils";
 import type { ConfirmedFight, PredictionData } from "@/types/prediction";
 
 // 오버라이드는 KST 날짜, 크롤은 메인 카드 UTC 날짜라 하루 어긋날 수 있어 경기 다음 날까지는 카드를 남긴다
@@ -71,7 +72,7 @@ const mergeOverridePrediction = (
  *
  * 품질 체크는 셋 중 하나를 통과하면 된다.
  * - 아직 끝나지 않은 confirmedFight가 있다 (opponents가 비어도 확정 카드를 띄워야 함)
- * - 경기 직후 대기 상태다 (opponents 0명 + lastFightDate). 거부하면 몇 달 묵은 캐시 예측이 뜬다
+ * - 후보가 아직 없는 상태다 (opponents 0명 + lastFightDate). 거부하면 몇 달 묵은 캐시 예측이 뜬다
  * - opponent가 1명 이상이고 그중 하나라도 실제 이미지(placeholder 아님)를 가진다
  *
  * 마지막으로 수동 오버라이드(`confirmed-fight.json`)가 있으면 자동 감지보다 우선 적용하되,
@@ -98,9 +99,7 @@ export const getPredictions = async (): Promise<PredictionData> => {
       if (data?.data) {
         const predictions = dropFinishedFight(data.data as PredictionData);
         const opponentCount = predictions.opponents?.length ?? 0;
-        const hasRealImage = predictions.opponents?.some(
-          (o) => o.imageUrl && !o.imageUrl.includes("placeholder")
-        );
+        const hasRealImage = hasRealOpponentImage(predictions.opponents);
         const isWaiting = opponentCount === 0 && !!predictions.lastFightDate;
         if (
           predictions.confirmedFight ||

@@ -7,10 +7,8 @@ import {
   collectScheduleFighterNames,
   translateMissingFighterNames,
 } from "@/lib/crawl/fighter-name-translator";
-import {
-  carryOverPredictions,
-  generatePredictions,
-} from "@/lib/crawl/prediction-generator";
+import { resolveOpponentPredictions } from "@/lib/crawl/prediction-generator";
+import type { CandidateSource } from "@/lib/crawl/prediction-generator";
 import { crawlUfcSchedule } from "@/lib/crawl/schedule-crawler";
 import {
   extractExistingPredictions,
@@ -171,16 +169,21 @@ export async function GET(request: NextRequest) {
     return null;
   });
 
-  // 확정 경기가 있으면 화면이 상대 예측을 그리지 않으므로 Gemini 4회 호출을 건너뛰고 직전 값을 이어 쓴다.
+  // 후보 생성(Gemini 4회)은 확정 경기가 없고 직전 후보가 낡았을 때만 돈다.
   // 매 실행 생성하던 때 크롤이 60초를 넘겨 504가 났다(2026-09~10, 68회 중 5회)
-  let opponentsCarriedOver = false;
+  let opponentsSource: CandidateSource | undefined;
   const opponentPredictionsPromise = (async (): Promise<PredictionData> => {
-    if (!(await confirmedFightPromise)) {
-      const previous = await prevPredictionsPromise;
-      return generatePredictions(latestStats, previous?.lastFightDate);
-    }
-    opponentsCarriedOver = true;
-    return carryOverPredictions(await prevPredictionsPromise, latestStats);
+    const [previous, confirmed] = await Promise.all([
+      prevPredictionsPromise,
+      confirmedFightPromise,
+    ]);
+    const { data, source } = await resolveOpponentPredictions(
+      previous,
+      latestStats,
+      Boolean(confirmed)
+    );
+    opponentsSource = source;
+    return data;
   })();
 
   // Phase 2: DB 저장(stats) + AI 예측 + 파이터명 한국어 번역 병렬 실행
@@ -298,7 +301,7 @@ export async function GET(request: NextRequest) {
             predictionsResult.status === "fulfilled"
               ? predictionsResult.value.opponents.length
               : 0,
-          carriedOver: opponentsCarriedOver,
+          source: opponentsSource,
         }
       : { success: false, error: serializeError(predSave.reason) };
 

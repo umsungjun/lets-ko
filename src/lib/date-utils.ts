@@ -74,6 +74,25 @@ export const formatFullDate = (dateStr: string, locale: string): string => {
 };
 
 /**
+ * @description 크롤 원문 날짜("Nov. 7, 2026")나 "YYYY-MM-DD"를 비교 가능한 "YYYY-MM-DD"로 맞춘다.
+ * UFC 전적 카드는 날짜를 텍스트로 주므로 문자열로 날짜를 비교하기 전에 반드시 거친다.
+ * @param dateStr - 날짜 문자열
+ * @returns "YYYY-MM-DD", 비었거나 파싱 실패 시 null
+ */
+export const toCalendarDate = (dateStr: string | undefined): string | null => {
+  if (!dateStr) return null;
+  // 날짜만 있는 ISO는 Date가 UTC 자정으로 읽어 음수 오프셋 런타임에서 하루 밀리므로 그대로 자른다
+  const iso = dateStr.match(/^\d{4}-\d{2}-\d{2}/);
+  if (iso) return iso[0];
+  // 시각 없는 텍스트 날짜는 런타임 로컬 자정으로 읽히므로 로컬 getter로 꺼내야 날짜가 유지된다
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return null;
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+
+/**
  * @description 현재 시각을 KST 기준 "YYYY-MM-DD" 문자열로 반환 (예정 이벤트 필터의 "오늘" 비교용).
  * 기존 `new Date().toISOString().split("T")[0]`는 UTC 날짜라 KST 자정~오전 9시 구간에 하루 어긋남.
  * en-CA 로케일은 "YYYY-MM-DD" 출력을 보장하므로 event.date 문자열 비교에 그대로 사용 가능.
